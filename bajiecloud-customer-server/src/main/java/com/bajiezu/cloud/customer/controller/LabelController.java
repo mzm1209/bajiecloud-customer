@@ -6,6 +6,8 @@ import com.bajiezu.cloud.customer.controller.vo.*;
 import com.bajiezu.cloud.customer.service.LabelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,8 +62,11 @@ public class LabelController {
     @PostMapping("/export")
     @Operation(summary = "列表导出")
     @PreAuthorize("@ss.hasPermission('customer:label:export')")
-    public CommonResult<Boolean> export(@Valid @RequestBody LabelListReqVO reqVO) {
-        labelService.export(reqVO);
+    public CommonResult<Boolean> export(HttpServletRequest request, HttpServletResponse response) {
+        log.info("export params:{}", request.getParameter("params"));
+//        Preconditions.checkArgument(StringUtils.isNotBlank(request.getParameter("params")), "请求参数不能为空");
+//        LabelListReqVO reqDto = JacksonUtil.str2Obj(request.getParameter("params"), LabelListReqVO.class);
+//        labelService.export(reqDto, response);
         return CommonResult.success(true);
     }
 }

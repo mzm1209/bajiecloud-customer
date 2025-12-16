@@ -10,6 +10,7 @@ import com.bajiezu.cloud.customer.dal.mapper.LabelInfoMapper;
 import com.bajiezu.cloud.customer.enums.LabelStatusEnum;
 import com.bajiezu.cloud.framework.security.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -147,8 +148,11 @@ public class LabelServiceImpl implements LabelService{
         return new PageResult<>(respVOList, count);
     }
 
+
+    private static final String HEADER_TITLE = "标签管理列表";
+    private static final String[] HEADERS = {"标签名称", "标签描述", "标签类型", "使用状态", "标签人数", "创建时间"};
     @Override
-    public void export(LabelListReqVO reqVO) {
+    public void export(LabelListReqVO reqVO, HttpServletResponse response) {
 
     }
 }
