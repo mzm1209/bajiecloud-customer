@@ -17,5 +17,12 @@
         id, customer_id, label_id, create_by, updated_by, create_time, update_time, is_deleted
     </sql>
 
+    <select id="queryListByLabelIds" resultMap="BaseResultMap">
+        select * from customer_label_info
+        where is_deleted = 0 and
+        <foreach collection="list" open="(" close=")" separator="," item="item">
+            label_id = #{item}
+        </foreach>
+    </select>
 
 </mapper>

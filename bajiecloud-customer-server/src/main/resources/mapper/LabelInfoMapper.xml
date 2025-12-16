@@ -19,4 +19,29 @@
         id, name, description, label_type, label_status, create_by, updated_by, create_time, update_time, is_deleted
     </sql>
 
+    <select id="queryByName" resultMap="BaseResultMap">
+        select * from label_info where name = #{name}
+    </select>
+
+    <select id="queryListBy" resultMap="BaseResultMap">
+        select * from label_info where is_deleted = 0
+        <if test="name != null and name != ''">
+            and `name` like concat('%',#{name},'%')
+        </if>
+        <if test="status != null">
+            and label_status = #{status}
+        </if>
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+
+    <select id="queryCountBy" resultType="java.lang.Long">
+        select count(*) from label_info where is_deleted = 0
+        <if test="name != null and name != ''">
+            and `name` like concat('%',#{name},'%')
+        </if>
+        <if test="status != null">
+            and label_status = #{status}
+        </if>
+    </select>
 </mapper>

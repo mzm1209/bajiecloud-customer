@@ -7,11 +7,11 @@ public interface LabelService {
 
     void add(LabelAddReqVO reqVO);
 
-    void edit(LabelModReqVO reqVO);
+    void mod(LabelModReqVO reqVO);
 
-    void enabel(LabelEnableReqVO reqVO);
+    void enable(LabelEnableReqVO reqVO);
 
     PageResult<LabelRespVO> list(LabelListReqVO reqVO);
 
-    void export();
+    void export(LabelListReqVO reqVO);
 }

@@ -1,9 +1,11 @@
 package com.bajiezu.cloud.customer.controller.vo;
 
+import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 public class LabelBaseVO {
@@ -21,4 +23,9 @@ public class LabelBaseVO {
     @NotBlank(message = "备注不能为空")
     @Size(max = 100, message = "备注长度不能超过 100 个字符")
     private String remark;
+
+    public void validaParam() {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(name), "name为空");
+        Preconditions.checkArgument(labelType != null, "类型为空");
+    }
 }
