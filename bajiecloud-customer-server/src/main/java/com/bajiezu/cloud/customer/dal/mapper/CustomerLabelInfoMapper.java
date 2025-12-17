@@ -5,10 +5,18 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.mapstruct.Mapper;
 
+import java.util.Date;
 import java.util.List;
 
 @Mapper
 public interface CustomerLabelInfoMapper extends BaseMapper<CustomerLabelInfo> {
 
     List<CustomerLabelInfo> queryListByLabelIds(@Param("list") List<Long> labelIds);
+
+    List<CustomerLabelInfo> queryListByCustomerId(@Param("customerId") Long customerId);
+
+    void batchInsert(@Param("list") List<CustomerLabelInfo> infos);
+
+    void delCustomerLabelIds(@Param("customerId") Long customerId, @Param("labelIds") List<Long> labelIds,
+                             @Param("updateBy") Long updateBy, @Param("updateTime")Date updateTime);
 }

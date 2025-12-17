@@ -19,5 +19,13 @@
         id, customer_id, operate_type, operator_id, action_desc, create_by, updated_by, create_time, update_time, is_deleted
     </sql>
 
+    <insert id="batchInsert">
+        insert into customer_log
+            (customer_id, operate_type, operator_id, action_desc, create_by, updated_by, create_time, update_time, is_deleted)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.customerId}, #{item.operateType}, #{item.operatorId}, #{item.actionDesc}, #{item.createBy}, #{item.updatedBy}, #{item.createTime}, #{item.updateTime}, #{item.isDeleted})
+        </foreach>
+    </insert>
 
 </mapper>

@@ -10,4 +10,6 @@ public interface ErrorCodeConstants {
 
     ErrorCode LABEL_NO_EXIST = new ErrorCode(3, "标签不存在");
 
+    ErrorCode CUSTOMER_NOT_EXIST = new ErrorCode(4, "客户不存在");
+
 }

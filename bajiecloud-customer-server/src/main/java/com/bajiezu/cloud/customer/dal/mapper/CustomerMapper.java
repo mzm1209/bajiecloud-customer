@@ -2,9 +2,18 @@ package com.bajiezu.cloud.customer.dal.mapper;
 
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 import org.mapstruct.Mapper;
+
+import java.util.Date;
+import java.util.List;
 
 @Mapper
 public interface CustomerMapper extends BaseMapper<Customer> {
 
+    List<Customer> queryByIds(@Param("customerIds") List<Long> ids);
+
+
+    void updateByBlack(@Param("isBlack") Integer isBlack, @Param("blackReason") String blackReason, @Param("customerIds") List<Long> ids,
+                       @Param("updateBy") Long updateBy, @Param("updateTime") Date updateTime);
 }

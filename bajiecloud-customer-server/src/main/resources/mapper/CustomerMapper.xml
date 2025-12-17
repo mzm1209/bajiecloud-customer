@@ -49,4 +49,21 @@
         emergency_contact_name, create_by, updated_by, create_time, update_time, is_deleted
     </sql>
 
+    <select id="queryByIds" resultMap="BaseResultMap">
+        select * from customer
+        where is_deleted = 0 and
+        id in
+        <foreach item="item" collection="customerIds" separator="," open="(" close=")" index="index">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateByBlack">
+        update customer set in_black_list = #{isBlack}, in_black_reason = #{blackReason},
+                            updated_by = #{updateBy}, update_time = #{updateTime}
+        where id in
+        <foreach item="item" collection="customerIds" separator="," open="(" close=")" index="index">
+            #{item}
+        </foreach>
+    </update>
 </mapper>

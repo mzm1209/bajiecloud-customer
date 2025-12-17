@@ -44,4 +44,12 @@
             and label_status = #{status}
         </if>
     </select>
+
+    <select id="queryByIds" resultMap="BaseResultMap">
+        select * from label_info where is_deleted = 0
+        and id in
+        <foreach item="item" collection="list" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
 </mapper>

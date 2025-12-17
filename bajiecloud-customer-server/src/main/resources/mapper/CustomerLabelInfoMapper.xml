@@ -25,4 +25,24 @@
         </foreach>
     </select>
 
+    <select id="queryListByCustomerId" resultMap="BaseResultMap">
+        select * from customer_label_info
+        where is_deleted = 0 and customer_id = #{customerId}
+    </select>
+
+    <insert id="batchInsert">
+        insert into customer_label_info (customer_id, label_id, create_by, updated_by, create_time, update_time, is_deleted)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.customerId}, #{item.labelId}, #{item.createBy}, #{item.updatedBy}, #{item.createTime}, #{item.updateTime}, #{item.isDeleted})
+        </foreach>
+    </insert>
+
+    <update id="delCustomerLabelIds">
+        update customer_label_info set is_deleted = 1, updated_by = #{updateBy}, update_time = #{updateTime}
+        where customer_id = #{customerId} and
+        <foreach collection="labelIds" open="(" close=")" separator="," item="item">
+            label_id = #{item}
+        </foreach>
+    </update>
 </mapper>
