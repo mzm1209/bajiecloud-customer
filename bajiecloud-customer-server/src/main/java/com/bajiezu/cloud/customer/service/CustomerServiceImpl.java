@@ -183,5 +183,6 @@ public class CustomerServiceImpl implements CustomerService{
     @Override
     public CustomerBaseDetail getBaseInfo(CustomerBaseReqVO reqVO) {
 
+        return null;
     }
 }
