@@ -12,7 +12,7 @@ public class CustomerRespVO {
     private Long customerId;
 
     @Schema(description = "三方平台用户ID")
-    private Long thirdPartyId;
+    private String thirdPartyId;
 
     @Schema(description = "姓名")
     private String name;
@@ -39,7 +39,7 @@ public class CustomerRespVO {
     private String platformName;
 
     @Schema(description = "是否是黑名单用户")
-    private Integer isBlackList;
+    private Boolean isBlackList;
 
     @Schema(description = "下单次数")
     private Integer orderCount;

@@ -66,4 +66,44 @@
             #{item}
         </foreach>
     </update>
+
+    <select id="queryListBy" resultMap="BaseResultMap" parameterType="com.bajiezu.cloud.customer.dal.dto.CustomerListDto">
+        select * from customer
+        <include refid="queryListCondition"/>
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+
+    <select id="queryCountBy" resultType="java.lang.Long" parameterType="com.bajiezu.cloud.customer.dal.dto.CustomerListDto">
+        select count(*) from customer
+        <include refid="queryListCondition"/>
+    </select>
+
+    <sql id="queryListCondition">
+        where is_deleted = 0
+        <if test="mobile != null and mobile != ''">
+            and mobile = #{mobile}
+        </if>
+        <if test="name != null and name != ''">
+            and nickname like concat('%',#{name},'%')
+        </if>
+        <if test="customerId != null">
+            and id = #{customerId}
+        </if>
+        <if test="memberLevels != null and memberLevels.size() > 0">
+            and member_level in
+            <foreach item="item" collection="memberLevels" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="platformNames != null and platformNames.size() > 0">
+            and platform_name in
+            <foreach item="item" collection="platformNames" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="isBlackCustomer != null">
+            and in_black_list = #{in_black_list}
+        </if>
+    </sql>
 </mapper>

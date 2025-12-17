@@ -3,6 +3,7 @@ package com.bajiezu.cloud.customer.service;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customervo.*;
+import com.bajiezu.cloud.customer.dal.dto.CustomerListDto;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.entity.CustomerLabelInfo;
 import com.bajiezu.cloud.customer.dal.entity.CustomerLog;
@@ -13,6 +14,7 @@ import com.bajiezu.cloud.framework.security.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -49,7 +51,58 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Override
     public PageResult<CustomerRespVO> list(CustomerListReqVO reqVO) {
-        return null;
+        log.info("list req: {}", reqVO);
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+
+        Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
+        Integer limit = reqVO.getPageSize();
+
+        CustomerListDto dto = new CustomerListDto();
+        BeanUtils.copyProperties(reqVO, dto);
+        dto.setOffset(offset);
+        dto.setLimit(limit);
+        log.info("list query dto: {}", dto);
+        List<Customer> customers = customerMapper.queryListBy(dto);
+        if (CollectionUtils.isEmpty(customers)) {
+            return PageResult.empty();
+        }
+        Long count = customerMapper.queryCountBy(dto);
+        log.info("list query get count: {}", count);
+
+        List<Long> customerIds = customers.stream().map(Customer::getId).toList();
+        // todo 根据 customerIds 查询用户 累计积分
+        // todo 根据 customerIds 查询用户 成长值
+        // todo 根据 customerIds 查询用户 下单次数
+
+
+        List<CustomerRespVO> respVOList = Lists.newArrayList();
+        for (Customer customer : customers) {
+            CustomerRespVO respVO = buildCustomerRespVO(customer);
+            respVOList.add(respVO);
+        }
+        return new PageResult<>(respVOList, count);
+    }
+
+
+    private CustomerRespVO buildCustomerRespVO(Customer customer) {
+        CustomerRespVO respVO = new CustomerRespVO();
+        respVO.setCustomerId(customer.getId());
+        respVO.setThirdPartyId(customer.getThirdPartyId());
+        respVO.setName(customer.getNickname());
+        respVO.setMobile(customer.getMobile());
+        respVO.setEmail(customer.getEmail());
+        respVO.setMemberLevel(customer.getMemberLevel());
+        respVO.setSourceChannel(customer.getSourceChannel());
+        respVO.setPlatformName(customer.getPlatformName());
+        respVO.setIsBlackList(customer.getInBlackList());
+        respVO.setRegisterTime(customer.getCreateTime());
+        respVO.setLastOrderTime(customer.getLastOrderTime());
+        // todo 根据条件查询之后设置其他参数
+
+        return respVO;
     }
 
     @Override
