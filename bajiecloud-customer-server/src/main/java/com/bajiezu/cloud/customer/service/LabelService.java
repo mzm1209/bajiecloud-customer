@@ -1,7 +1,7 @@
 package com.bajiezu.cloud.customer.service;
 
 import com.bajiezu.cloud.common.web.pojo.PageResult;
-import com.bajiezu.cloud.customer.controller.vo.*;
+import com.bajiezu.cloud.customer.controller.labelvo.*;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface LabelService {

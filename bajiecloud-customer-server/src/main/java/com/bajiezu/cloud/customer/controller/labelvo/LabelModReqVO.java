@@ -1,4 +1,4 @@
-package com.bajiezu.cloud.customer.controller.vo;
+package com.bajiezu.cloud.customer.controller.labelvo;
 
 import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.media.Schema;

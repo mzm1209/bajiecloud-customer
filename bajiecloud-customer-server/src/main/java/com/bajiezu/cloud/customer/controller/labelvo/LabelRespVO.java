@@ -1,4 +1,4 @@
-package com.bajiezu.cloud.customer.controller.vo;
+package com.bajiezu.cloud.customer.controller.labelvo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

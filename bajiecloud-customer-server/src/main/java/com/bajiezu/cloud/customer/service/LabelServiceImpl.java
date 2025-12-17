@@ -2,7 +2,7 @@ package com.bajiezu.cloud.customer.service;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
-import com.bajiezu.cloud.customer.controller.vo.*;
+import com.bajiezu.cloud.customer.controller.labelvo.*;
 import com.bajiezu.cloud.customer.dal.entity.CustomerLabelInfo;
 import com.bajiezu.cloud.customer.dal.entity.LabelInfo;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerLabelInfoMapper;

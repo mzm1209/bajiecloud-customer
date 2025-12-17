@@ -2,7 +2,7 @@ package com.bajiezu.cloud.customer.controller;
 
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
-import com.bajiezu.cloud.customer.controller.vo.*;
+import com.bajiezu.cloud.customer.controller.labelvo.*;
 import com.bajiezu.cloud.customer.service.LabelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

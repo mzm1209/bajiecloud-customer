@@ -1,4 +1,4 @@
-package com.bajiezu.cloud.customer.controller.vo;
+package com.bajiezu.cloud.customer.controller.labelvo;
 
 
 import com.bajiezu.cloud.common.web.pojo.PageParam;
