@@ -10,6 +10,7 @@ import com.bajiezu.cloud.customer.dal.entity.CustomerLog;
 import com.bajiezu.cloud.customer.dal.entity.LabelInfo;
 import com.bajiezu.cloud.customer.dal.mapper.*;
 import com.bajiezu.cloud.customer.enums.OperateTypeEnum;
+import com.bajiezu.cloud.customer.utils.MobileUtils;
 import com.bajiezu.cloud.framework.security.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import com.google.common.collect.Lists;
@@ -92,7 +93,7 @@ public class CustomerServiceImpl implements CustomerService{
         respVO.setCustomerId(customer.getId());
         respVO.setThirdPartyId(customer.getThirdPartyId());
         respVO.setName(customer.getNickname());
-        respVO.setMobile(customer.getMobile());
+        respVO.setMobile(MobileUtils.encryptMobile(customer.getMobile()));
         respVO.setEmail(customer.getEmail());
         respVO.setMemberLevel(customer.getMemberLevel());
         respVO.setSourceChannel(customer.getSourceChannel());
