@@ -4,6 +4,7 @@ package com.bajiezu.cloud.customer.controller;
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customervo.*;
+import com.bajiezu.cloud.customer.service.CustomerCacheService;
 import com.bajiezu.cloud.customer.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,9 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    public CustomerCacheService customerCacheService;
 
     @PostMapping("/list")
     @Operation(summary = "客户列表")
@@ -70,6 +74,6 @@ public class CustomerController {
     @Operation(summary = "获取客户基本信息")
     @PreAuthorize("@ss.hasPermission('customer:baseInfo')")
     public CommonResult<CustomerBaseDetail> getBaseInfo(@Valid @RequestBody CustomerBaseReqVO reqVO) {
-        return CommonResult.success(customerService.getBaseInfo(reqVO));
+        return CommonResult.success(customerCacheService.getBaseInfo(reqVO.getCustomerId()));
     }
 }

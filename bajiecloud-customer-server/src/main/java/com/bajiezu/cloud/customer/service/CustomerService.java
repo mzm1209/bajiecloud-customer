@@ -33,10 +33,23 @@ public interface CustomerService {
      * */
     void addLabel(CustomerLabelAddVO addVO);
 
+
     /**
-     *  用户基本信息维护
-     *  /api/customer/update
+     *  判断客户是否为会员
+     *  0 普通成员
+     *  大于0  会员 (在根据数据大小，区分会员等级)
      * */
-    CustomerBaseDetail getBaseInfo(CustomerBaseReqVO reqVO);
+    CustomerMemberLevelVO checkIsMember(CustomerBaseReqVO reqVO);
+
+    /**
+     *  变更客户为会员
+     * */
+    void updateMemberLevel(CustomerMemberLevelVO reqVO);
+
+
+    /**
+     *  客户合并
+     * */
+    void merge();
 
 }

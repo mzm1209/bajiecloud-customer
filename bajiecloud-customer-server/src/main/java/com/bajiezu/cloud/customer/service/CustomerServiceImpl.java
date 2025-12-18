@@ -14,10 +14,12 @@ import com.bajiezu.cloud.customer.utils.MobileUtils;
 import com.bajiezu.cloud.framework.security.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 import java.util.Date;
@@ -49,6 +51,12 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Autowired
     private LabelInfoMapper labelInfoMapper;
+
+    @Autowired
+    private MergeLogMapper mergeLogMapper;
+
+    @Resource
+    private CustomerCacheService customerCacheService;
 
     @Override
     public PageResult<CustomerRespVO> list(CustomerListReqVO reqVO) {
@@ -128,6 +136,7 @@ public class CustomerServiceImpl implements CustomerService{
         log.info("isBlack customerIds: {}", customerIds);
 
         customerMapper.updateByBlack(reqVO.getIsBlack(), reqVO.getBlackReason(), customerIds, loginUser.getId(), new Date());
+        customerCacheService.batchClearCache(customerIds);
 
         List<CustomerLog> customerLogs = Lists.newArrayList();
         for (Long id : customerIds) {
@@ -234,9 +243,42 @@ public class CustomerServiceImpl implements CustomerService{
         return customerLabelInfo;
     }
 
-    @Override
-    public CustomerBaseDetail getBaseInfo(CustomerBaseReqVO reqVO) {
 
-        return null;
+    @Override
+    public CustomerMemberLevelVO checkIsMember(CustomerBaseReqVO reqVO) {
+        log.info("checkIsMember req: {}", reqVO);
+        reqVO.validateParam();
+
+        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+        if (baseDetail == null) {
+            log.error("isBlack CUSTOMER_NOT_EXIST");
+            throw exception(CUSTOMER_NOT_EXIST);
+        }
+        CustomerMemberLevelVO levelVO = new CustomerMemberLevelVO();
+        levelVO.setCustomerId(baseDetail.getCustomerId());
+        levelVO.setMemberLevel(baseDetail.getMemberLevel());
+        return levelVO;
+    }
+
+    @Override
+    public void updateMemberLevel(CustomerMemberLevelVO reqVO) {
+        log.info("updateMemberLevel reqVO: {}", reqVO);
+        reqVO.validateParam();
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        Customer customer = customerMapper.selectById(reqVO.getCustomerId());
+        customer.setMemberLevel(reqVO.getMemberLevel());
+        customer.setUpdatedBy(loginUser.getId());
+        customer.setUpdateTime(new Date());
+        customerMapper.updateById(customer);
+
+        customerCacheService.clearCache(reqVO.getCustomerId());
+    }
+
+    @Override
+    public void merge() {
+
     }
 }
