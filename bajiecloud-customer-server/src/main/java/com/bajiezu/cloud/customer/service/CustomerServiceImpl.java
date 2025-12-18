@@ -116,7 +116,25 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Override
     public CustomerDetailRespVO detail(CustomerBaseReqVO reqVO) {
-        return null;
+        log.info("detail req: {}", reqVO);
+        reqVO.validateParam();
+
+        // 客户基础信息
+        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+        if (baseDetail == null) {
+            log.error("isBlack CUSTOMER_NOT_EXIST");
+            throw exception(CUSTOMER_NOT_EXIST);
+        }
+        // 获取客户关联标签信息
+        List<CustomerLabelRespVO> labelList = getLabel(reqVO);
+
+        // todo 获取客户附件或者扩展信息
+
+        CustomerDetailRespVO detailRespVO = new CustomerDetailRespVO();
+        detailRespVO.setBaseDetail(baseDetail);
+        detailRespVO.setLabelList(labelList);
+
+        return detailRespVO;
     }
 
     @Override
