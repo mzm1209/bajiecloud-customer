@@ -76,4 +76,19 @@ public class CustomerController {
     public CommonResult<CustomerBaseDetail> getBaseInfo(@Valid @RequestBody CustomerBaseReqVO reqVO) {
         return CommonResult.success(customerCacheService.getBaseInfo(reqVO.getCustomerId()));
     }
+
+    @PostMapping("/checkIsMember")
+    @Operation(summary = "判断客户是否为会员")
+    @PreAuthorize("@ss.hasPermission('customer:checkIsMember')")
+    public CommonResult<CustomerMemberLevelVO> checkIsMember(@Valid @RequestBody CustomerBaseReqVO reqVO) {
+        return CommonResult.success(customerService.checkIsMember(reqVO));
+    }
+
+    @PostMapping("/updateMemberLevel")
+    @Operation(summary = "变更客户为会员")
+    @PreAuthorize("@ss.hasPermission('customer:updateMemberLevel')")
+    public CommonResult<Boolean> updateMemberLevel(@Valid @RequestBody CustomerMemberLevelVO reqVO) {
+        customerService.updateMemberLevel(reqVO);
+        return CommonResult.success(true);
+    }
 }
