@@ -33,7 +33,6 @@ public interface CustomerService {
      * */
     void addLabel(CustomerLabelAddVO addVO);
 
-
     /**
      *  判断客户是否为会员
      *  0 普通成员
@@ -46,10 +45,38 @@ public interface CustomerService {
      * */
     void updateMemberLevel(CustomerMemberLevelVO reqVO);
 
-
     /**
      *  客户合并
      * */
     void merge();
 
+    /**
+     *  客户订单记录
+     * */
+    void orderList(CustomerBaseReqVO reqVO);
+
+    /**
+     *  客户金额信息
+     * */
+    void amountInfo(CustomerBaseReqVO reqVO);
+
+    /**
+     *  客户优惠权益
+     * */
+    void couponInfos(CustomerBaseReqVO reqVO);
+
+    /**
+     *  客户地址信息
+     * */
+    void addressInfo(CustomerBaseReqVO reqVO);
+
+    /**
+     *  客户积分信息
+     * */
+    void pointInfoList(CustomerBaseReqVO reqVO);
+
+    /**
+     *  客户成长值信息
+     * */
+    void growthInfoList(CustomerBaseReqVO reqVO);
 }

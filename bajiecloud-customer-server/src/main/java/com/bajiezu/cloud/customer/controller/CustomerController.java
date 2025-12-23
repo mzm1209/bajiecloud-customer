@@ -36,21 +36,21 @@ public class CustomerController {
     @PostMapping("/list")
     @Operation(summary = "客户列表")
     @PreAuthorize("@ss.hasPermission('customer:list')")
-    public CommonResult<PageResult<CustomerRespVO>> list(@Valid @RequestBody CustomerListReqVO reqVO) {
+    public CommonResult<PageResult<CustomerRespVO>> list(@RequestBody CustomerListReqVO reqVO) {
         return CommonResult.success(customerService.list(reqVO));
     }
 
     @PostMapping("/detail")
     @Operation(summary = "客户详情")
     @PreAuthorize("@ss.hasPermission('customer:detail')")
-    public CommonResult<CustomerDetailRespVO> mod(@Valid @RequestBody CustomerBaseReqVO reqVO) {
+    public CommonResult<CustomerDetailRespVO> mod(@RequestBody CustomerBaseReqVO reqVO) {
         return CommonResult.success(customerService.detail(reqVO));
     }
 
     @PostMapping("/isBlack")
     @Operation(summary = "拉黑/解除拉黑")
     @PreAuthorize("@ss.hasPermission('customer:isBlack')")
-    public CommonResult<Boolean> isBlack(@Valid @RequestBody CustomerBlackReqVO reqVO) {
+    public CommonResult<Boolean> isBlack(@RequestBody CustomerBlackReqVO reqVO) {
         customerService.isBlack(reqVO);
         return CommonResult.success(true);
     }
@@ -58,14 +58,14 @@ public class CustomerController {
     @PostMapping("/getLabel")
     @Operation(summary = "获取客户标签列表")
     @PreAuthorize("@ss.hasPermission('customer:getLabel')")
-    public CommonResult<List<CustomerLabelRespVO>> getLabel(@Valid @RequestBody CustomerBaseReqVO reqVO) {
+    public CommonResult<List<CustomerLabelRespVO>> getLabel(@RequestBody CustomerBaseReqVO reqVO) {
         return CommonResult.success(customerService.getLabel(reqVO));
     }
 
     @PostMapping("/addLabel")
     @Operation(summary = "给客户打标签")
     @PreAuthorize("@ss.hasPermission('customer:addLabel')")
-    public CommonResult<Boolean> addLabel(@Valid @RequestBody CustomerLabelAddVO reqVO) {
+    public CommonResult<Boolean> addLabel(@RequestBody CustomerLabelAddVO reqVO) {
         customerService.addLabel(reqVO);
         return CommonResult.success(true);
     }
@@ -73,21 +73,21 @@ public class CustomerController {
     @PostMapping("/baseInfo")
     @Operation(summary = "获取客户基本信息")
     @PreAuthorize("@ss.hasPermission('customer:baseInfo')")
-    public CommonResult<CustomerBaseDetail> getBaseInfo(@Valid @RequestBody CustomerBaseReqVO reqVO) {
+    public CommonResult<CustomerBaseDetail> getBaseInfo(@RequestBody CustomerBaseReqVO reqVO) {
         return CommonResult.success(customerCacheService.getBaseInfo(reqVO.getCustomerId()));
     }
 
     @PostMapping("/checkIsMember")
     @Operation(summary = "判断客户是否为会员")
     @PreAuthorize("@ss.hasPermission('customer:checkIsMember')")
-    public CommonResult<CustomerMemberLevelVO> checkIsMember(@Valid @RequestBody CustomerBaseReqVO reqVO) {
+    public CommonResult<CustomerMemberLevelVO> checkIsMember(@RequestBody CustomerBaseReqVO reqVO) {
         return CommonResult.success(customerService.checkIsMember(reqVO));
     }
 
     @PostMapping("/updateMemberLevel")
     @Operation(summary = "变更客户为会员")
     @PreAuthorize("@ss.hasPermission('customer:updateMemberLevel')")
-    public CommonResult<Boolean> updateMemberLevel(@Valid @RequestBody CustomerMemberLevelVO reqVO) {
+    public CommonResult<Boolean> updateMemberLevel(@RequestBody CustomerMemberLevelVO reqVO) {
         customerService.updateMemberLevel(reqVO);
         return CommonResult.success(true);
     }
