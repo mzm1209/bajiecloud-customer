@@ -301,32 +301,8 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public void orderList(CustomerBaseReqVO reqVO) {
-
-    }
-
-    @Override
-    public void amountInfo(CustomerBaseReqVO reqVO) {
-
-    }
-
-    @Override
-    public void couponInfos(CustomerBaseReqVO reqVO) {
-
-    }
-
-    @Override
     public void addressInfo(CustomerBaseReqVO reqVO) {
 
     }
-
-    @Override
-    public void pointInfoList(CustomerBaseReqVO reqVO) {
-
-    }
-
-    @Override
-    public void growthInfoList(CustomerBaseReqVO reqVO) {
-
-    }
+    
 }
