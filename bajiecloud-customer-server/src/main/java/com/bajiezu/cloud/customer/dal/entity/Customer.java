@@ -126,6 +126,10 @@ public class Customer implements Serializable {
     @TableField("last_login_ip")
     private String lastLoginIp;
 
+    /** 下单次数 */
+    @TableField("order_count")
+    private Integer orderCount;
+
     /** 最后下单时间 */
     @TableField("last_order_time")
     private Date lastOrderTime;

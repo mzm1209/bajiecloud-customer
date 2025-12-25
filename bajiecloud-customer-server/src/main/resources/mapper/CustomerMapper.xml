@@ -30,6 +30,7 @@
         <result column="merge_master_id" property="mergeMasterId"/>
         <result column="last_login_time" property="lastLoginTime"/>
         <result column="last_login_ip" property="lastLoginIp"/>
+        <result column="order_count" property="orderCount"/>
         <result column="last_order_time" property="lastOrderTime"/>
         <result column="last_source" property="lastSource"/>
         <result column="version" property="version"/>
@@ -45,7 +46,7 @@
         id, platform_uid, third_party_id, platform_name, source_channel, source_level, source_point,
         mobile, email, wechat_id, wechat_mobile, id_card, id_card_hash, nickname, avatar_url, real_name,
         gender, birthday, area_code, member_level, in_black_list, in_black_reason, is_anonymous,
-        account_status, merge_master_id, last_login_time, last_login_ip, last_order_time, last_source, version,
+        account_status, merge_master_id, last_login_time, last_login_ip, order_count, last_order_time, last_source, version,
         emergency_contact_name, create_by, updated_by, create_time, update_time, is_deleted
     </sql>
 
