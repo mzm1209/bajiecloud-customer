@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Validated
-public class CustomerApiServiceImpl implements CustomerApiService {
+public class CustomerApiImpl implements CustomerApi {
 
     @Autowired
     private CustomerService customerService;

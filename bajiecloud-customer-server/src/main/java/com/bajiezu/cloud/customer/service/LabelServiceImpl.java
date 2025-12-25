@@ -8,7 +8,7 @@ import com.bajiezu.cloud.customer.dal.entity.LabelInfo;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerLabelInfoMapper;
 import com.bajiezu.cloud.customer.dal.mapper.LabelInfoMapper;
 import com.bajiezu.cloud.customer.enums.LabelStatusEnum;
-import com.bajiezu.cloud.framework.security.LoginUser;
+import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,7 @@ public class LabelServiceImpl implements LabelService{
         labelInfoMapper.insert(info);
     }
 
-    private LabelInfo buildInfo(LabelAddReqVO req, LoginUser user) {
+    private LabelInfo buildInfo(LabelAddReqVO req, LoginUser<?> user) {
         LabelInfo info = new LabelInfo();
         info.setName(req.getName());
         info.setLabelType(req.getLabelType());
