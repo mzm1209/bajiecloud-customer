@@ -19,6 +19,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 
+import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_NOT_EXIST;
+
 @Slf4j
 @Service
 public class CustomerCacheServiceImpl implements CustomerCacheService {
@@ -50,9 +53,6 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
         }
 
         baseDetail = getBaseInfoFromDB(customerId);
-        if (baseDetail == null) {
-            return null;
-        }
         redisTemplate.opsForValue().set(cacheKey, JacksonUtil.obj2Str(baseDetail), key.getExpireTime(), key.getTimeUnit());
         return baseDetail;
     }
@@ -62,7 +62,8 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
         CustomerBaseDetail baseDetail = new CustomerBaseDetail();
         Customer customer = customerMapper.selectById(customerId);
         if (customer == null) {
-            return null;
+            log.error("getBaseInfoFromDB CUSTOMER_NOT_EXIST");
+            throw exception(CUSTOMER_NOT_EXIST);
         }
         BeanUtils.copyProperties(customer, baseDetail);
         baseDetail.setCustomerId(customer.getId());
