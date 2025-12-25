@@ -2,33 +2,36 @@ package com.bajiezu.cloud.customer.api;
 
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.customer.api.dto.*;
+import com.bajiezu.cloud.customer.enums.ApiConstants;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(contextId = "customerServiceApi", path = "/customer", value = "customer-service")
-@ConditionalOnMissingClass("com.bajiezu.cloud.customer.api.CustomerApiServiceImpl")
-public interface CustomerApiService {
+@FeignClient(name = ApiConstants.NAME)
+@Tag(name = "RPC 服务 - 客户服务")
+public interface CustomerApi {
 
-    @PostMapping("/isBlack")
+    String PREFIX = ApiConstants.PREFIX;
+
+    @PostMapping(PREFIX + "/isBlack")
     @Operation(summary = "拉黑/解除拉黑")
     CommonResult<Boolean> isBlack(@RequestBody CustomerBlackDto dto);
 
-    @PostMapping("/addLabel")
+    @PostMapping(PREFIX + "/addLabel")
     @Operation(summary = "给客户打标签")
     CommonResult<Boolean> addLabel(@RequestBody CustomerLabelAddDto dto);
 
-    @PostMapping("/baseInfo")
+    @PostMapping(PREFIX + "/baseInfo")
     @Operation(summary = "获取客户基本信息")
     CommonResult<CustomerBaseDetailInfo> getBaseInfo(@RequestBody CustomerBaseDto dto);
 
-    @PostMapping("/checkIsMember")
+    @PostMapping(PREFIX + "/checkIsMember")
     @Operation(summary = "判断客户是否为会员")
     CommonResult<CustomerMemberLevelDto> checkIsMember(@RequestBody CustomerBaseDto dto);
 
-    @PostMapping("/updateMemberLevel")
+    @PostMapping(PREFIX + "/updateMemberLevel")
     @Operation(summary = "变更客户为会员")
     CommonResult<Boolean> updateMemberLevel(@RequestBody CustomerMemberLevelDto dto);
 }

@@ -2,8 +2,8 @@ package com.bajiezu.cloud.customer.dal.mapper;
 
 import com.bajiezu.cloud.customer.dal.entity.CustomerLabelInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import java.util.Date;
 import java.util.List;
 

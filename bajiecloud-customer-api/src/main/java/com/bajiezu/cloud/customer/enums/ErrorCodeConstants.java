@@ -4,12 +4,12 @@ import com.bajiezu.cloud.common.web.exception.ErrorCode;
 
 public interface ErrorCodeConstants {
 
-    ErrorCode LOGIN_EXCEPTION = new ErrorCode(1, "用户登录异常");
+    ErrorCode LOGIN_EXCEPTION = new ErrorCode(1_004_001_001, "用户登录异常");
 
-    ErrorCode NAME_EXIST = new ErrorCode(2, "名称已存在");
+    ErrorCode NAME_EXIST = new ErrorCode(1_004_001_002, "名称已存在");
 
-    ErrorCode LABEL_NO_EXIST = new ErrorCode(3, "标签不存在");
+    ErrorCode LABEL_NO_EXIST = new ErrorCode(1_004_001_003, "标签不存在");
 
-    ErrorCode CUSTOMER_NOT_EXIST = new ErrorCode(4, "客户不存在");
+    ErrorCode CUSTOMER_NOT_EXIST = new ErrorCode(1_004_001_004, "客户不存在");
 
 }

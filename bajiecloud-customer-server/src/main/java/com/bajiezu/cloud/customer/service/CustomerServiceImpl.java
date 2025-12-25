@@ -11,7 +11,7 @@ import com.bajiezu.cloud.customer.dal.entity.LabelInfo;
 import com.bajiezu.cloud.customer.dal.mapper.*;
 import com.bajiezu.cloud.customer.enums.OperateTypeEnum;
 import com.bajiezu.cloud.customer.utils.MobileUtils;
-import com.bajiezu.cloud.framework.security.LoginUser;
+import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import com.google.common.collect.Lists;
 import jakarta.annotation.Resource;
@@ -19,12 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_NOT_EXIST;
