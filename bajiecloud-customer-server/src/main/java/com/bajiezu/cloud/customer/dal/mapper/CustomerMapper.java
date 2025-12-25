@@ -3,8 +3,8 @@ package com.bajiezu.cloud.customer.dal.mapper;
 import com.bajiezu.cloud.customer.dal.dto.CustomerListDto;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.mapstruct.Mapper;
 
 import java.util.Date;
 import java.util.List;
