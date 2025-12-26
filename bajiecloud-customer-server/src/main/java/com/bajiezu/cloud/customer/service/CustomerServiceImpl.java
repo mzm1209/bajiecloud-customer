@@ -4,15 +4,13 @@ import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.dal.dto.CustomerListDto;
-import com.bajiezu.cloud.customer.dal.entity.Customer;
-import com.bajiezu.cloud.customer.dal.entity.CustomerLabelInfo;
-import com.bajiezu.cloud.customer.dal.entity.CustomerLog;
-import com.bajiezu.cloud.customer.dal.entity.LabelInfo;
+import com.bajiezu.cloud.customer.dal.entity.*;
 import com.bajiezu.cloud.customer.dal.mapper.*;
 import com.bajiezu.cloud.customer.enums.OperateTypeEnum;
 import com.bajiezu.cloud.customer.utils.MobileUtils;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -294,13 +292,82 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public void merge() {
+    public void addAddress(CustomerAddressVO reqVO) {
+        log.info("addAddress reqVO: {}", reqVO);
+        reqVO.validateParam();
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+        if (baseDetail == null) {
+            log.error("addAddress CUSTOMER_NOT_EXIST");
+            throw exception(CUSTOMER_NOT_EXIST);
+        }
+        CustomerAddress address = buildCustomerAddress(reqVO, loginUser);
+        customerAddressMapper.insert(address);
+    }
 
+    private CustomerAddress buildCustomerAddress(CustomerAddressVO reqVO, LoginUser user ) {
+        CustomerAddress customerAddress = new CustomerAddress();
+        customerAddress.setCustomerId(reqVO.getCustomerId());
+        customerAddress.setAddressType(reqVO.getAddressType());
+        customerAddress.setReceiverName(reqVO.getName());
+        customerAddress.setReceiverMobile(reqVO.getMobile());
+        customerAddress.setAreaCode(reqVO.getAreaCode());
+        customerAddress.setStreetAddress(reqVO.getStreetAddress());
+        customerAddress.setPostalCode(reqVO.getPostCode());
+        customerAddress.setIsDefault(reqVO.getIsDefault());
+        customerAddress.setCreateBy(user.getId());
+        customerAddress.setUpdatedBy(user.getId());
+        customerAddress.setCreateTime(new Date());
+        customerAddress.setUpdateTime(new Date());
+        customerAddress.setIsDeleted(0);
+        return customerAddress;
     }
 
     @Override
-    public void addressInfo(CustomerBaseReqVO reqVO) {
+    public PageResult<CustomerAddressVO> addressInfoList(CustomerAddressListVO reqVO) {
+        log.info("addressInfoList reqVO: {}", reqVO);
+        Preconditions.checkArgument(reqVO.getCustomerId() != null, "customerId不能为空");
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+        if (baseDetail == null) {
+            log.error("addressInfoList CUSTOMER_NOT_EXIST");
+            throw exception(CUSTOMER_NOT_EXIST);
+        }
+
+        Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
+        Integer limit = reqVO.getPageSize();
+        List<CustomerAddress> addressList = customerAddressMapper.queryList(reqVO.getCustomerId(), offset, limit);
+        if (CollectionUtils.isEmpty(addressList)) {
+            return PageResult.empty();
+        }
+        Long count = customerAddressMapper.queryCount(reqVO.getCustomerId());
+        log.info("addressInfoList get count: {}", count);
+
+        List<CustomerAddressVO> respVOList = Lists.newArrayList();
+        for (CustomerAddress address : addressList) {
+            CustomerAddressVO addressVO = new CustomerAddressVO();
+            addressVO.setCustomerId(addressVO.getCustomerId());
+            addressVO.setAddressType(address.getAddressType());
+            addressVO.setName(address.getReceiverName());
+            addressVO.setMobile(address.getReceiverMobile());
+            addressVO.setAreaCode(address.getAreaCode());
+            addressVO.setStreetAddress(address.getStreetAddress());
+            addressVO.setPostCode(address.getPostalCode());
+            addressVO.setIsDefault(address.getIsDefault());
+            addressVO.setCreateTime(address.getCreateTime());
+            respVOList.add(addressVO);
+        }
+        return new PageResult<>(respVOList, count);
+    }
+
+    @Override
+    public void merge() {
 
     }
-    
 }

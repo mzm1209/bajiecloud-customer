@@ -2,7 +2,6 @@ package com.bajiezu.cloud.customer.service;
 
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customervo.*;
-import com.bajiezu.cloud.customer.controller.labelvo.LabelRespVO;
 
 import java.util.List;
 
@@ -45,15 +44,21 @@ public interface CustomerService {
      * */
     void updateMemberLevel(CustomerMemberLevelVO reqVO);
 
+
+    /**
+     * 添加地址
+     * */
+    void addAddress(CustomerAddressVO reqVO);
+
+    /**
+     *  客户地址信息列表
+     * */
+    PageResult<CustomerAddressVO> addressInfoList(CustomerAddressListVO reqVO);
+
+
     /**
      *  客户合并
      * */
     void merge();
-
-
-    /**
-     *  客户地址信息
-     * */
-    void addressInfo(CustomerBaseReqVO reqVO);
 
 }

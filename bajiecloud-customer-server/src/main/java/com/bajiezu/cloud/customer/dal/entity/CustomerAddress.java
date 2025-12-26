@@ -53,7 +53,7 @@ public class CustomerAddress implements Serializable {
 
     /** 是否默认地址：0-否，1-是 */
     @TableField("is_default")
-    private Boolean isDefault;
+    private Integer isDefault;
 
     /** 创建者 */
     @TableField("create_by")

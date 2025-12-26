@@ -24,4 +24,13 @@
         create_by, updated_by, create_time, update_time, is_deleted
     </sql>
 
+    <select id="queryList" resultMap="BaseResultMap">
+        select * from customer_address where customer_id = #{customerId} and is_deleted = 0
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+
+    <select id="queryCount" resultType="java.lang.Long">
+        select count(*) from customer_address where customer_id = #{customerId} and is_deleted = 0
+    </select>
 </mapper>
