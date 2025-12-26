@@ -14,7 +14,6 @@ import lombok.*;
 public class LabelModReqVO extends LabelBaseVO{
 
     @Schema(description = "ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotBlank(message = "ID不能为空")
     private Long id;
 
     public void validateParam() {

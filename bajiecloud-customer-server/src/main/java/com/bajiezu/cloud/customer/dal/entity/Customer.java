@@ -19,7 +19,7 @@ import java.util.Date;
 public class Customer implements Serializable {
 
     /** 客户ID（平台内部唯一ID） */
-    @TableId(value = "id", type = IdType.ASSIGN_ID) // 假设由代码分配ID
+    @TableId(value = "id", type = IdType.AUTO) // 假设由代码分配ID
     private Long id;
 
     /** 平台统一用户标识 */

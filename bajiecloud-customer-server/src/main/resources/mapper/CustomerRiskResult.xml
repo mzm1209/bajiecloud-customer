@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bajiezu.cloud.customer.dal.mapper.CustomerRiskResultMapper">
+
+    <resultMap id="BaseResultMap" type="com.bajiezu.cloud.customer.dal.entity.CustomerRiskResult">
+        <id column="id" property="id"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="risk_event_id" property="riskEventId"/>
+        <result column="risk_scene" property="riskScene"/>
+        <result column="risk_level" property="riskLevel"/>
+        <result column="risk_score" property="riskScore"/>
+        <result column="credit_score" property="creditScore"/>
+        <result column="risk_tags" property="riskTags"/>
+        <result column="risk_detail" property="riskDetail"/>
+        <result column="request_context" property="requestContext"/>
+        <result column="decision_action" property="decisionAction"/>
+        <result column="is_manual_review" property="isManualReview"/>
+        <result column="review_status" property="reviewStatus"/>
+        <result column="expire_time" property="expireTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, customer_id, risk_event_id, risk_scene, risk_level, risk_score, credit_score,
+        risk_tags, risk_detail, request_context, decision_action, is_manual_review, review_status,
+        expire_time, create_by, updated_by, create_time, update_time, is_deleted
+    </sql>
+
+
+</mapper>

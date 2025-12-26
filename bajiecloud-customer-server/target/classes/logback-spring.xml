@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 引入通用日志配置 -->
+    <include resource="logback-common.xml"/>
+    <!-- 每个业务可以自定义自己的appender -->
+</configuration>

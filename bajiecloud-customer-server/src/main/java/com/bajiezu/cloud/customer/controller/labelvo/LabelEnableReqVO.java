@@ -13,11 +13,9 @@ import lombok.*;
 public class LabelEnableReqVO {
 
     @Schema(description = "标签ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotBlank(message = "ID不能为空")
     private Long id;
 
     @Schema(description = "标签状态 0: 禁用 1: 启用", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotBlank(message = "状态不能为空")
     private Integer status;
 
     public void validateParam() {

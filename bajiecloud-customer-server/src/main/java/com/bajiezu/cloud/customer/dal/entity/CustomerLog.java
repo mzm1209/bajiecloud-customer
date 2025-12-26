@@ -20,7 +20,7 @@ public class CustomerLog implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(value = "id", type = IdType.INPUT) // 假设ID由外部生成（如雪花ID）
+    @TableId(value = "id", type = IdType.AUTO) // 假设ID由外部生成（如雪花ID）
     private Long id;
 
     /** 客户ID */

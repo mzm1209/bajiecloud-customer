@@ -1,6 +1,7 @@
 package com.bajiezu.cloud.customer.service;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.labelvo.*;
 import com.bajiezu.cloud.customer.dal.entity.CustomerLabelInfo;
@@ -82,7 +83,9 @@ public class LabelServiceImpl implements LabelService{
             }
         }
         info.setName(reqVO.getName());
-        info.setDescription(reqVO.getRemark());
+        if (StringUtils.isNotEmpty(reqVO.getRemark())) {
+            info.setDescription(reqVO.getRemark());
+        }
         info.setLabelType(reqVO.getLabelType());
         info.setUpdatedBy(loginUser.getId());
         info.setUpdateTime(new Date());

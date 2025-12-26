@@ -55,6 +55,44 @@ public class CustomerServiceImpl implements CustomerService{
     private CustomerCacheService customerCacheService;
 
     @Override
+    public void mockAddCustomer() {
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        for (int i = 0; i < 7; i++) {
+            Customer customer = new Customer();
+            String pid = "100_" + i;
+            customer.setPlatformUid(pid);
+            customer.setPlatformName("100");
+            String tid = "101_" + i;
+            customer.setThirdPartyId(tid);
+            customer.setPlatformName("wechat");
+            customer.setSourceChannel("WeChat");
+            customer.setSourceLevel("A");
+            customer.setSourcePoint("100");
+            customer.setMobile("13800000001");
+            customer.setEmail("13800000001@qq.com");
+            String name = "aa_" + i;
+            customer.setNickname(name);
+            customer.setRealName(name);
+            customer.setGender(1);
+            customer.setBirthday(new Date());
+            customer.setMemberLevel(0);
+            customer.setInBlackList(false);
+            customer.setIsAnonymous(false);
+            customer.setAccountStatus(1);
+            customer.setVersion(1);
+            customer.setCreateBy(loginUser.getId());
+            customer.setUpdatedBy(loginUser.getId());
+            customer.setCreateTime(new Date());
+            customer.setUpdateTime(new Date());
+            customer.setIsDeleted(0);
+            customerMapper.insert(customer);
+        }
+    }
+
+    @Override
     public PageResult<CustomerRespVO> list(CustomerListReqVO reqVO) {
         log.info("list req: {}", reqVO);
         LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
