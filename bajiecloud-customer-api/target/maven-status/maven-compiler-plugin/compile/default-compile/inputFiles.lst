@@ -1,0 +1,17 @@
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/api/CustomerApi.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/api/dto/CustomerBaseDetailInfo.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/api/dto/CustomerBaseDto.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/api/dto/CustomerBlackDto.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/api/dto/CustomerLabelAddDto.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/api/dto/CustomerMemberLevelDto.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/ApiConstants.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/CustomerBehaviorPointEnum.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/ErrorCodeConstants.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/IRedisKey.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/LabelStatusEnum.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/LabelTypeEnum.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/MemberLevelEnum.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/OperateTypeEnum.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/enums/RedisKeyEnum.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/utils/JacksonUtil.java
+/Users/dayu/Desktop/bajie/bajiecloud-customer/bajiecloud-customer-api/src/main/java/com/bajiezu/cloud/customer/utils/MobileUtils.java

@@ -6543,3 +6543,129 @@ java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.
 2025-12-26 16:01:11.019 [HikariCP-customer-service:housekeeper] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - Before cleanup stats (total=5/20, idle=5/5, active=0, waiting=0)
 2025-12-26 16:01:11.022 [HikariCP-customer-service:housekeeper] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - After  cleanup stats (total=5/20, idle=5/5, active=0, waiting=0)
 2025-12-26 16:01:11.022 [HikariCP-customer-service:housekeeper] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - Fill pool skipped, pool has sufficient level or currently being filled.
+2025-12-26 16:01:41.028 [HikariCP-customer-service:housekeeper] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - Before cleanup stats (total=5/20, idle=5/5, active=0, waiting=0)
+2025-12-26 16:01:41.030 [HikariCP-customer-service:housekeeper] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - After  cleanup stats (total=5/20, idle=5/5, active=0, waiting=0)
+2025-12-26 16:01:41.030 [HikariCP-customer-service:housekeeper] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - Fill pool skipped, pool has sufficient level or currently being filled.
+2025-12-26 16:02:08.558 [Thread-7] INFO  [] customer-service c.a.n.c.http.HttpClientBeanHolder - [HttpClientBeanHolder] Start destroying common HttpClient
+2025-12-26 16:02:08.558 [Thread-1] INFO  [] customer-service c.a.n.c.executor.ThreadPoolManager - [ThreadPoolManager] Start destroying ThreadPool
+2025-12-26 16:02:08.558 [Thread-9] INFO  [] customer-service c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Start destroying Publisher
+2025-12-26 16:02:08.560 [Thread-9] INFO  [] customer-service c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Completed destruction of Publisher
+2025-12-26 16:02:08.561 [Thread-7] INFO  [] customer-service c.a.n.c.http.HttpClientBeanHolder - [HttpClientBeanHolder] Completed destruction of HttpClient
+2025-12-26 16:02:08.561 [Thread-1] INFO  [] customer-service c.a.n.c.executor.ThreadPoolManager - [ThreadPoolManager] Completed destruction of ThreadPool
+2025-12-26 16:02:08.570 [SpringApplicationShutdownHook] INFO  [] customer-service c.a.c.n.r.NacosServiceRegistry - De-registering from Nacos Server now...
+2025-12-26 16:02:08.571 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - [DEREGISTER-SERVICE] dev deregistering service customer-service with instance: Instance{instanceId='null', ip='172.27.200.75', port=8084, weight=1.0, healthy=true, enabled=true, ephemeral=true, clusterName='DEFAULT', serviceName='null', metadata={}}
+2025-12-26 16:02:08.560 [nacos.publisher-com.alibaba.nacos.client.config.impl.ConfigFuzzyWatchNotifyEvent] ERROR [] customer-service c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1761)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2025-12-26 16:02:08.561 [nacos.publisher-com.alibaba.nacos.client.naming.event.InstancesChangeEvent] ERROR [] customer-service c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1761)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2025-12-26 16:02:08.561 [nacos.publisher-com.alibaba.nacos.common.notify.SlowEvent] ERROR [] customer-service c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1761)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2025-12-26 16:02:08.561 [nacos.publisher-com.alibaba.nacos.client.naming.event.NamingFuzzyWatchLoadEvent] ERROR [] customer-service c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1761)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2025-12-26 16:02:08.561 [nacos.publisher-com.alibaba.nacos.client.naming.event.NamingFuzzyWatchNotifyEvent] ERROR [] customer-service c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1761)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2025-12-26 16:02:08.561 [nacos.publisher-com.alibaba.nacos.common.ability.AbstractAbilityControlManager$AbilityUpdateEvent] ERROR [] customer-service c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1761)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2025-12-26 16:02:08.560 [nacos.publisher-com.alibaba.nacos.client.config.impl.ConfigFuzzyWatchLoadEvent] ERROR [] customer-service c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1761)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2025-12-26 16:02:08.614 [SpringApplicationShutdownHook] INFO  [] customer-service c.a.c.n.r.NacosServiceRegistry - De-registration finished.
+2025-12-26 16:02:08.615 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.cache.ServiceInfoHolder do shutdown begin
+2025-12-26 16:02:08.615 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.backups.FailoverReactor do shutdown begin
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.backups.FailoverReactor do shutdown stop
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.cache.ServiceInfoHolder do shutdown stop
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate do shutdown begin
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.core.ServiceInfoUpdateService do shutdown begin
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.core.ServiceInfoUpdateService do shutdown stop
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service c.a.n.c.a.AbstractServerListManager - com.alibaba.nacos.client.naming.core.NamingServerListManager do shutdown begin
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service c.a.n.c.a.AbstractServerListManager - com.alibaba.nacos.client.naming.core.NamingServerListManager do shutdown stop
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.remote.http.NamingHttpClientProxy do shutdown begin
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - [NamingHttpClientManager] Start destroying NacosRestTemplate
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - [NamingHttpClientManager] Completed destruction of NacosRestTemplate
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.remote.http.NamingHttpClientProxy do shutdown stop
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - Shutdown naming grpc client proxy for  uuid->0867bfbd-83f0-48f6-811e-d0496c27bf20
+2025-12-26 16:02:08.616 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - Shutdown grpc redo service executor java.util.concurrent.ScheduledThreadPoolExecutor@5242e9f7[Running, pool size = 1, active threads = 0, queued tasks = 1, completed tasks = 29]
+2025-12-26 16:02:08.617 [SpringApplicationShutdownHook] INFO  [] customer-service c.alibaba.nacos.common.remote.client - Shutdown rpc client, set status to shutdown
+2025-12-26 16:02:08.617 [SpringApplicationShutdownHook] INFO  [] customer-service c.alibaba.nacos.common.remote.client - Shutdown client event executor java.util.concurrent.ScheduledThreadPoolExecutor@7da4486[Running, pool size = 2, active threads = 2, queued tasks = 0, completed tasks = 0]
+2025-12-26 16:02:08.617 [SpringApplicationShutdownHook] INFO  [] customer-service c.alibaba.nacos.common.remote.client - Close current connection 1766736039710_172.17.202.151_54317
+2025-12-26 16:02:08.628 [SpringApplicationShutdownHook] INFO  [] customer-service c.a.n.c.r.client.grpc.GrpcClient - Shutdown grpc executor java.util.concurrent.ThreadPoolExecutor@289f9094[Running, pool size = 9, active threads = 0, queued tasks = 0, completed tasks = 76]
+2025-12-26 16:02:08.628 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - shutdown and remove naming rpc client  for uuid ->0867bfbd-83f0-48f6-811e-d0496c27bf20
+2025-12-26 16:02:08.628 [SpringApplicationShutdownHook] ERROR [] customer-service c.a.c.n.r.NacosGracefulShutdownDelegate - Error occurred while performing Nacos client graceful shutdown
+java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.alibaba.nacos.common.notify.NotifyCenter.INSTANCE" is null
+	at com.alibaba.nacos.common.notify.NotifyCenter.deregisterSubscriber(NotifyCenter.java:242)
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.shutdown(NamingGrpcClientProxy.java:537)
+	at com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate.shutdown(NamingClientProxyDelegate.java:212)
+	at com.alibaba.nacos.client.naming.NacosNamingService.shutDown(NacosNamingService.java:637)
+	at com.alibaba.cloud.nacos.NacosServiceManager.nacosServiceShutDown(NacosServiceManager.java:117)
+	at com.alibaba.cloud.nacos.registry.NacosServiceRegistry.close(NacosServiceRegistry.java:120)
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.stop(AbstractAutoServiceRegistration.java:311)
+	at com.alibaba.cloud.nacos.registry.NacosGracefulShutdownDelegate.doGracefulShutdown(NacosGracefulShutdownDelegate.java:69)
+	at com.alibaba.cloud.nacos.registry.NacosGracefulShutdownDelegate.onApplicationEvent(NacosGracefulShutdownDelegate.java:64)
+	at com.alibaba.cloud.nacos.registry.NacosGracefulShutdownDelegate.onApplicationEvent(NacosGracefulShutdownDelegate.java:34)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:185)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:178)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:156)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:454)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:387)
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1166)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.doClose(ServletWebServerApplicationContext.java:179)
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1129)
+	at org.springframework.boot.SpringApplicationShutdownHook.closeAndWait(SpringApplicationShutdownHook.java:147)
+	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
+	at org.springframework.boot.SpringApplicationShutdownHook.run(SpringApplicationShutdownHook.java:116)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2025-12-26 16:02:08.636 [SpringApplicationShutdownHook] INFO  [] customer-service o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2025-12-26 16:02:08.639 [tomcat-shutdown] INFO  [] customer-service o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2025-12-26 16:02:08.664 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.cache.ServiceInfoHolder do shutdown begin
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.backups.FailoverReactor do shutdown begin
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.backups.FailoverReactor do shutdown stop
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.cache.ServiceInfoHolder do shutdown stop
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate do shutdown begin
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.core.ServiceInfoUpdateService do shutdown begin
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.core.ServiceInfoUpdateService do shutdown stop
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service c.a.n.c.a.AbstractServerListManager - com.alibaba.nacos.client.naming.core.NamingServerListManager do shutdown begin
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service c.a.n.c.a.AbstractServerListManager - com.alibaba.nacos.client.naming.core.NamingServerListManager do shutdown stop
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.remote.http.NamingHttpClientProxy do shutdown begin
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - [NamingHttpClientManager] Start destroying NacosRestTemplate
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - [NamingHttpClientManager] Completed destruction of NacosRestTemplate
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - com.alibaba.nacos.client.naming.remote.http.NamingHttpClientProxy do shutdown stop
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - Shutdown naming grpc client proxy for  uuid->0867bfbd-83f0-48f6-811e-d0496c27bf20
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - Shutdown grpc redo service executor java.util.concurrent.ScheduledThreadPoolExecutor@5242e9f7[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 29]
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] INFO  [] customer-service com.alibaba.nacos.client.naming - shutdown and remove naming rpc client  for uuid ->0867bfbd-83f0-48f6-811e-d0496c27bf20
+2025-12-26 16:02:08.665 [SpringApplicationShutdownHook] WARN  [] customer-service o.s.b.f.s.DisposableBeanAdapter - Custom destroy method 'close' on bean with name 'nacosServiceRegistry' propagated an exception: java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.alibaba.nacos.common.notify.NotifyCenter.INSTANCE" is null
+2025-12-26 16:02:08.668 [SpringApplicationShutdownHook] INFO  [] customer-service com.zaxxer.hikari.HikariDataSource - HikariCP-customer-service - Shutdown initiated...
+2025-12-26 16:02:08.668 [SpringApplicationShutdownHook] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - Before shutdown stats (total=5/20, idle=5/5, active=0, waiting=0)
+2025-12-26 16:02:08.669 [HikariCP-customer-service:connection-closer] DEBUG [] customer-service com.zaxxer.hikari.pool.PoolBase - HikariCP-customer-service - Closing connection com.mysql.cj.jdbc.ConnectionImpl@4b86b892: (connection evicted)
+2025-12-26 16:02:08.674 [HikariCP-customer-service:connection-closer] DEBUG [] customer-service com.zaxxer.hikari.pool.PoolBase - HikariCP-customer-service - Closing connection com.mysql.cj.jdbc.ConnectionImpl@282f81a2: (connection evicted)
+2025-12-26 16:02:08.675 [HikariCP-customer-service:connection-closer] DEBUG [] customer-service com.zaxxer.hikari.pool.PoolBase - HikariCP-customer-service - Closing connection com.mysql.cj.jdbc.ConnectionImpl@6038cd6c: (connection evicted)
+2025-12-26 16:02:08.675 [HikariCP-customer-service:connection-closer] DEBUG [] customer-service com.zaxxer.hikari.pool.PoolBase - HikariCP-customer-service - Closing connection com.mysql.cj.jdbc.ConnectionImpl@3d666a7c: (connection evicted)
+2025-12-26 16:02:08.675 [HikariCP-customer-service:connection-closer] DEBUG [] customer-service com.zaxxer.hikari.pool.PoolBase - HikariCP-customer-service - Closing connection com.mysql.cj.jdbc.ConnectionImpl@79b9b421: (connection evicted)
+2025-12-26 16:02:08.676 [SpringApplicationShutdownHook] DEBUG [] customer-service com.zaxxer.hikari.pool.HikariPool - HikariCP-customer-service - After  shutdown stats (total=0/20, idle=0/5, active=0, waiting=0)
+2025-12-26 16:02:08.676 [SpringApplicationShutdownHook] INFO  [] customer-service com.zaxxer.hikari.HikariDataSource - HikariCP-customer-service - Shutdown completed.
