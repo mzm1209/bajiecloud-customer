@@ -2,6 +2,7 @@ package com.bajiezu.cloud.customer.service;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
+import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerTotalPointRespVO;
 import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.dal.dto.CustomerListDto;
 import com.bajiezu.cloud.customer.dal.entity.*;
@@ -53,6 +54,9 @@ public class CustomerServiceImpl implements CustomerService{
 
     @Resource
     private CustomerCacheService customerCacheService;
+
+    @Resource
+    private CustomerBehaviorService customerBehaviorService;
 
     @Override
     public void mockAddCustomer() {
@@ -115,22 +119,19 @@ public class CustomerServiceImpl implements CustomerService{
         Long count = customerMapper.queryCountBy(dto);
         log.info("list query get count: {}", count);
 
-        List<Long> customerIds = customers.stream().map(Customer::getId).toList();
-        // todo 根据 customerIds 查询用户 累计积分
-        // todo 根据 customerIds 查询用户 成长值
-        // todo 根据 customerIds 查询用户 下单次数
-
-
         List<CustomerRespVO> respVOList = Lists.newArrayList();
         for (Customer customer : customers) {
-            CustomerRespVO respVO = buildCustomerRespVO(customer);
+            CustomerBaseReqVO baseReqVO = new CustomerBaseReqVO();
+            baseReqVO.setCustomerId(customer.getId());
+            CustomerTotalPointRespVO totalPoint = customerBehaviorService.customerTotalPoint(baseReqVO);
+            CustomerRespVO respVO = buildCustomerRespVO(customer, totalPoint);
             respVOList.add(respVO);
         }
         return new PageResult<>(respVOList, count);
     }
 
 
-    private CustomerRespVO buildCustomerRespVO(Customer customer) {
+    private CustomerRespVO buildCustomerRespVO(Customer customer, CustomerTotalPointRespVO totalResp) {
         CustomerRespVO respVO = new CustomerRespVO();
         respVO.setCustomerId(customer.getId());
         respVO.setThirdPartyId(customer.getThirdPartyId());
@@ -143,7 +144,10 @@ public class CustomerServiceImpl implements CustomerService{
         respVO.setIsBlackList(customer.getInBlackList());
         respVO.setRegisterTime(customer.getCreateTime());
         respVO.setLastOrderTime(customer.getLastOrderTime());
-        // todo 根据条件查询之后设置其他参数
+        if (totalResp != null) {
+            respVO.setTotalGrowth(totalResp.getTotalGrowth());
+            respVO.setTotalPoint(totalResp.getTotalPoint());
+        }
 
         return respVO;
     }

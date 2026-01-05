@@ -11,5 +11,11 @@ import java.util.List;
 @Mapper
 public interface CustomerBehaviorPointRecordMapper extends BaseMapper<CustomerBehaviorPointRecord> {
 
-    List<CustomerBehaviorPointRecord> queryByCustomerIdAndRuleId(@Param("customerId") Long customerId, @Param("taskId") Long taskId, @Param("ruleId") Long ruleId);
+    List<CustomerBehaviorPointRecord> queryByCustomerIdAndRuleId(@Param("customerId") Integer customerId, @Param("taskId") Long taskId, @Param("ruleId") Integer ruleId);
+
+    List<CustomerBehaviorPointRecord> queryAllBehaviorList(@Param("customerId") Long customerId);
+
+    List<CustomerBehaviorPointRecord> queryList(@Param("customerId") Long customerId, @Param("offset") Integer offset, @Param("limit") Integer limit);
+
+    Long queryCount(@Param("customerId") Long customerId);
 }

@@ -29,4 +29,17 @@
         and task_id = #{taskId} and rule_id = #{ruleId}
     </select>
 
+    <select id="queryAllBehaviorList" resultMap="BaseResultMap">
+        select * from customer_behavior_point_record where customer_id = #{customerId}
+    </select>
+
+    <select id="queryList" resultMap="BaseResultMap">
+        select * from customer_behavior_point_record where customer_id = #{customerId}
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+
+    <select id="queryCount" resultType="java.lang.Long">
+        select count(*) from customer_behavior_point_record where customer_id = #{customerId}
+    </select>
 </mapper>

@@ -9,19 +9,26 @@ import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehavior
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerTotalPointRespVO;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseDetail;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseReqVO;
+import com.bajiezu.cloud.customer.dal.entity.CustomerBehaviorPointRecord;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerBehaviorPointRecordMapper;
 import com.bajiezu.cloud.customer.enums.CustomerBehaviorPointEnum;
+import com.bajiezu.cloud.framework.security.po.LoginUser;
+import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import com.bajiezu.cloud.marketing.api.vip.MarketingVipIntegralTaskApi;
 import com.bajiezu.cloud.marketing.dto.vip.req.MarketingVipIntegralTaskDetailReqDTO;
 import com.bajiezu.cloud.marketing.dto.vip.resp.MarketingVipIntegralTaskDetailRespDTO;
 import com.bajiezu.cloud.marketing.dto.vip.resp.base.TaskIntegralDTO;
 import com.bajiezu.cloud.marketing.dto.vip.resp.base.TaskIntegralRuleDTO;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
 
 @Slf4j
 @Service
@@ -98,11 +105,66 @@ public class CustomerBehaviorServiceImpl implements CustomerBehaviorService{
 
     @Override
     public CustomerTotalPointRespVO customerTotalPoint(CustomerBaseReqVO reqVO) {
-        return null;
+        log.info("customerTotalPoint req: {}", reqVO);
+        reqVO.validateParam();
+
+        CustomerTotalPointRespVO respVO = new CustomerTotalPointRespVO();
+        List<CustomerBehaviorPointRecord> records = customerBehaviorPointRecordMapper.queryAllBehaviorList(reqVO.getCustomerId());
+        if (CollectionUtils.isEmpty(records)) {
+            return respVO;
+        }
+        long totalPoint = 0L;
+        long totalGrowth = 0L;
+        for (CustomerBehaviorPointRecord record : records) {
+            if (record.getOperatingAction() == 1) {
+                totalPoint += record.getPointCount();
+                totalGrowth += record.getGrowthCount();
+            }
+            if (record.getOperatingAction() == 2) {
+                totalPoint -= record.getPointCount();
+                totalGrowth -= record.getGrowthCount();
+            }
+        }
+        log.info("customerTotalPoint totalPoint: {}, totalGrowth: {}", totalPoint, totalGrowth);
+        respVO.setTotalPoint(totalPoint);
+        respVO.setTotalGrowth(totalGrowth);
+        return respVO;
     }
 
     @Override
     public PageResult<CustomerBehaviorRespVO> list(CustomerBehaviorListReqVO reqVO) {
-        return null;
+        log.info("list req: {}", reqVO);
+        reqVO.validateParam();
+
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
+        Integer limit = reqVO.getPageSize();
+
+        List<CustomerBehaviorPointRecord> records = customerBehaviorPointRecordMapper.queryList(reqVO.getCustomerId(), offset, limit);
+        if (CollectionUtils.isEmpty(records)) {
+            return PageResult.empty();
+        }
+        Long count = customerBehaviorPointRecordMapper.queryCount(reqVO.getCustomerId());
+        log.info("list query get count: {}", count);
+
+        List<CustomerBehaviorRespVO> respVOList = Lists.newArrayList();
+        for (CustomerBehaviorPointRecord record : records) {
+            CustomerBehaviorRespVO respVO = new CustomerBehaviorRespVO();
+            respVO.setId(record.getId());
+            respVO.setBehaviorCode(record.getBehaviorCode());
+            respVO.setBehaviorDesc(record.getBehaviorDesc());
+            respVO.setOperateAction(record.getOperatingAction());
+            respVO.setOperateTime(record.getCreateTime());
+            if (reqVO.getBehaviorType() == 1) {
+                respVO.setCount(record.getPointCount());
+            }else {
+                respVO.setCount(record.getGrowthCount());
+            }
+            respVOList.add(respVO);
+        }
+        return new PageResult<>(respVOList, count);
     }
 }

@@ -1,6 +1,7 @@
 package com.bajiezu.cloud.customer.controller.customerbehaviorVO;
 
 import com.bajiezu.cloud.common.web.pojo.PageParam;
+import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -17,4 +18,9 @@ public class CustomerBehaviorListReqVO extends PageParam {
 
     @Schema(description = "查询列表类型 1:积分明细 2:成长值明细", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Integer behaviorType;
+
+    public void validateParam() {
+        Preconditions.checkArgument(customerId != null, "客户ID不能为空");
+        Preconditions.checkArgument(behaviorType != null, "查询列表类型不能为空");
+    }
 }

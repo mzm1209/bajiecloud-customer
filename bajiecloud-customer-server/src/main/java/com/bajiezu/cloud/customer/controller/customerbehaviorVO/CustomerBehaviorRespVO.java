@@ -9,7 +9,7 @@ import java.util.Date;
 public class CustomerBehaviorRespVO {
 
     @Schema(description = "列表ID",  example = "1")
-    private Integer id;
+    private Long id;
 
     @Schema(description = "行为编码",  example = "1")
     private Integer behaviorCode;
@@ -24,7 +24,7 @@ public class CustomerBehaviorRespVO {
     private Integer operateAction;
 
     @Schema(description = "操作数值",  example = "100")
-    private Integer count;
+    private Long count;
 
     @Schema(description = "操作时间",  example = "xxxxx")
     private Date operateTime;

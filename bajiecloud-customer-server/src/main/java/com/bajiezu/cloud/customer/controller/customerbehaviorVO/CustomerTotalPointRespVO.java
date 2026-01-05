@@ -7,9 +7,9 @@ import lombok.Data;
 public class CustomerTotalPointRespVO {
 
     @Schema(description = "累计积分",  example = "100")
-    private Integer totalPoint;
+    private Long totalPoint;
 
 
     @Schema(description = "累计成长值",  example = "100")
-    private Integer totalGrowth;
+    private Long totalGrowth;
 }

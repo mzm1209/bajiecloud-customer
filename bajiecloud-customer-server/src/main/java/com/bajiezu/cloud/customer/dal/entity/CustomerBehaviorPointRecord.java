@@ -51,7 +51,7 @@ public class CustomerBehaviorPointRecord implements Serializable {
     @TableField("operating_action")
     private Integer operatingAction;
 
-    /** 行为描述 */
+    /** 行为code值 */
     @TableField("behavior_code")
     private Integer behaviorCode;
 
