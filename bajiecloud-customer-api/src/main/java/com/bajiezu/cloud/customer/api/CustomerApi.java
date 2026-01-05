@@ -34,4 +34,8 @@ public interface CustomerApi {
     @PostMapping(PREFIX + "/updateMemberLevel")
     @Operation(summary = "变更客户为会员")
     CommonResult<Boolean> updateMemberLevel(@RequestBody CustomerMemberLevelDto dto);
+
+    @PostMapping(PREFIX + "/behaviorHandle")
+    @Operation(summary = "用户行为操作记录")
+    CommonResult<Boolean> behaviorHandle(@RequestBody CustomerBehaviorDto dto);
 }

@@ -2,7 +2,9 @@ package com.bajiezu.cloud.customer.api;
 
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.customer.api.dto.*;
+import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorVO;
 import com.bajiezu.cloud.customer.controller.customervo.*;
+import com.bajiezu.cloud.customer.service.CustomerBehaviorService;
 import com.bajiezu.cloud.customer.service.CustomerCacheService;
 import com.bajiezu.cloud.customer.service.CustomerService;
 import org.springframework.beans.BeanUtils;
@@ -19,6 +21,10 @@ public class CustomerApiImpl implements CustomerApi {
 
     @Autowired
     private CustomerCacheService customerCacheService;
+
+    @Autowired
+    private CustomerBehaviorService customerBehaviorService;
+
     @Override
     public CommonResult<Boolean> isBlack(CustomerBlackDto dto) {
         CustomerBlackReqVO reqVO = new CustomerBlackReqVO();
@@ -59,6 +65,14 @@ public class CustomerApiImpl implements CustomerApi {
         CustomerMemberLevelVO levelVO = new CustomerMemberLevelVO();
         BeanUtils.copyProperties(dto, levelVO);
         customerService.updateMemberLevel(levelVO);
+        return CommonResult.success(true);
+    }
+
+    @Override
+    public CommonResult<Boolean> behaviorHandle(CustomerBehaviorDto dto) {
+        CustomerBehaviorVO behaviorVO = new CustomerBehaviorVO();
+        BeanUtils.copyProperties(dto, behaviorVO);
+        customerBehaviorService.handleCustomerBehavior(behaviorVO);
         return CommonResult.success(true);
     }
 }
