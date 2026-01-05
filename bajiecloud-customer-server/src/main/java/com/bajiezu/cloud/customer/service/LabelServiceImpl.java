@@ -9,13 +9,16 @@ import com.bajiezu.cloud.customer.dal.entity.LabelInfo;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerLabelInfoMapper;
 import com.bajiezu.cloud.customer.dal.mapper.LabelInfoMapper;
 import com.bajiezu.cloud.customer.enums.LabelStatusEnum;
+import com.bajiezu.cloud.customer.utils.Id2NameDto;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
+import com.google.common.collect.Lists;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +96,29 @@ public class LabelServiceImpl implements LabelService{
     }
 
     @Override
+    public void delete(LabelIdReqVO reqVO) {
+        log.info("delete req: {}", reqVO);
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        LabelInfo info = labelInfoMapper.selectById(reqVO.getId());
+        if (info == null) {
+            throw exception(LABEL_NO_EXIST);
+        }
+        // 查询标签下是否有客户，有就提示无法删除
+        List<CustomerLabelInfo> customerInfoList = customerLabelInfoMapper.queryListByLabelIds(Lists.newArrayList(reqVO.getId()));
+        if (CollectionUtils.isNotEmpty(customerInfoList)) {
+            throw exception(LABEL_HAVE_CUSTOMER);
+        }
+
+        info.setIsDeleted(1);
+        info.setUpdatedBy(loginUser.getId());
+        info.setUpdateTime(new Date());
+        labelInfoMapper.updateById(info);
+    }
+
+    @Override
     public void enable(LabelEnableReqVO reqVO) {
         log.info("enable req: {}", reqVO);
         reqVO.validateParam();
@@ -149,6 +175,22 @@ public class LabelServiceImpl implements LabelService{
             return respVO;
         }).toList();
         return new PageResult<>(respVOList, count);
+    }
+
+
+    @Override
+    public List<Id2NameDto> queryAllLabel() {
+        log.info("queryAllLabel");
+        List<LabelInfo> list = labelInfoMapper.queryAllLabel();
+        if (CollectionUtils.isNotEmpty(list)) {
+            return list.stream().map(info -> {
+                Id2NameDto dto = new Id2NameDto();
+                dto.setId(info.getId());
+                dto.setName(info.getName());
+                return dto;
+            }).toList();
+        }
+        return Collections.emptyList();
     }
 
 

@@ -104,7 +104,7 @@
             </foreach>
         </if>
         <if test="isBlackCustomer != null">
-            and in_black_list = #{in_black_list}
+            and in_black_list = #{isBlackCustomer}
         </if>
     </sql>
 </mapper>

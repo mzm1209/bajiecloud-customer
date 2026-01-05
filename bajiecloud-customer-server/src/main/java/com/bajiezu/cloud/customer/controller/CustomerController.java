@@ -3,8 +3,12 @@ package com.bajiezu.cloud.customer.controller;
 
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
+import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorListReqVO;
+import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorRespVO;
+import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerTotalPointRespVO;
 import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.enums.ApiConstants;
+import com.bajiezu.cloud.customer.service.CustomerBehaviorService;
 import com.bajiezu.cloud.customer.service.CustomerCacheService;
 import com.bajiezu.cloud.customer.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +37,9 @@ public class CustomerController {
 
     @Autowired
     public CustomerCacheService customerCacheService;
+
+    @Autowired
+    private CustomerBehaviorService behaviorService;
 
     @PostMapping("/add")
     @Operation(summary = "客户新增")
@@ -98,5 +105,34 @@ public class CustomerController {
     public CommonResult<Boolean> updateMemberLevel(@RequestBody CustomerMemberLevelVO reqVO) {
         customerService.updateMemberLevel(reqVO);
         return CommonResult.success(true);
+    }
+
+    @PostMapping("/addAddress")
+    @Operation(summary = "添加客户地址")
+//    @PreAuthorize("@ss.hasPermission('customer:addAddress')")
+    public CommonResult<Boolean> addAddress(@RequestBody CustomerAddressVO reqVO) {
+        customerService.addAddress(reqVO);
+        return CommonResult.success(true);
+    }
+
+    @PostMapping("/addressList")
+    @Operation(summary = "获取客户地址列表")
+//    @PreAuthorize("@ss.hasPermission('customer:addressList')")
+    public CommonResult<PageResult<CustomerAddressVO>> addressList(@RequestBody CustomerAddressListVO reqVO) {
+        return CommonResult.success(customerService.addressInfoList(reqVO));
+    }
+
+    @PostMapping("/behaviorList")
+    @Operation(summary = "客户积分/成长值列表")
+//    @PreAuthorize("@ss.hasPermission('customer:behaviorList')")
+    public CommonResult<PageResult<CustomerBehaviorRespVO>> list(@RequestBody CustomerBehaviorListReqVO reqVO) {
+        return CommonResult.success(behaviorService.list(reqVO));
+    }
+
+    @PostMapping("/totalPoint")
+    @Operation(summary = "客户累计积分/成长值")
+//    @PreAuthorize("@ss.hasPermission('customer:totalPoint')")
+    public CommonResult<CustomerTotalPointRespVO> totalPoint(@RequestBody CustomerBaseReqVO reqVO) {
+        return CommonResult.success(behaviorService.customerTotalPoint(reqVO));
     }
 }

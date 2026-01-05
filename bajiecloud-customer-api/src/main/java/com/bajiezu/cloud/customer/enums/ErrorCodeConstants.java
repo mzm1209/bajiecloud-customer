@@ -12,4 +12,6 @@ public interface ErrorCodeConstants {
 
     ErrorCode CUSTOMER_NOT_EXIST = new ErrorCode(1_004_001_004, "客户不存在");
 
+    ErrorCode LABEL_HAVE_CUSTOMER = new ErrorCode(1_004_001_005, "标签关联客户无法删除");
+
 }
