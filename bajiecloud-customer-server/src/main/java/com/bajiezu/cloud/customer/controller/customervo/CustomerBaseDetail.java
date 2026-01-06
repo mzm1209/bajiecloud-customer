@@ -1,5 +1,9 @@
 package com.bajiezu.cloud.customer.controller.customervo;
 
+import com.bajiezu.cloud.framework.desensitize.core.regex.annotation.EmailDesensitize;
+import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.ChineseNameDesensitize;
+import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.IdCardDesensitize;
+import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.MobileDesensitize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -30,9 +34,11 @@ public class CustomerBaseDetail {
     private String sourcePoint;
 
     @Schema(description = "手机号", example = "xxx")
+    @MobileDesensitize
     private String mobile;
 
     @Schema(description = "邮箱", example = "xxx")
+    @EmailDesensitize
     private String email;
 
     @Schema(description = "微信ID", example = "xxx")
@@ -42,12 +48,14 @@ public class CustomerBaseDetail {
     private String wechatMobile;
 
     @Schema(description = "证件号", example = "xxx")
+    @IdCardDesensitize
     private String idCard;
 
     @Schema(description = "证件号hash", example = "xxx")
     private String idCardHash;
 
     @Schema(description = "昵称", example = "xxx")
+    @ChineseNameDesensitize(prefixKeep = 1)
     private String nickName;
 
     @Schema(description = "头像URL", example = "xxx")
