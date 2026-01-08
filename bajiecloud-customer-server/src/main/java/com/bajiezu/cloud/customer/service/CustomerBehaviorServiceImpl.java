@@ -104,9 +104,9 @@ public class CustomerBehaviorServiceImpl implements CustomerBehaviorService{
             }
             pointRecord.setSettingType(1);
             pointRecord.setOperatingAction(taskAction);
-//            pointRecord.setTaskId(taskIntegral.getIntegralTaskId());
+            pointRecord.setTaskId(taskIntegral.getIntegralTaskId());
 
-            List<CustomerBehaviorPointRecord> existRecords = customerBehaviorPointRecordMapper.queryByCustomerIdAndRuleId(vo.getCustomerId(), taskIntegral.getIntegralTaskId(), null);
+            List<CustomerBehaviorPointRecord> existRecords = customerBehaviorPointRecordMapper.queryByCustomerIdAndRuleId(vo.getCustomerId().intValue(), taskIntegral.getIntegralTaskId(), null);
             Long totalGrowth = 0L;
             Long totalPoint = 0L;
             if (CollectionUtils.isNotEmpty(existRecords)) {
