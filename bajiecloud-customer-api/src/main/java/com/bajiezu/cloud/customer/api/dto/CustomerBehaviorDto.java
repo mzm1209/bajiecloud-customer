@@ -36,4 +36,7 @@ public class CustomerBehaviorDto {
 
     @Schema(description = "逾期天数 behaviorCode = 4 时必传", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Integer days;
+
+    @Schema(description = "兑换积分 behaviorCode = 14 时必传", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    private Integer points;
 }
