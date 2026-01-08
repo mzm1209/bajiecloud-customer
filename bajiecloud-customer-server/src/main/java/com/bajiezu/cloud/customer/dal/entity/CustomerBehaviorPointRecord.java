@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,6 +15,7 @@ import java.util.Date;
  * 对应数据库表: customer_behavior_point_record
  */
 @Data
+@ToString
 @TableName("customer_behavior_point_record")
 public class CustomerBehaviorPointRecord implements Serializable {
 
