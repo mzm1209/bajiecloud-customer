@@ -26,7 +26,10 @@
 
     <select id="queryByCustomerIdAndRuleId" resultMap="BaseResultMap">
         select * from customer_behavior_point_record where customer_id = #{customerId}
-        and task_id = #{taskId} and rule_id = #{ruleId}
+        and task_id = #{taskId}
+        <if test="ruleId != null">
+            and rule_id = #{ruleId}
+        </if>
     </select>
 
     <select id="queryAllBehaviorList" resultMap="BaseResultMap">

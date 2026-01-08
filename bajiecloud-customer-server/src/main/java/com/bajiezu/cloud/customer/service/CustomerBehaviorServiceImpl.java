@@ -17,6 +17,7 @@ import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import com.bajiezu.cloud.marketing.api.vip.MarketingVipIntegralTaskApi;
 import com.bajiezu.cloud.marketing.dto.vip.req.MarketingVipIntegralTaskDetailReqDTO;
 import com.bajiezu.cloud.marketing.dto.vip.resp.MarketingVipIntegralTaskDetailRespDTO;
+import com.bajiezu.cloud.marketing.dto.vip.resp.base.GlobalIntegralDTO;
 import com.bajiezu.cloud.marketing.dto.vip.resp.base.TaskIntegralDTO;
 import com.bajiezu.cloud.marketing.dto.vip.resp.base.TaskIntegralRuleDTO;
 import com.google.common.collect.Lists;
@@ -24,8 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
@@ -69,6 +72,15 @@ public class CustomerBehaviorServiceImpl implements CustomerBehaviorService{
             return;
         }
 
+        CustomerBehaviorPointRecord pointRecord = new CustomerBehaviorPointRecord();
+        pointRecord.setCustomerId(vo.getCustomerId());
+        pointRecord.setBehaviorCode(vo.getBehaviorCode());
+        pointRecord.setBehaviorDesc(CustomerBehaviorPointEnum.getEnums(vo.getBehaviorCode()).getDesc());
+        pointRecord.setCreateBy(-1L);
+        pointRecord.setUpdatedBy(-1L);
+        pointRecord.setCreateTime(new Date());
+        pointRecord.setUpdateTime(new Date());
+
         // 任务规则
         if (taskDetail.getTaskIntegral() != null) {
             TaskIntegralDTO taskIntegral = taskDetail.getTaskIntegral();
@@ -86,21 +98,91 @@ public class CustomerBehaviorServiceImpl implements CustomerBehaviorService{
             }
             Integer taskAction = taskIntegral.getTaskAction();
             List<TaskIntegralRuleDTO> rules = taskIntegral.getTaskIntegralRuleList();
+            if  (CollectionUtils.isEmpty(rules)) {
+                log.error("handle customer behavior error, taskIntegralRuleList is empty, taskIntegral:{}", taskIntegral);
+                return;
+            }
+            pointRecord.setSettingType(1);
+            pointRecord.setOperatingAction(taskAction);
+//            pointRecord.setTaskId(taskIntegral.getIntegralTaskId());
 
+            List<CustomerBehaviorPointRecord> existRecords = customerBehaviorPointRecordMapper.queryByCustomerIdAndRuleId(vo.getCustomerId(), taskIntegral.getIntegralTaskId(), null);
+            Long totalGrowth = 0L;
+            Long totalPoint = 0L;
+            if (CollectionUtils.isNotEmpty(existRecords)) {
+                for (CustomerBehaviorPointRecord record : existRecords) {
+                    totalGrowth += record.getGrowthCount();
+                    totalPoint += record.getPointCount();
+                }
+            }
+            log.info("handle customer behavior  totalGrowth: {}, totalPoint: {}", totalGrowth, totalPoint);
 
-
-
-
+            if (CustomerBehaviorPointEnum.getEnums(vo.getBehaviorCode()) == CustomerBehaviorPointEnum.REPAYMENT_OVERDUE) {
+                Integer days = vo.getDays();
+                TaskIntegralRuleDTO ruleDTO = rules.stream().filter(dto ->  dto.getDays() != null && dto.getDays().equals(days)).findFirst().orElse(null);
+                if (ruleDTO != null) {
+                    fixPointRecord(pointRecord, ruleDTO, totalGrowth, totalPoint);
+                }else {
+                    log.info("handle customer behavior error, ruleDTO is empty, taskIntegral:{}", taskIntegral);
+                }
+            }else {
+                for (TaskIntegralRuleDTO dto : rules) {
+                    fixPointRecord(pointRecord, dto, totalGrowth, totalPoint);
+                }
+            }
+            log.info("handle customer behavior, pointRecord: {}", pointRecord);
+            customerBehaviorPointRecordMapper.insert(pointRecord);
         }
 
         // 全局规则
         if (CollectionUtils.isNotEmpty(taskDetail.getGlobalRuleList())) {
+            // todo 自定义有效期 暂不处理
+            List<GlobalIntegralDTO> globalRuleList = taskDetail.getGlobalRuleList().stream().filter(dto -> (dto.getIntegralRuleStatus() == 1 && dto.getIntegralValidityType() == 1)).toList();
+            if (CollectionUtils.isEmpty(globalRuleList)) {
+                log.error("handle customer behavior error, globalRuleList is empty, taskDetail:{}", taskDetail);
+                return;
+            }
+            pointRecord.setSettingType(2);
+            pointRecord.setOperatingAction(2);
 
+            GlobalIntegralDTO globalRule = globalRuleList.get(0);
+            pointRecord.setTaskId(globalRule.getId());
+            pointRecord.setPointCount(vo.getPoints().longValue());
+            customerBehaviorPointRecordMapper.insert(pointRecord);
         }
+    }
 
 
-
-
+    private void fixPointRecord(CustomerBehaviorPointRecord pointRecord, TaskIntegralRuleDTO dto, Long totalGrowth, Long totalPoint) {
+        pointRecord.setRuleId(dto.getRuleId().longValue());
+        if (!dto.getGrowthValueUpperStatus()) {
+            pointRecord.setGrowthCount(dto.getGrowthValue().longValue());
+        }else {
+            // 设置了成长值上线 则判断当前任务规则的成长值上限是否满足 上线
+            if (totalGrowth < dto.getGrowthValueUpper()) {
+                // 如果当前值 + 当前任务规则的成长值 < 上线 则直接入库， 如果大于，则入差值
+                if (totalGrowth + dto.getGrowthValue().longValue() < dto.getGrowthValueUpper()) {
+                    pointRecord.setGrowthCount(dto.getGrowthValue().longValue());
+                }else {
+                    pointRecord.setGrowthCount(dto.getGrowthValueUpper() - totalGrowth);
+                }
+            }else {
+                log.info("handle customer behavior error, growth value upper status, growth value upper:{}", dto.getGrowthValueUpper());
+            }
+        }
+        if (!dto.getGiftIntegralUpperStatus()) {
+            pointRecord.setPointCount(dto.getGiftIntegral().longValue());
+        }else {
+            if (totalPoint < dto.getGiftIntegralUpper()) {
+                if (totalPoint + dto.getGiftIntegral().longValue() < dto.getGiftIntegralUpper()) {
+                    pointRecord.setPointCount(dto.getGiftIntegral().longValue());
+                }else {
+                    pointRecord.setPointCount(dto.getGiftIntegralUpper() - totalPoint);
+                }
+            }else {
+                log.info("handle customer behavior error, gift integral upper status, gift integral upper:{}", dto.getGiftIntegralUpper());
+            }
+        }
     }
 
     @Override

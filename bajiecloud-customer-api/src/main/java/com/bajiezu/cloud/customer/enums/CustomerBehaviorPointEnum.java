@@ -3,8 +3,10 @@ package com.bajiezu.cloud.customer.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Getter
-@AllArgsConstructor
 public enum CustomerBehaviorPointEnum {
 
     // 任务配置
@@ -32,4 +34,22 @@ public enum CustomerBehaviorPointEnum {
     private final String code;
     private final String desc;
 
+    CustomerBehaviorPointEnum(Integer status, String code, String desc) {
+        this.status = status;
+        this.code = code;
+        this.desc = desc;
+    }
+
+    private static final Map<Integer, CustomerBehaviorPointEnum> cache;
+
+    static {
+        cache = new HashMap<>();
+        for (CustomerBehaviorPointEnum item : CustomerBehaviorPointEnum.values()) {
+            cache.put(item.getStatus(), item);
+        }
+    }
+
+    public static CustomerBehaviorPointEnum getEnums(int status) {
+        return cache.get(status);
+    }
 }

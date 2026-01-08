@@ -39,13 +39,17 @@ public class CustomerBehaviorVO {
     @Schema(description = "逾期天数 behaviorCode = 4 时必传", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Integer days;
 
+    @Schema(description = "兑换积分 behaviorCode = 14 时必传", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    private Integer points;
+
     public void validateParams() {
         Preconditions.checkArgument(customerId != null, "客户ID不能为空");
         Preconditions.checkArgument(behaviorCode != null, "客户行为不能为空");
         if (behaviorCode.equals(CustomerBehaviorPointEnum.REPAYMENT_OVERDUE.getStatus())) {
-            if (days == null) {
-                throw new RuntimeException("逾期天数不能为空");
-            }
+            Preconditions.checkArgument(days != null, "逾期天数不能为空");
+        }
+        if (behaviorCode.equals(CustomerBehaviorPointEnum.REDEEM.getStatus())) {
+            Preconditions.checkArgument(points != null, "兑换积分不能为空");
         }
     }
 }
