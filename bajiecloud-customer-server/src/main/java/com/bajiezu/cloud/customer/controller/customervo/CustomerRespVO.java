@@ -1,5 +1,9 @@
 package com.bajiezu.cloud.customer.controller.customervo;
 
+import com.bajiezu.cloud.framework.desensitize.core.regex.annotation.EmailDesensitize;
+import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.ChineseNameDesensitize;
+import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.FixedPhoneDesensitize;
+import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.MobileDesensitize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -15,12 +19,15 @@ public class CustomerRespVO {
     private String thirdPartyId;
 
     @Schema(description = "姓名")
+    @ChineseNameDesensitize(prefixKeep = 1)
     private String name;
 
     @Schema(description = "手机号")
+    @MobileDesensitize
     private String mobile;
 
     @Schema(description = "邮箱")
+    @EmailDesensitize
     private String email;
 
     @Schema(description = "会员等级")

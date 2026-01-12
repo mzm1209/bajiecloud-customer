@@ -5,6 +5,7 @@ import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.labelvo.*;
 import com.bajiezu.cloud.customer.enums.ApiConstants;
 import com.bajiezu.cloud.customer.service.LabelService;
+import com.bajiezu.cloud.customer.utils.Id2NameDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Tag(name = "管理后台 - 客户中心 - 标签管理")
 @RestController
@@ -45,6 +48,14 @@ public class LabelController {
         return CommonResult.success(true);
     }
 
+    @PostMapping("/label/del")
+    @Operation(summary = "删除")
+//    @PreAuthorize("@ss.hasPermission('customer:label:del')")
+    public CommonResult<Boolean> del(@Valid @RequestBody LabelIdReqVO reqVO) {
+        labelService.delete(reqVO);
+        return CommonResult.success(true);
+    }
+
     @PostMapping("/label/enable")
     @Operation(summary = "启用禁用")
 //    @PreAuthorize("@ss.hasPermission('customer:label:enable')")
@@ -58,5 +69,12 @@ public class LabelController {
 //    @PreAuthorize("@ss.hasPermission('customer:label:list')")
     public CommonResult<PageResult<LabelRespVO>> list(@Valid @RequestBody LabelListReqVO reqVO) {
         return CommonResult.success(labelService.list(reqVO));
+    }
+
+    @PostMapping("/label/all")
+    @Operation(summary = "所有标签")
+//    @PreAuthorize("@ss.hasPermission('customer:label:all')")
+    public CommonResult<List<Id2NameDto>> all() {
+        return CommonResult.success(labelService.queryAllLabel());
     }
 }

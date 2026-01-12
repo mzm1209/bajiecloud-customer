@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,6 +15,7 @@ import java.util.Date;
  * 对应数据库表: customer_behavior_point_record
  */
 @Data
+@ToString
 @TableName("customer_behavior_point_record")
 public class CustomerBehaviorPointRecord implements Serializable {
 
@@ -35,6 +37,10 @@ public class CustomerBehaviorPointRecord implements Serializable {
     @TableField("task_id")
     private Long taskId;
 
+    /** 关联规则ID */
+    @TableField("rule_id")
+    private Long ruleId;
+
     /** 积分数值 */
     @TableField("point_count")
     private Long pointCount;
@@ -46,6 +52,10 @@ public class CustomerBehaviorPointRecord implements Serializable {
     /** 操作动作 1: 发放 2:扣减 */
     @TableField("operating_action")
     private Integer operatingAction;
+
+    /** 行为code值 */
+    @TableField("behavior_code")
+    private Integer behaviorCode;
 
     /** 行为描述 */
     @TableField("behavior_desc")

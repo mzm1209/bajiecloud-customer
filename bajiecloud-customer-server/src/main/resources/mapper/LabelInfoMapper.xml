@@ -52,4 +52,8 @@
             #{item}
         </foreach>
     </select>
+
+    <select id="queryAllLabel" resultMap="BaseResultMap">
+        select * from label_info where is_deleted = 0
+    </select>
 </mapper>

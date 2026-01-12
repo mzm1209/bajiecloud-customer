@@ -16,4 +16,6 @@ public interface LabelInfoMapper extends BaseMapper<LabelInfo> {
     Long queryCountBy(@Param("name") String name, @Param("status") Integer status);
 
     List<LabelInfo> queryByIds(@Param("list") List<Long> ids);
+
+    List<LabelInfo> queryAllLabel();
 }
