@@ -4,6 +4,7 @@ import com.bajiezu.cloud.framework.desensitize.core.regex.annotation.EmailDesens
 import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.ChineseNameDesensitize;
 import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.IdCardDesensitize;
 import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.MobileDesensitize;
+import com.bajiezu.cloud.framework.desensitize.core.slider.annotation.PasswordDesensitize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -42,9 +43,11 @@ public class CustomerBaseDetail {
     private String email;
 
     @Schema(description = "微信ID", example = "xxx")
+    @PasswordDesensitize
     private String wechatId;
 
     @Schema(description = "微信手机号", example = "xxx")
+    @MobileDesensitize
     private String wechatMobile;
 
     @Schema(description = "证件号", example = "xxx")
@@ -55,13 +58,13 @@ public class CustomerBaseDetail {
     private String idCardHash;
 
     @Schema(description = "昵称", example = "xxx")
-    @ChineseNameDesensitize(prefixKeep = 1)
     private String nickName;
 
     @Schema(description = "头像URL", example = "xxx")
     private String avatarUrl;
 
     @Schema(description = "真实姓名", example = "xxx")
+    @ChineseNameDesensitize(prefixKeep = 1)
     private String realName;
 
     @Schema(description = "性别：0-未知，1-男，2-女", example = "xxx")

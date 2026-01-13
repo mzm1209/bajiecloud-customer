@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bajiezu.cloud.customer.dal.mapper.CustomerLabelInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.bajiezu.cloud.customer.dal.entity.CustomerLabelInfo">
+        <id column="id" property="id"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="label_id" property="labelId"/>
+        <result column="create_by" property="createBy"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, customer_id, label_id, create_by, updated_by, create_time, update_time, is_deleted
+    </sql>
+
+    <select id="queryListByLabelIds" resultMap="BaseResultMap">
+        select * from customer_label_info
+        where is_deleted = 0 and label_id in
+        <foreach collection="list" open="(" close=")" separator="," item="item">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryListByCustomerId" resultMap="BaseResultMap">
+        select * from customer_label_info
+        where is_deleted = 0 and customer_id = #{customerId}
+    </select>
+
+    <insert id="batchInsert">
+        insert into customer_label_info (customer_id, label_id, create_by, updated_by, create_time, update_time, is_deleted)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.customerId}, #{item.labelId}, #{item.createBy}, #{item.updatedBy}, #{item.createTime}, #{item.updateTime}, #{item.isDeleted})
+        </foreach>
+    </insert>
+
+    <update id="delCustomerLabelIds">
+        update customer_label_info set is_deleted = 1, updated_by = #{updateBy}, update_time = #{updateTime}
+        where customer_id = #{customerId} and label_id in
+        <foreach collection="labelIds" open="(" close=")" separator="," item="item">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

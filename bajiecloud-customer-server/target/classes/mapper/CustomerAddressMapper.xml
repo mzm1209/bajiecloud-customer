@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bajiezu.cloud.customer.dal.mapper.CustomerAddressMapper">
+
+    <resultMap id="BaseResultMap" type="com.bajiezu.cloud.customer.dal.entity.CustomerAddress">
+        <id column="id" property="id"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="address_type" property="addressType"/>
+        <result column="receiver_name" property="receiverName"/>
+        <result column="receiver_mobile" property="receiverMobile"/>
+        <result column="area_code" property="areaCode"/>
+        <result column="street_address" property="streetAddress"/>
+        <result column="postal_code" property="postalCode"/>
+        <result column="is_default" property="isDefault"/>
+        <result column="create_by" property="createBy"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, customer_id, address_type, receiver_name, receiver_mobile, area_code, street_address, postal_code, is_default,
+        create_by, updated_by, create_time, update_time, is_deleted
+    </sql>
+
+    <select id="queryList" resultMap="BaseResultMap">
+        select * from customer_address where customer_id = #{customerId} and is_deleted = 0
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+
+    <select id="queryCount" resultType="java.lang.Long">
+        select count(*) from customer_address where customer_id = #{customerId} and is_deleted = 0
+    </select>
+</mapper>

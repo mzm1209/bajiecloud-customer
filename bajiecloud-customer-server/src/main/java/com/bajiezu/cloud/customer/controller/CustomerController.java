@@ -92,6 +92,13 @@ public class CustomerController {
         return CommonResult.success(customerCacheService.getBaseInfo(reqVO.getCustomerId()));
     }
 
+    @PostMapping("/sensitiveData")
+    @Operation(summary = "获取客户非脱敏信息")
+//    @PreAuthorize("@ss.hasPermission('customer:sensitiveData')")
+    public CommonResult<String> getCustomerSensitiveData(@RequestBody CustomerSensitiveReq reqVO) {
+        return CommonResult.success(customerCacheService.getCustomerSensitiveData(reqVO));
+    }
+
     @PostMapping("/checkIsMember")
     @Operation(summary = "判断客户是否为会员")
 //    @PreAuthorize("@ss.hasPermission('customer:checkIsMember')")
