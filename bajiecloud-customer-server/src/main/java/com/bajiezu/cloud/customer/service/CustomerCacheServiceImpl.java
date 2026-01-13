@@ -4,12 +4,14 @@ import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseDetail;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseReqVO;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerSensitiveReq;
+import com.bajiezu.cloud.customer.controller.customervo.CustomerSensitiveResp;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.customer.enums.IRedisKey;
 import com.bajiezu.cloud.customer.enums.RedisKeyEnum;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
 import com.bajiezu.cloud.customer.utils.ReflectUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -75,16 +77,25 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
 
 
     @Override
-    public String getCustomerSensitiveData(CustomerSensitiveReq reqVO) {
+    public List<CustomerSensitiveResp> getCustomerSensitiveData(CustomerSensitiveReq reqVO) {
         log.info("getCustomerSensitiveData reqVO:{}", reqVO);
         Customer customer = customerMapper.selectById(reqVO.getCustomerId());
         if (customer == null) {
             log.error("getBaseInfoFromDB CUSTOMER_NOT_EXIST");
             throw exception(CUSTOMER_NOT_EXIST);
         }
-        String param = reqVO.getParam();
-        Object fieldValue = ReflectUtils.getFieldValue(customer, param);
-        return fieldValue == null ? "" : fieldValue.toString();
+        Preconditions.checkArgument(CollectionUtils.isNotEmpty(reqVO.getParams()), "查询的params不能为空");
+        List<CustomerSensitiveResp> respVOList = Lists.newArrayList();
+        for (String param : reqVO.getParams()) {
+            Object fieldValue = ReflectUtils.getFieldValue(customer, param);
+
+            CustomerSensitiveResp resp = new CustomerSensitiveResp();
+            resp.setParam( param);
+            String fieldValueStr = fieldValue == null ? "" : fieldValue.toString();
+            resp.setValue(fieldValueStr);
+            respVOList.add(resp);
+        }
+        return respVOList;
     }
 
 

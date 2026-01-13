@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CustomerSensitiveReq {
 
@@ -19,5 +21,5 @@ public class CustomerSensitiveReq {
             "wechatMobile: 微信手机号, " +
             "idCard: 证件号", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @NotBlank(message = "客户ID不能为空")
-    private String param;
+    private List<String> params;
 }

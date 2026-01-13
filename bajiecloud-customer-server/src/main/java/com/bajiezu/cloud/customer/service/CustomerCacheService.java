@@ -3,6 +3,7 @@ package com.bajiezu.cloud.customer.service;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseDetail;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseReqVO;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerSensitiveReq;
+import com.bajiezu.cloud.customer.controller.customervo.CustomerSensitiveResp;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface CustomerCacheService {
     CustomerBaseDetail getBaseInfo(Long customerId);
 
 
-    String getCustomerSensitiveData(CustomerSensitiveReq reqVO);
+    List<CustomerSensitiveResp> getCustomerSensitiveData(CustomerSensitiveReq reqVO);
 
 
     void clearCache(Long customerId);
