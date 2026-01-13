@@ -77,7 +77,7 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
 
 
     @Override
-    public List<CustomerSensitiveResp> getCustomerSensitiveData(CustomerSensitiveReq reqVO) {
+    public CustomerSensitiveResp getCustomerSensitiveData(CustomerSensitiveReq reqVO) {
         log.info("getCustomerSensitiveData reqVO:{}", reqVO);
         Customer customer = customerMapper.selectById(reqVO.getCustomerId());
         if (customer == null) {
@@ -85,17 +85,13 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
             throw exception(CUSTOMER_NOT_EXIST);
         }
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(reqVO.getParams()), "查询的params不能为空");
-        List<CustomerSensitiveResp> respVOList = Lists.newArrayList();
+        CustomerSensitiveResp resp = new CustomerSensitiveResp();
         for (String param : reqVO.getParams()) {
             Object fieldValue = ReflectUtils.getFieldValue(customer, param);
-
-            CustomerSensitiveResp resp = new CustomerSensitiveResp();
-            resp.setParam( param);
-            String fieldValueStr = fieldValue == null ? null : fieldValue.toString();
-            resp.setValue(fieldValueStr);
-            respVOList.add(resp);
+            String fieldValueStr = fieldValue == null ? "" : fieldValue.toString();
+            ReflectUtils.setFieldValue(resp, param, fieldValueStr);
         }
-        return respVOList;
+        return resp;
     }
 
 

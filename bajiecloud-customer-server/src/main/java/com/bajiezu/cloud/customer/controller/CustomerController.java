@@ -95,7 +95,7 @@ public class CustomerController {
     @PostMapping("/sensitiveData")
     @Operation(summary = "获取客户非脱敏信息")
 //    @PreAuthorize("@ss.hasPermission('customer:sensitiveData')")
-    public CommonResult<List<CustomerSensitiveResp>> getCustomerSensitiveData(@RequestBody CustomerSensitiveReq reqVO) {
+    public CommonResult<CustomerSensitiveResp> getCustomerSensitiveData(@RequestBody CustomerSensitiveReq reqVO) {
         return CommonResult.success(customerCacheService.getCustomerSensitiveData(reqVO));
     }
 

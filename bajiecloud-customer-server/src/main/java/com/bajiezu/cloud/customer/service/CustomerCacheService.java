@@ -16,7 +16,7 @@ public interface CustomerCacheService {
     CustomerBaseDetail getBaseInfo(Long customerId);
 
 
-    List<CustomerSensitiveResp> getCustomerSensitiveData(CustomerSensitiveReq reqVO);
+    CustomerSensitiveResp getCustomerSensitiveData(CustomerSensitiveReq reqVO);
 
 
     void clearCache(Long customerId);
