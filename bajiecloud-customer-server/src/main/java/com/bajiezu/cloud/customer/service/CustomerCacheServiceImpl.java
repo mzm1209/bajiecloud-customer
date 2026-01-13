@@ -88,7 +88,7 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
         CustomerSensitiveResp resp = new CustomerSensitiveResp();
         for (String param : reqVO.getParams()) {
             Object fieldValue = ReflectUtils.getFieldValue(customer, param);
-            String fieldValueStr = fieldValue == null ? "" : fieldValue.toString();
+            String fieldValueStr = fieldValue == null ? null : fieldValue.toString();
             ReflectUtils.setFieldValue(resp, param, fieldValueStr);
         }
         return resp;
