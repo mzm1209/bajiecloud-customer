@@ -91,7 +91,7 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
 
             CustomerSensitiveResp resp = new CustomerSensitiveResp();
             resp.setParam( param);
-            String fieldValueStr = fieldValue == null ? "" : fieldValue.toString();
+            String fieldValueStr = fieldValue == null ? null : fieldValue.toString();
             resp.setValue(fieldValueStr);
             respVOList.add(resp);
         }
