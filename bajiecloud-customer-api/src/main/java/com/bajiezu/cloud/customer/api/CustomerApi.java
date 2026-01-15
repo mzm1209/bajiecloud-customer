@@ -1,6 +1,7 @@
 package com.bajiezu.cloud.customer.api;
 
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
+import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.api.dto.*;
 import com.bajiezu.cloud.customer.enums.ApiConstants;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,4 +39,8 @@ public interface CustomerApi {
     @PostMapping(PREFIX + "/behaviorHandle")
     @Operation(summary = "用户行为操作记录")
     CommonResult<Boolean> behaviorHandle(@RequestBody CustomerBehaviorDto dto);
+
+    @PostMapping(PREFIX + "/mobileList")
+    @Operation(summary = "手机号查询客户列表")
+    CommonResult<PageResult<CustomerInfoDto>> mobileList(@RequestBody CustomerMobileDto reqVO);
 }

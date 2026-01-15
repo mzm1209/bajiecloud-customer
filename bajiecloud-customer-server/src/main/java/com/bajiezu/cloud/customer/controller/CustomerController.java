@@ -142,4 +142,11 @@ public class CustomerController {
     public CommonResult<CustomerTotalPointRespVO> totalPoint(@RequestBody CustomerBaseReqVO reqVO) {
         return CommonResult.success(behaviorService.customerTotalPoint(reqVO));
     }
+
+    @PostMapping("/mobileList")
+    @Operation(summary = "手机号查询客户列表")
+//    @PreAuthorize("@ss.hasPermission('customer:list')")
+    public CommonResult<PageResult<CustomerInfoRespVO>> mobileList(@RequestBody MobileReqVO reqVO) {
+        return CommonResult.success(customerService.mobileList(reqVO));
+    }
 }

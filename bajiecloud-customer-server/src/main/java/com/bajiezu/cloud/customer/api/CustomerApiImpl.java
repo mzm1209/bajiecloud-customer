@@ -1,16 +1,21 @@
 package com.bajiezu.cloud.customer.api;
 
+import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
+import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.api.dto.*;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorVO;
 import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.service.CustomerBehaviorService;
 import com.bajiezu.cloud.customer.service.CustomerCacheService;
 import com.bajiezu.cloud.customer.service.CustomerService;
+import com.google.common.collect.Lists;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @Validated
@@ -74,5 +79,27 @@ public class CustomerApiImpl implements CustomerApi {
         BeanUtils.copyProperties(dto, behaviorVO);
         customerBehaviorService.handleCustomerBehavior(behaviorVO);
         return CommonResult.success(true);
+    }
+
+    @Override
+    public CommonResult<PageResult<CustomerInfoDto>> mobileList(CustomerMobileDto reqVO) {
+        MobileReqVO mobileReqVO = new MobileReqVO();
+        BeanUtils.copyProperties(reqVO, mobileReqVO);
+        mobileReqVO.setPageNo(reqVO.getPageNo());
+        mobileReqVO.setPageSize(reqVO.getPageSize());
+        PageResult<CustomerInfoRespVO> result = customerService.mobileList(mobileReqVO);
+        if (result == null) {
+            return CommonResult.success(PageResult.empty());
+        }
+        Long count = result.getTotal();
+        List<CustomerInfoDto> infoDtos = Lists.newArrayList();
+        if (CollectionUtils.isNotEmpty(result.getList())) {
+            for (CustomerInfoRespVO respVO : result.getList()) {
+                CustomerInfoDto infoDto = new CustomerInfoDto();
+                BeanUtils.copyProperties(respVO, infoDto);
+                infoDtos.add(infoDto);
+            }
+        }
+        return CommonResult.success(new PageResult<>(infoDtos, count));
     }
 }

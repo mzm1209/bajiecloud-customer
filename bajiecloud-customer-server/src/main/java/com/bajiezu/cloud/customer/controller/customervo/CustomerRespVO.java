@@ -15,6 +15,9 @@ public class CustomerRespVO {
     @Schema(description = "用户ID")
     private Long customerId;
 
+    @Schema(description = "平台统一用户ID")
+    private String platformUid;
+
     @Schema(description = "三方平台用户ID")
     private String thirdPartyId;
 

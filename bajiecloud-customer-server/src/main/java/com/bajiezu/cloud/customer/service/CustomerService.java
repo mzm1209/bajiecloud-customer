@@ -59,6 +59,12 @@ public interface CustomerService {
 
 
     /**
+     *  根据手机号查询客户信息
+     * */
+    PageResult<CustomerInfoRespVO> mobileList(MobileReqVO reqVO);
+
+
+    /**
      *  客户合并
      * */
     void merge();

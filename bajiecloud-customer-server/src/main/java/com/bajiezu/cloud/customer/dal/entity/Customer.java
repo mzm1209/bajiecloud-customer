@@ -22,7 +22,7 @@ public class Customer implements Serializable {
     @TableId(value = "id", type = IdType.AUTO) // 假设由代码分配ID
     private Long id;
 
-    /** 平台统一用户标识 */
+    /** 平台统一用户ID */
     @TableField("platform_uid")
     private String platformUid;
 

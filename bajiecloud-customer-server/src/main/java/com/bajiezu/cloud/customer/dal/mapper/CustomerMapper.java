@@ -21,4 +21,9 @@ public interface CustomerMapper extends BaseMapper<Customer> {
     List<Customer> queryListBy(CustomerListDto dto);
 
     Long queryCountBy(CustomerListDto dto);
+
+
+    List<Customer> queryListByMobile(@Param("mobile") String mobile, @Param("offset") Integer offset, @Param("limit") Integer limit);
+
+    Long queryCountByMobile(@Param("mobile") String mobile);
 }

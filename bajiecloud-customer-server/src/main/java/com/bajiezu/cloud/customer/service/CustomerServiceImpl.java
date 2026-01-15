@@ -409,6 +409,34 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
+    public PageResult<CustomerInfoRespVO> mobileList(MobileReqVO reqVO) {
+        log.info("mobileList req: {}", reqVO);
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+
+        Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
+        Integer limit = reqVO.getPageSize();
+
+        List<Customer> customers = customerMapper.queryListByMobile(reqVO.getMobile(), offset, limit);
+        if (CollectionUtils.isEmpty(customers)) {
+            return PageResult.empty();
+        }
+        Long count = customerMapper.queryCountByMobile(reqVO.getMobile());
+        log.info("mobileList query get count: {}", count);
+
+        List<CustomerInfoRespVO> respVOList = Lists.newArrayList();
+        for (Customer customer : customers) {
+            CustomerInfoRespVO baseReqVO = new CustomerInfoRespVO();
+            baseReqVO.setCustomerId(customer.getId());
+            baseReqVO.setMobile(customer.getMobile());
+            respVOList.add(baseReqVO);
+        }
+        return new PageResult<>(respVOList, count);
+    }
+
+    @Override
     public void merge() {
 
     }
