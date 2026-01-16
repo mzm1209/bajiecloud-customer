@@ -25,6 +25,10 @@ public class CustomerRespVO {
     @ChineseNameDesensitize(prefixKeep = 1)
     private String name;
 
+    @Schema(description = "真实姓名")
+    @ChineseNameDesensitize(prefixKeep = 1)
+    private String realName;
+
     @Schema(description = "手机号")
     @MobileDesensitize
     private String mobile;

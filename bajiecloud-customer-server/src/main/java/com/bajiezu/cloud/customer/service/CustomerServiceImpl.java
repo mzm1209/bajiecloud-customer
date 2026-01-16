@@ -136,6 +136,7 @@ public class CustomerServiceImpl implements CustomerService{
         respVO.setCustomerId(customer.getId());
         respVO.setThirdPartyId(customer.getThirdPartyId());
         respVO.setName(customer.getNickname());
+        respVO.setRealName(customer.getRealName());
         respVO.setMobile(MobileUtils.encryptMobile(customer.getMobile()));
         respVO.setEmail(customer.getEmail());
         respVO.setMemberLevel(customer.getMemberLevel());
