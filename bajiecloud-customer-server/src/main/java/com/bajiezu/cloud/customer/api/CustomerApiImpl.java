@@ -9,7 +9,9 @@ import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.service.CustomerBehaviorService;
 import com.bajiezu.cloud.customer.service.CustomerCacheService;
 import com.bajiezu.cloud.customer.service.CustomerService;
+import com.bajiezu.cloud.customer.utils.Id2NameDto;
 import com.google.common.collect.Lists;
+import java.util.Collection;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -101,5 +103,10 @@ public class CustomerApiImpl implements CustomerApi {
             }
         }
         return CommonResult.success(new PageResult<>(infoDtos, count));
+    }
+
+    @Override
+    public CommonResult<List<Id2NameDto>> queryCustomerNameByIds(Collection<Long> ids) {
+        return CommonResult.success(customerService.queryCustomerNameByIds(ids));
     }
 }

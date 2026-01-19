@@ -3,6 +3,8 @@ package com.bajiezu.cloud.customer.service;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customervo.*;
 
+import com.bajiezu.cloud.customer.utils.Id2NameDto;
+import java.util.Collection;
 import java.util.List;
 
 public interface CustomerService {
@@ -63,6 +65,10 @@ public interface CustomerService {
      * */
     PageResult<CustomerInfoRespVO> mobileList(MobileReqVO reqVO);
 
+    /**
+     *  根据客户ID列表查询客户名称
+     * */
+    List<Id2NameDto> queryCustomerNameByIds(Collection<Long> ids);
 
     /**
      *  客户合并
