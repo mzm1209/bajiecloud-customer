@@ -166,6 +166,7 @@ public class LabelServiceImpl implements LabelService{
             respVO.setRemark(info.getDescription());
             respVO.setStatus(info.getLabelStatus());
             respVO.setCreateTime(info.getCreateTime());
+            respVO.setCustomerSize(0);
             if (finalCustomerInfoMap != null && finalCustomerInfoMap.containsKey(info.getId())) {
                 List<CustomerLabelInfo> customerLabelInfoList = finalCustomerInfoMap.get(info.getId());
                 if (CollectionUtils.isNotEmpty(customerLabelInfoList)) {

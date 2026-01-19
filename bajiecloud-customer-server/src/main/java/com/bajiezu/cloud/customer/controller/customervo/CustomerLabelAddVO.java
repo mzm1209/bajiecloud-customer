@@ -19,11 +19,10 @@ import java.util.List;
 public class CustomerLabelAddVO extends CustomerBaseReqVO{
 
     @Schema(description = "标签ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "[1]")
-    @NotBlank(message = "标签ID不能为空")
     private List<Long> labelIds;
 
     public void validateParam() {
         super.validateParam();
-        Preconditions.checkArgument(CollectionUtils.isNotEmpty(labelIds), "标签ID不能为空");
+//        Preconditions.checkArgument(CollectionUtils.isNotEmpty(labelIds), "标签ID不能为空");
     }
 }
