@@ -11,4 +11,7 @@ public class CustomerInfoDto {
 
     @Schema(description = "手机号")
     private String mobile;
+
+    @Schema(description = "客户名称")
+    private String name;
 }

@@ -4,11 +4,15 @@ import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.api.dto.*;
 import com.bajiezu.cloud.customer.enums.ApiConstants;
+import com.bajiezu.cloud.customer.utils.Id2NameDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Collection;
+import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name = ApiConstants.NAME)
 @Tag(name = "RPC 服务 - 客户服务")
@@ -43,4 +47,8 @@ public interface CustomerApi {
     @PostMapping(PREFIX + "/mobileList")
     @Operation(summary = "手机号查询客户列表")
     CommonResult<PageResult<CustomerInfoDto>> mobileList(@RequestBody CustomerMobileDto reqVO);
+
+    @PostMapping(PREFIX + "/queryCustomerNameByIds")
+    @Operation(summary = "根据客户ID查询客户信息")
+    CommonResult<List<Id2NameDto>> queryCustomerNameByIds(@RequestParam("ids") Collection<Long> ids);
 }

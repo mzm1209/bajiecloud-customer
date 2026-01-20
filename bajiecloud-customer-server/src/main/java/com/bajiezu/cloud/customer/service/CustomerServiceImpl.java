@@ -8,12 +8,15 @@ import com.bajiezu.cloud.customer.dal.dto.CustomerListDto;
 import com.bajiezu.cloud.customer.dal.entity.*;
 import com.bajiezu.cloud.customer.dal.mapper.*;
 import com.bajiezu.cloud.customer.enums.OperateTypeEnum;
+import com.bajiezu.cloud.customer.utils.Id2NameDto;
 import com.bajiezu.cloud.customer.utils.MobileUtils;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import jakarta.annotation.Resource;
+import java.util.Collection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -435,6 +438,25 @@ public class CustomerServiceImpl implements CustomerService{
             respVOList.add(baseReqVO);
         }
         return new PageResult<>(respVOList, count);
+    }
+
+    @Override
+    public List<Id2NameDto> queryCustomerNameByIds(Collection<Long> ids) {
+        if(CollectionUtils.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        List<Customer> customers = customerMapper.selectList(new LambdaQueryWrapper<Customer>().select(Customer::getId, Customer::getNickname).in(Customer::getId, ids));
+        if(CollectionUtils.isEmpty(customers)) {
+            return Collections.emptyList();
+        }
+        List<Id2NameDto> respVOList = Lists.newArrayList();
+        for (Customer customer : customers) {
+            Id2NameDto id2NameDto = new Id2NameDto();
+            id2NameDto.setId(customer.getId());
+            id2NameDto.setName(customer.getNickname());
+            respVOList.add(id2NameDto);
+        }
+        return respVOList;
     }
 
     @Override
