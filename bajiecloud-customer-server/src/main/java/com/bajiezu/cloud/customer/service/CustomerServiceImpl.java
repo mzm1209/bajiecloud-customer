@@ -281,7 +281,7 @@ public class CustomerServiceImpl implements CustomerService{
             customerLabelInfoMapper.batchInsert(addLabels);
         }
         if (CollectionUtils.isNotEmpty(delLabelIds)) {
-            customerLabelInfoMapper.delCustomerLabelIds(addVO.getCustomerId(), delLabelIds, loginUser.getId(), new Date());
+            customerLabelInfoMapper.delCustomerLabelIds(addVO.getCustomerId(), delLabelIds);
         }
 
         CustomerLog customerLog = buildCustomerLog(addVO.getCustomerId(), OperateTypeEnum.ADD_LABEL.getCode(), "", loginUser.getId());

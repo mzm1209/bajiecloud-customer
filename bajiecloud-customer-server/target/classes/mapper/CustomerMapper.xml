@@ -107,4 +107,16 @@
             and in_black_list = #{isBlackCustomer}
         </if>
     </sql>
+
+    <select id="queryListByMobile" resultMap="BaseResultMap">
+        select * from customer
+        where is_deleted = 0 and mobile like concat(#{mobile},'%')
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+
+    <select id="queryCountByMobile" resultType="java.lang.Long">
+        select count(*) from customer
+        where is_deleted = 0 and mobile like concat(#{mobile},'%')
+    </select>
 </mapper>

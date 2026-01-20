@@ -39,7 +39,7 @@
     </insert>
 
     <update id="delCustomerLabelIds">
-        update customer_label_info set is_deleted = 1, updated_by = #{updateBy}, update_time = #{updateTime}
+        delete from customer_label_info
         where customer_id = #{customerId} and label_id in
         <foreach collection="labelIds" open="(" close=")" separator="," item="item">
             #{item}

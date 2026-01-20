@@ -16,6 +16,5 @@ public interface CustomerLabelInfoMapper extends BaseMapper<CustomerLabelInfo> {
 
     void batchInsert(@Param("list") List<CustomerLabelInfo> infos);
 
-    void delCustomerLabelIds(@Param("customerId") Long customerId, @Param("labelIds") List<Long> labelIds,
-                             @Param("updateBy") Long updateBy, @Param("updateTime")Date updateTime);
+    void delCustomerLabelIds(@Param("customerId") Long customerId, @Param("labelIds") List<Long> labelIds);
 }
