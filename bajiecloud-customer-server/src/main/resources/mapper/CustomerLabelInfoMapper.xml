@@ -38,11 +38,11 @@
         </foreach>
     </insert>
 
-    <update id="delCustomerLabelIds">
+    <delete id="delCustomerLabelIds">
         delete from customer_label_info
         where customer_id = #{customerId} and label_id in
         <foreach collection="labelIds" open="(" close=")" separator="," item="item">
             #{item}
         </foreach>
-    </update>
+    </delete>
 </mapper>
