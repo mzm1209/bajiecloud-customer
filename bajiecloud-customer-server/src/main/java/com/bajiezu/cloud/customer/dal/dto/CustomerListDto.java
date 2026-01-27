@@ -18,6 +18,8 @@ public class CustomerListDto {
 
     private List<String> platformNames;
 
+    private List<String> thirdPartyIds;
+
     private Integer isBlackCustomer;
 
     private Integer offset;
