@@ -43,23 +43,24 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
 
     @Override
     public CustomerBaseDetail getBaseInfo(Long customerId) {
-        IRedisKey key = RedisKeyEnum.CUSTOMER_BASE_INFO;
-        String cacheKey = key.prefixedFormat(redisPrefix, customerId);
-        CustomerBaseDetail baseDetail;
+//        IRedisKey key = RedisKeyEnum.CUSTOMER_BASE_INFO;
+//        String cacheKey = key.prefixedFormat(redisPrefix, customerId);
+//        CustomerBaseDetail baseDetail;
+//
+//        String json = redisTemplate.opsForValue().get(cacheKey);
+//        if (StringUtils.isNotBlank(json)) {
+//            try {
+//                baseDetail = JacksonUtil.str2Obj(json, CustomerBaseDetail.class);
+//                return baseDetail;
+//            } catch (IOException e) {
+//                log.error("read redis getBaseInfo json failed, json={}", json, e);
+//            }
+//        }
+//        baseDetail = getBaseInfoFromDB(customerId);
+//        redisTemplate.opsForValue().set(cacheKey, JacksonUtil.obj2Str(baseDetail), key.getExpireTime(), key.getTimeUnit());
+//        return baseDetail;
 
-        String json = redisTemplate.opsForValue().get(cacheKey);
-        if (StringUtils.isNotBlank(json)) {
-            try {
-                baseDetail = JacksonUtil.str2Obj(json, CustomerBaseDetail.class);
-                return baseDetail;
-            } catch (IOException e) {
-                log.error("read redis getBaseInfo json failed, json={}", json, e);
-            }
-        }
-
-        baseDetail = getBaseInfoFromDB(customerId);
-        redisTemplate.opsForValue().set(cacheKey, JacksonUtil.obj2Str(baseDetail), key.getExpireTime(), key.getTimeUnit());
-        return baseDetail;
+        return getBaseInfoFromDB(customerId);
     }
 
 
