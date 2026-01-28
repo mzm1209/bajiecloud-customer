@@ -8,19 +8,7 @@ import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerTotalPointRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerAddressListVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerAddressVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseDetail;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBlackReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerDetailRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerInfoRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerLabelAddVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerLabelRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerListReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerMemberLevelVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.MobileReqVO;
+import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.controller.request.CustomerQueryRequest;
 import com.bajiezu.cloud.customer.dal.dto.CustomerListDto;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
@@ -190,7 +178,7 @@ public class CustomerServiceImpl implements CustomerService {
     // 客户基础信息
     CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
     if (baseDetail == null) {
-      log.error("isBlack CUSTOMER_NOT_EXIST");
+      log.error("detail CUSTOMER_NOT_EXIST");
       throw exception(CUSTOMER_NOT_EXIST);
     }
     // 获取客户关联标签信息
@@ -203,6 +191,28 @@ public class CustomerServiceImpl implements CustomerService {
     detailRespVO.setLabelList(labelList);
 
     return detailRespVO;
+  }
+
+  @Override
+  public CustomerOrderInfo externalInfo(CustomerBaseReqVO reqVO) {
+    log.info("externalInfo req: {}", reqVO);
+    reqVO.validateParam();
+
+    Customer customer = customerMapper.selectById(reqVO.getCustomerId());
+    if (customer == null) {
+      log.error("externalInfo CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    CustomerOrderInfo info = new CustomerOrderInfo();
+    info.setOrderCount(customer.getOrderCount());
+    info.setLastOrderTime(customer.getLastOrderTime());
+
+    CustomerTotalPointRespVO totalPoint = customerBehaviorService.customerTotalPoint(reqVO);
+    if (totalPoint != null) {
+      info.setTotalGrowth(totalPoint.getTotalGrowth());
+      info.setTotalPoint(totalPoint.getTotalPoint());
+    }
+    return info;
   }
 
   @Override
@@ -527,5 +537,16 @@ public class CustomerServiceImpl implements CustomerService {
   @Override
   public void merge() {
 
+  }
+
+  @Override
+  public void customerOrderUpdate(Long customerId) {
+    log.info("customerOrderUpdate customerId: {}", customerId);
+    CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(customerId);
+    if (baseDetail == null) {
+      log.error("addressInfoList CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    customerMapper.updateOrderCountAndLastOrderTime(customerId);
   }
 }

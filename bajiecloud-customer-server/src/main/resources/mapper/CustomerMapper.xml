@@ -125,4 +125,9 @@
         select count(*) from customer
         where is_deleted = 0 and mobile like concat(#{mobile},'%')
     </select>
+
+    <update id="updateOrderCountAndLastOrderTime">
+        update customer set order_count = order_count + 1, last_order_time = now()
+        where id = #{customerId}
+    </update>
 </mapper>

@@ -26,4 +26,6 @@ public interface CustomerMapper extends BaseMapper<Customer> {
     List<Customer> queryListByMobile(@Param("mobile") String mobile, @Param("offset") Integer offset, @Param("limit") Integer limit);
 
     Long queryCountByMobile(@Param("mobile") String mobile);
+
+    void updateOrderCountAndLastOrderTime(@Param("customerId") Long customerId);
 }

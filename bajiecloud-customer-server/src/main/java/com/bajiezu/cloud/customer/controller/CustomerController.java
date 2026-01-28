@@ -6,21 +6,7 @@ import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorListReqVO;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorRespVO;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerTotalPointRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerAddressListVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerAddressVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseDetail;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBlackReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerDetailRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerInfoRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerLabelAddVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerLabelRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerListReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerMemberLevelVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerSensitiveReq;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerSensitiveResp;
-import com.bajiezu.cloud.customer.controller.customervo.MobileReqVO;
+import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.controller.request.CustomerQueryRequest;
 import com.bajiezu.cloud.customer.service.CustomerBehaviorService;
 import com.bajiezu.cloud.customer.service.CustomerCacheService;
@@ -68,8 +54,15 @@ public class CustomerController {
   @PostMapping("/detail")
   @Operation(summary = "客户详情")
 //    @PreAuthorize("@ss.hasPermission('customer:detail')")
-  public CommonResult<CustomerDetailRespVO> mod(@RequestBody CustomerBaseReqVO reqVO) {
+  public CommonResult<CustomerDetailRespVO> detail(@RequestBody CustomerBaseReqVO reqVO) {
     return CommonResult.success(customerService.detail(reqVO));
+  }
+
+  @PostMapping("/externalInfo")
+  @Operation(summary = "客户其他信息")
+//    @PreAuthorize("@ss.hasPermission('customer:detail')")
+  public CommonResult<CustomerOrderInfo> externalInfo(@RequestBody CustomerBaseReqVO reqVO) {
+    return CommonResult.success(customerService.externalInfo(reqVO));
   }
 
   @PostMapping("/isBlack")

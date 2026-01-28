@@ -1,18 +1,7 @@
 package com.bajiezu.cloud.customer.service;
 
 import com.bajiezu.cloud.common.web.pojo.PageResult;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerAddressListVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerAddressVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerBlackReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerDetailRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerInfoRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerLabelAddVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerLabelRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerListReqVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerMemberLevelVO;
-import com.bajiezu.cloud.customer.controller.customervo.CustomerRespVO;
-import com.bajiezu.cloud.customer.controller.customervo.MobileReqVO;
+import com.bajiezu.cloud.customer.controller.customervo.*;
 import com.bajiezu.cloud.customer.controller.request.CustomerQueryRequest;
 import com.bajiezu.cloud.customer.utils.Id2NameDto;
 
@@ -32,6 +21,11 @@ public interface CustomerService {
    * 客户详情
    */
   CustomerDetailRespVO detail(CustomerBaseReqVO reqVO);
+
+  /**
+   * 客户其他信息
+   */
+  CustomerOrderInfo externalInfo(CustomerBaseReqVO reqVO);
 
   /**
    * 拉黑 / 解除拉黑
@@ -88,5 +82,10 @@ public interface CustomerService {
    * 客户合并
    */
   void merge();
+
+  /**
+   *  更新客户下单时间及下单次数
+   * */
+  void customerOrderUpdate(Long customerId);
 
 }
