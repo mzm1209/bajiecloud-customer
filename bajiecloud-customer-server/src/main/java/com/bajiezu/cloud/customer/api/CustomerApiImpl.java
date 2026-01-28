@@ -115,4 +115,10 @@ public class CustomerApiImpl implements CustomerApi {
     public CommonResult<List<Id2NameDto>> queryCustomerNameByIds(Collection<Long> ids) {
         return CommonResult.success(customerService.queryCustomerNameByIds(ids));
     }
+
+    @Override
+    public CommonResult<Boolean> customerOrderUpdate(CustomerBaseDto dto) {
+        customerService.customerOrderUpdate(dto.getCustomerId());
+        return CommonResult.success(true);
+    }
 }

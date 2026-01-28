@@ -51,4 +51,8 @@ public interface CustomerApi {
     @PostMapping(PREFIX + "/queryCustomerNameByIds")
     @Operation(summary = "根据客户ID查询客户信息")
     CommonResult<List<Id2NameDto>> queryCustomerNameByIds(@RequestParam("ids") Collection<Long> ids);
+
+    @PostMapping(PREFIX + "/orderUpdate")
+    @Operation(summary = "客户下单更新数据")
+    CommonResult<Boolean> customerOrderUpdate(@RequestBody CustomerBaseDto dto);
 }
