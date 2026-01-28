@@ -106,6 +106,12 @@
         <if test="isBlackCustomer != null">
             and in_black_list = #{isBlackCustomer}
         </if>
+        <if test="thirdPartyIds != null and thirdPartyIds.size() > 0">
+            and third_party_id in
+            <foreach item="item" collection="thirdPartyIds" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
     </sql>
 
     <select id="queryListByMobile" resultMap="BaseResultMap">
@@ -119,4 +125,9 @@
         select count(*) from customer
         where is_deleted = 0 and mobile like concat(#{mobile},'%')
     </select>
+
+    <update id="updateOrderCountAndLastOrderTime">
+        update customer set order_count = order_count + 1, last_order_time = now()
+        where id = #{customerId}
+    </update>
 </mapper>
