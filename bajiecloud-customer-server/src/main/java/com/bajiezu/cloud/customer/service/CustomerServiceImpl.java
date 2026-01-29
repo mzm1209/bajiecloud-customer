@@ -6,6 +6,7 @@ import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTIO
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerTotalPointRespVO;
 import com.bajiezu.cloud.customer.controller.customervo.*;
@@ -28,21 +29,23 @@ import com.bajiezu.cloud.customer.utils.Id2NameDto;
 import com.bajiezu.cloud.customer.utils.MobileUtils;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
+import com.bajiezu.cloud.marketing.api.vip.MarketingVipGradeApi;
+import com.bajiezu.cloud.marketing.dto.vip.req.MarketingVipGradeReqDTO;
+import com.bajiezu.cloud.marketing.dto.vip.resp.MarketingVipGradeRespDTO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -74,6 +77,13 @@ public class CustomerServiceImpl implements CustomerService {
 
   @Resource
   private CustomerBehaviorService customerBehaviorService;
+
+  @Autowired
+  private AreaService areaService;
+
+
+  @Autowired
+  private MarketingVipGradeApi vipGradeApi;
 
   @Override
   public void mockAddCustomer() {
@@ -136,12 +146,29 @@ public class CustomerServiceImpl implements CustomerService {
     Long count = customerMapper.queryCountBy(dto);
     log.info("list query get count: {}", count);
 
+    Map<Long, String> memberLevelNameMap = Maps.newHashMap();
+    MarketingVipGradeReqDTO gradeReqDTO = new MarketingVipGradeReqDTO();
+    CommonResult<List<MarketingVipGradeRespDTO>> commonResult = vipGradeApi.getVipGradeList(gradeReqDTO);
+    if (commonResult.isSuccess()) {
+      List<MarketingVipGradeRespDTO> data = commonResult.getData();
+      if (CollectionUtils.isNotEmpty(data)) {
+        for (MarketingVipGradeRespDTO gradeRespDTO : data) {
+          memberLevelNameMap.put(gradeRespDTO.getId(), gradeRespDTO.getGradeName());
+        }
+      }
+    }
+    log.info("list query get memberLevelNameMap: {}", memberLevelNameMap);
+
     List<CustomerRespVO> respVOList = Lists.newArrayList();
     for (Customer customer : customers) {
       CustomerBaseReqVO baseReqVO = new CustomerBaseReqVO();
       baseReqVO.setCustomerId(customer.getId());
       CustomerTotalPointRespVO totalPoint = customerBehaviorService.customerTotalPoint(baseReqVO);
       CustomerRespVO respVO = buildCustomerRespVO(customer, totalPoint);
+      Integer memberLevel = customer.getMemberLevel();
+      if (memberLevel != null && memberLevelNameMap.containsKey(memberLevel.longValue())) {
+        respVO.setLevelName(memberLevelNameMap.get(memberLevel.longValue()));
+      }
       respVOList.add(respVO);
     }
     return new PageResult<>(respVOList, count);
@@ -159,6 +186,7 @@ public class CustomerServiceImpl implements CustomerService {
     respVO.setMemberLevel(customer.getMemberLevel());
     respVO.setSourceChannel(customer.getSourceChannel());
     respVO.setPlatformName(customer.getPlatformName());
+    respVO.setOrderCount(customer.getOrderCount());
     respVO.setIsBlackList(customer.getInBlackList());
     respVO.setRegisterTime(customer.getCreateTime());
     respVO.setLastOrderTime(customer.getLastOrderTime());
@@ -442,6 +470,10 @@ public class CustomerServiceImpl implements CustomerService {
       addressVO.setName(address.getReceiverName());
       addressVO.setMobile(address.getReceiverMobile());
       addressVO.setAreaCode(address.getAreaCode());
+      if (StringUtils.isNotEmpty(address.getAreaCode())) {
+        String areaName = areaService.getFullName(address.getAreaCode());
+        addressVO.setAreaName(areaName);
+      }
       addressVO.setStreetAddress(address.getStreetAddress());
       addressVO.setPostCode(address.getPostalCode());
       addressVO.setIsDefault(address.getIsDefault());

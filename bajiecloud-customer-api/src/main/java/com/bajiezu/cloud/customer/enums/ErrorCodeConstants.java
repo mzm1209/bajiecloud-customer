@@ -14,4 +14,7 @@ public interface ErrorCodeConstants {
 
     ErrorCode LABEL_HAVE_CUSTOMER = new ErrorCode(1_004_001_005, "标签关联客户无法删除");
 
+    ErrorCode AREA_CODE_NO_EXIST = new ErrorCode(1_004_001_006, "地区编码不存在");
+
+
 }

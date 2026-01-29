@@ -1,6 +1,7 @@
 package com.bajiezu.cloud.customer.service;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseDetail;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseReqVO;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerSensitiveReq;
@@ -11,8 +12,12 @@ import com.bajiezu.cloud.customer.enums.IRedisKey;
 import com.bajiezu.cloud.customer.enums.RedisKeyEnum;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
 import com.bajiezu.cloud.customer.utils.ReflectUtils;
+import com.bajiezu.cloud.marketing.api.vip.MarketingVipGradeApi;
+import com.bajiezu.cloud.marketing.dto.vip.req.MarketingVipGradeReqDTO;
+import com.bajiezu.cloud.marketing.dto.vip.resp.MarketingVipGradeRespDTO;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_NOT_EXIST;
@@ -39,6 +45,9 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
 
     @Autowired
     private CustomerMapper customerMapper;
+
+    @Autowired
+    private MarketingVipGradeApi vipGradeApi;
 
 
     @Override
@@ -72,7 +81,27 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
             throw exception(CUSTOMER_NOT_EXIST);
         }
         BeanUtils.copyProperties(customer, baseDetail);
+        baseDetail.setWechatId(customer.getWechatId());
+        baseDetail.setWechatMobile(customer.getWechatMobile());
         baseDetail.setCustomerId(customer.getId());
+        baseDetail.setRegisterTime(customer.getCreateTime());
+
+        Map<Long, String> memberLevelNameMap = Maps.newHashMap();
+        MarketingVipGradeReqDTO gradeReqDTO = new MarketingVipGradeReqDTO();
+        CommonResult<List<MarketingVipGradeRespDTO>> commonResult = vipGradeApi.getVipGradeList(gradeReqDTO);
+        if (commonResult.isSuccess()) {
+            List<MarketingVipGradeRespDTO> data = commonResult.getData();
+            if (CollectionUtils.isNotEmpty(data)) {
+                for (MarketingVipGradeRespDTO gradeRespDTO : data) {
+                    memberLevelNameMap.put(gradeRespDTO.getId(), gradeRespDTO.getGradeName());
+                }
+            }
+        }
+        log.info("getBaseInfoFromDB query get memberLevelNameMap: {}", memberLevelNameMap);
+        Integer memberLevel = customer.getMemberLevel();
+        if (memberLevel != null && memberLevelNameMap.containsKey(memberLevel.longValue())) {
+            baseDetail.setLevelName(memberLevelNameMap.get(memberLevel.longValue()));
+        }
         return baseDetail;
     }
 

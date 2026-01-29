@@ -32,6 +32,9 @@ public class CustomerAddressVO extends CustomerBaseReqVO {
     @NotBlank(message = "区县代码不能为空")
     private String areaCode;
 
+    @Schema(description = "地址")
+    private String areaName;
+
     @Schema(description = "详细街道地址", requiredMode = Schema.RequiredMode.REQUIRED, example = "xxx")
     @NotBlank(message = "详细街道地址不能为空")
     private String streetAddress;
