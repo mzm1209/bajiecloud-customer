@@ -7,10 +7,12 @@ import com.bajiezu.cloud.customer.dal.mapper.AreaMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,7 +23,7 @@ import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.AREA_CODE_NO_E
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
 
 @Slf4j
-@Service
+@Component
 public class AreaServiceImpl implements AreaService{
 
     // Area表的数据基本不会发生变化，因此只在启动时初始化地区数据到内存中。
@@ -34,11 +36,15 @@ public class AreaServiceImpl implements AreaService{
     @Autowired
     private AreaMapper areaMapper;
 
-    @EventListener(ApplicationPreparedEvent.class)
+    @PostConstruct
     public void init() {
+        log.info("===== 开始执行区域缓存初始化方法 ====="); // 新增日志
+
         long time = System.currentTimeMillis();
 
         List<Area> list = areaMapper.getAll();
+        log.info("区域数据查询结果：总条数={}，前3条数据={}", list.size(), list.stream().limit(3)
+                .map(a -> "code=" + a.getCode() + ",pcode=" + a.getPcode() + ",level=" + a.getLevel()).collect(Collectors.toList()));
 
         // 直辖市的行政区域代码，降级为市级，代替"市辖区"。
         Set<String> directCities = Sets.newHashSet("110100", "120100", "310100", "500100");
