@@ -43,8 +43,6 @@ public class AreaServiceImpl implements AreaService{
         long time = System.currentTimeMillis();
 
         List<Area> list = areaMapper.getAll();
-        log.info("区域数据查询结果：总条数={}，前3条数据={}", list.size(), list.stream().limit(3)
-                .map(a -> "code=" + a.getCode() + ",pcode=" + a.getPcode() + ",level=" + a.getLevel()).collect(Collectors.toList()));
 
         // 直辖市的行政区域代码，降级为市级，代替"市辖区"。
         Set<String> directCities = Sets.newHashSet("110100", "120100", "310100", "500100");
