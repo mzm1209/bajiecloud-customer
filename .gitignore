@@ -1,3 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Java template
 # Compiled class file
 *.class
 
@@ -21,6 +23,36 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-/.idea/
-*/target/
+
+# Intellij
+.idea/
+.run/
+*.iml
+*.iws
+**/out
+
+**/.gitignore
+
+# Maven
+**/log/
+**/logs/
+**/target
+**/*.log
+**/tmp
+**/.tmp
+**/bin/**
+**/pom.xml.versionsBackup
+**/*tree.txt
+
+# Eclipse
+**/.classpath
+**/.project
+**/.settings/
 .DS_Store
+**/.DS_Store
+**/*.http
+**/**/.rebel-remote.xml.bak
+**/**/rebel.xml
+**/*flattened-pom.xml
+/.vscode/
+**/exportDir
