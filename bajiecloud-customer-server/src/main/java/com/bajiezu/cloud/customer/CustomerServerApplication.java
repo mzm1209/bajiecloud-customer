@@ -3,9 +3,11 @@ package com.bajiezu.cloud.customer;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @MapperScan("com.bajiezu.cloud.customer.dal.mapper.**") // 指定Mapper接口的包路径
+@EnableFeignClients(basePackages = "com.bajiezu.cloud.system.api")
 public class CustomerServerApplication {
 
 

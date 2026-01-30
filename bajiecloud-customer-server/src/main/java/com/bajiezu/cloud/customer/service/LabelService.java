@@ -19,8 +19,6 @@ public interface LabelService {
 
     PageResult<LabelRespVO> list(LabelListReqVO reqVO);
 
-    void export(LabelListReqVO reqVO, HttpServletResponse response);
-
     List<Id2NameDto> queryAllLabel();
 
 }

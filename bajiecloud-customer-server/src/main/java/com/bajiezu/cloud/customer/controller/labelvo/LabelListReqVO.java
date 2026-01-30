@@ -16,4 +16,7 @@ public class LabelListReqVO extends PageParam {
 
     @Schema(description = "标签状态 0: 禁用 1: 启用", example = "1")
     private Integer status;
+
+    @Schema(description = "下载来源")
+    private Integer source;
 }

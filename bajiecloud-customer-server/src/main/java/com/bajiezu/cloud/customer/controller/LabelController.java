@@ -4,10 +4,14 @@ import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.labelvo.*;
 import com.bajiezu.cloud.customer.enums.ApiConstants;
+import com.bajiezu.cloud.customer.service.LabelExportService;
 import com.bajiezu.cloud.customer.service.LabelService;
 import com.bajiezu.cloud.customer.utils.Id2NameDto;
+import com.bajiezu.cloud.framework.security.po.LoginUser;
+import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -31,6 +35,9 @@ public class LabelController {
 
     @Autowired
     private LabelService labelService;
+
+    @Resource
+    private LabelExportService labelExportService;
 
     @PostMapping("/label/add")
     @Operation(summary = "新增")
@@ -76,5 +83,13 @@ public class LabelController {
 //    @PreAuthorize("@ss.hasPermission('customer:label:all')")
     public CommonResult<List<Id2NameDto>> all() {
         return CommonResult.success(labelService.queryAllLabel());
+    }
+
+    @PostMapping("/label/export")
+    @Operation(summary = "导出标准商品")
+    public CommonResult<Boolean> export(@Validated @RequestBody LabelListReqVO exportReqVO) {
+        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        labelExportService.executeDownload(loginUser.getId(), loginUser.getPartnerId(), exportReqVO, exportReqVO.getSource());
+        return CommonResult.success(true);
     }
 }

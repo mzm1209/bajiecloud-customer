@@ -165,6 +165,8 @@ public class LabelServiceImpl implements LabelService{
             respVO.setLabelType(info.getLabelType());
             respVO.setRemark(info.getDescription());
             respVO.setStatus(info.getLabelStatus());
+            String statusDesc = info.getLabelStatus() == 1 ? "启用" : "禁用";
+            respVO.setStatusDesc(statusDesc);
             respVO.setCreateTime(info.getCreateTime());
             respVO.setCustomerSize(0);
             if (finalCustomerInfoMap != null && finalCustomerInfoMap.containsKey(info.getId())) {
@@ -192,13 +194,5 @@ public class LabelServiceImpl implements LabelService{
             }).toList();
         }
         return Collections.emptyList();
-    }
-
-
-    private static final String HEADER_TITLE = "标签管理列表";
-    private static final String[] HEADERS = {"标签名称", "标签描述", "标签类型", "使用状态", "标签人数", "创建时间"};
-    @Override
-    public void export(LabelListReqVO reqVO, HttpServletResponse response) {
-
     }
 }
