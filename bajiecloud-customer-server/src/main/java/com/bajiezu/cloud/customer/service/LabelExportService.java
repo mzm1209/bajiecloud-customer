@@ -39,6 +39,7 @@ public class LabelExportService extends AbstractExportService {
         PageResult<LabelRespVO> pageResult = labelService.list(reqVO);
         List<LabelRespVO> respVOList = Lists.newArrayList();
         while (CollectionUtil.isNotEmpty(pageResult.getList())) {
+            respVOList.addAll(pageResult.getList());
             pageNo++;
             reqVO.setPageNo(pageNo);
             pageResult = labelService.list(reqVO);
