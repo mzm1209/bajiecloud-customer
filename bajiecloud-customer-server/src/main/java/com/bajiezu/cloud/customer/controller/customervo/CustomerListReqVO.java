@@ -31,6 +31,9 @@ public class CustomerListReqVO extends PageParam {
     @Schema(description = "注册来源", example = "1")
     private List<String> platformNames;
 
+    @Schema(description = "访问id列表", example = "1")
+    private List<String> thirdPartyIds;
+
     @Schema(description = "是否是黑名单用户 0:否 1:是", example = "1")
     private Integer isBlackCustomer;
 }

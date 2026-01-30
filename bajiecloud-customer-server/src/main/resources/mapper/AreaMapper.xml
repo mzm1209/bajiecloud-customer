@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bajiezu.cloud.customer.dal.mapper.AreaMapper">
+
+    <resultMap id="BaseResultMap" type="com.bajiezu.cloud.customer.dal.entity.Area">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="code" jdbcType="VARCHAR" property="code" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="pcode" jdbcType="VARCHAR" property="pcode" />
+        <result column="level" jdbcType="INTEGER" property="level" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, code, name, pcode, level
+    </sql>
+
+    <select id="getAll" resultMap="BaseResultMap">
+        select * from area
+        order by level, code
+    </select>
+
+    <select id="selectLatestByName" resultMap="BaseResultMap">
+        SELECT * FROM area WHERE `name` = #{name} ORDER BY id DESC LIMIT 1
+    </select>
+
+    <select id="queryByName" resultMap="BaseResultMap">
+        select * from area where name like concat(#{name}, '%')
+    </select>
+</mapper>

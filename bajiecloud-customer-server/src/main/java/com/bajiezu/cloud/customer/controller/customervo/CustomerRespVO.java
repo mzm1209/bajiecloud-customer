@@ -40,6 +40,9 @@ public class CustomerRespVO {
     @Schema(description = "会员等级")
     private Integer memberLevel;
 
+    @Schema(description = "会员等级名称")
+    private String levelName;
+
     @Schema(description = "累计积分")
     private Long totalPoint;
 

@@ -5,7 +5,9 @@ import lombok.Data;
 @Data
 public class CustomerInfoRespVO {
 
-    private Long customerId;
+  private Long customerId;
 
-    private String mobile;
+  private String mobile;
+
+  private String name;
 }

@@ -54,6 +54,12 @@ public class CustomerApiImpl implements CustomerApi {
         CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(dto.getCustomerId());
         CustomerBaseDetailInfo detailInfo = new CustomerBaseDetailInfo();
         BeanUtils.copyProperties(baseDetail, detailInfo);
+        detailInfo.setEmail(baseDetail.getEmail());
+        detailInfo.setMobile(baseDetail.getMobile());
+        detailInfo.setWechatId(baseDetail.getWechatId());
+        detailInfo.setWechatMobile(baseDetail.getWechatMobile());
+        detailInfo.setIdCard(baseDetail.getIdCard());
+        detailInfo.setRealName(baseDetail.getRealName());
         return CommonResult.success(detailInfo);
     }
 
@@ -108,5 +114,11 @@ public class CustomerApiImpl implements CustomerApi {
     @Override
     public CommonResult<List<Id2NameDto>> queryCustomerNameByIds(Collection<Long> ids) {
         return CommonResult.success(customerService.queryCustomerNameByIds(ids));
+    }
+
+    @Override
+    public CommonResult<Boolean> customerOrderUpdate(CustomerBaseDto dto) {
+        customerService.customerOrderUpdate(dto.getCustomerId());
+        return CommonResult.success(true);
     }
 }

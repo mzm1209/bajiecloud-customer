@@ -39,7 +39,7 @@ public class CustomerBaseDetail {
     private String mobile;
 
     @Schema(description = "邮箱", example = "xxx")
-    @EmailDesensitize
+//    @EmailDesensitize
     private String email;
 
     @Schema(description = "微信ID", example = "xxx")
@@ -64,7 +64,7 @@ public class CustomerBaseDetail {
     private String avatarUrl;
 
     @Schema(description = "真实姓名", example = "xxx")
-    @ChineseNameDesensitize(prefixKeep = 1)
+//    @ChineseNameDesensitize(prefixKeep = 1)
     private String realName;
 
     @Schema(description = "性别：0-未知，1-男，2-女", example = "xxx")
@@ -79,6 +79,9 @@ public class CustomerBaseDetail {
     @Schema(description = "会员等级：0- 普通用户 1-普通会员，2-高级会员，3-VIP会员", example = "xxx")
     private Integer memberLevel;
 
+    @Schema(description = "会员等级：0- 普通用户 1-普通会员，2-高级会员，3-VIP会员")
+    private String levelName;
+
     @Schema(description = "是否进黑名单：0-否，1-是", example = "xxx")
     private Integer isBlackList;
 
@@ -87,4 +90,7 @@ public class CustomerBaseDetail {
 
     @Schema(description = "账户状态：0-禁用，1-正常，2-冻结，3-合并后归档", example = "xxx")
     private Integer accountStatus;
+
+    @Schema(description = "注册时间")
+    private Date registerTime;
 }

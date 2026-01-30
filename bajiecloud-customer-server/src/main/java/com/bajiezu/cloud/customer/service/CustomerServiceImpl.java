@@ -1,466 +1,584 @@
 package com.bajiezu.cloud.customer.service;
 
+import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_NOT_EXIST;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
+
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.common.utils.StringUtils;
+import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerTotalPointRespVO;
 import com.bajiezu.cloud.customer.controller.customervo.*;
+import com.bajiezu.cloud.customer.controller.request.CustomerQueryRequest;
 import com.bajiezu.cloud.customer.dal.dto.CustomerListDto;
-import com.bajiezu.cloud.customer.dal.entity.*;
-import com.bajiezu.cloud.customer.dal.mapper.*;
+import com.bajiezu.cloud.customer.dal.entity.Customer;
+import com.bajiezu.cloud.customer.dal.entity.CustomerAddress;
+import com.bajiezu.cloud.customer.dal.entity.CustomerLabelInfo;
+import com.bajiezu.cloud.customer.dal.entity.CustomerLog;
+import com.bajiezu.cloud.customer.dal.entity.LabelInfo;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerAddressMapper;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerExtMapper;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerLabelInfoMapper;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerLogMapper;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
+import com.bajiezu.cloud.customer.dal.mapper.LabelInfoMapper;
+import com.bajiezu.cloud.customer.dal.mapper.MergeLogMapper;
 import com.bajiezu.cloud.customer.enums.OperateTypeEnum;
 import com.bajiezu.cloud.customer.utils.Id2NameDto;
 import com.bajiezu.cloud.customer.utils.MobileUtils;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
+import com.bajiezu.cloud.marketing.api.vip.MarketingVipGradeApi;
+import com.bajiezu.cloud.marketing.dto.vip.req.MarketingVipGradeReqDTO;
+import com.bajiezu.cloud.marketing.dto.vip.resp.MarketingVipGradeRespDTO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import jakarta.annotation.Resource;
-import java.util.Collection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
-import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
-import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_NOT_EXIST;
-import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class CustomerServiceImpl implements CustomerService{
+public class CustomerServiceImpl implements CustomerService {
 
-    @Autowired
-    private CustomerMapper customerMapper;
+  @Autowired
+  private CustomerMapper customerMapper;
 
-    @Autowired
-    private CustomerLogMapper customerLogMapper;
+  @Autowired
+  private CustomerLogMapper customerLogMapper;
 
-    @Autowired
-    private CustomerExtMapper customerExtMapper;
+  @Autowired
+  private CustomerExtMapper customerExtMapper;
 
-    @Autowired
-    private CustomerAddressMapper customerAddressMapper;
+  @Autowired
+  private CustomerAddressMapper customerAddressMapper;
 
-    @Autowired
-    private CustomerLabelInfoMapper customerLabelInfoMapper;
+  @Autowired
+  private CustomerLabelInfoMapper customerLabelInfoMapper;
 
-    @Autowired
-    private LabelInfoMapper labelInfoMapper;
+  @Autowired
+  private LabelInfoMapper labelInfoMapper;
 
-    @Autowired
-    private MergeLogMapper mergeLogMapper;
+  @Autowired
+  private MergeLogMapper mergeLogMapper;
 
-    @Resource
-    private CustomerCacheService customerCacheService;
+  @Resource
+  private CustomerCacheService customerCacheService;
 
-    @Resource
-    private CustomerBehaviorService customerBehaviorService;
+  @Resource
+  private CustomerBehaviorService customerBehaviorService;
 
-    @Override
-    public void mockAddCustomer() {
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        for (int i = 0; i < 7; i++) {
-            Customer customer = new Customer();
-            String pid = "100_" + i;
-            customer.setPlatformUid(pid);
-            customer.setPlatformName("100");
-            String tid = "101_" + i;
-            customer.setThirdPartyId(tid);
-            customer.setPlatformName("wechat");
-            customer.setSourceChannel("WeChat");
-            customer.setSourceLevel("A");
-            customer.setSourcePoint("100");
-            customer.setMobile("13800000001");
-            customer.setEmail("13800000001@qq.com");
-            String name = "aa_" + i;
-            customer.setNickname(name);
-            customer.setRealName(name);
-            customer.setGender(1);
-            customer.setBirthday(new Date());
-            customer.setMemberLevel(0);
-            customer.setInBlackList(false);
-            customer.setIsAnonymous(false);
-            customer.setAccountStatus(1);
-            customer.setVersion(1);
-            customer.setCreateBy(loginUser.getId());
-            customer.setUpdatedBy(loginUser.getId());
-            customer.setCreateTime(new Date());
-            customer.setUpdateTime(new Date());
-            customer.setIsDeleted(0);
-            customerMapper.insert(customer);
-        }
+  @Autowired
+  private AreaService areaService;
+
+
+  @Autowired
+  private MarketingVipGradeApi vipGradeApi;
+
+  @Override
+  public void mockAddCustomer() {
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
+    }
+    for (int i = 0; i < 7; i++) {
+      Customer customer = new Customer();
+      String pid = "100_" + i;
+      customer.setPlatformUid(pid);
+      customer.setPlatformName("100");
+      String tid = "101_" + i;
+      customer.setThirdPartyId(tid);
+      customer.setPlatformName("wechat");
+      customer.setSourceChannel("WeChat");
+      customer.setSourceLevel("A");
+      customer.setSourcePoint("100");
+      customer.setMobile("13800000001");
+      customer.setEmail("13800000001@qq.com");
+      String name = "aa_" + i;
+      customer.setNickname(name);
+      customer.setRealName(name);
+      customer.setGender(1);
+      customer.setBirthday(new Date());
+      customer.setMemberLevel(0);
+      customer.setInBlackList(false);
+      customer.setIsAnonymous(false);
+      customer.setAccountStatus(1);
+      customer.setVersion(1);
+      customer.setCreateBy(loginUser.getId());
+      customer.setUpdatedBy(loginUser.getId());
+      customer.setCreateTime(new Date());
+      customer.setUpdateTime(new Date());
+      customer.setIsDeleted(0);
+      customerMapper.insert(customer);
+    }
+  }
+
+  @Override
+  public PageResult<CustomerRespVO> list(CustomerListReqVO reqVO) {
+    log.info("list req: {}", reqVO);
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
     }
 
-    @Override
-    public PageResult<CustomerRespVO> list(CustomerListReqVO reqVO) {
-        log.info("list req: {}", reqVO);
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
+    Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
+    Integer limit = reqVO.getPageSize();
 
-        Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
-        Integer limit = reqVO.getPageSize();
+    CustomerListDto dto = new CustomerListDto();
+    BeanUtils.copyProperties(reqVO, dto);
+    dto.setOffset(offset);
+    dto.setLimit(limit);
+    log.info("list query dto: {}", dto);
+    List<Customer> customers = customerMapper.queryListBy(dto);
+    if (CollectionUtils.isEmpty(customers)) {
+      return PageResult.empty();
+    }
+    Long count = customerMapper.queryCountBy(dto);
+    log.info("list query get count: {}", count);
 
-        CustomerListDto dto = new CustomerListDto();
-        BeanUtils.copyProperties(reqVO, dto);
-        dto.setOffset(offset);
-        dto.setLimit(limit);
-        log.info("list query dto: {}", dto);
-        List<Customer> customers = customerMapper.queryListBy(dto);
-        if (CollectionUtils.isEmpty(customers)) {
-            return PageResult.empty();
+    Map<Long, String> memberLevelNameMap = Maps.newHashMap();
+    MarketingVipGradeReqDTO gradeReqDTO = new MarketingVipGradeReqDTO();
+    CommonResult<List<MarketingVipGradeRespDTO>> commonResult = vipGradeApi.getVipGradeList(gradeReqDTO);
+    if (commonResult.isSuccess()) {
+      List<MarketingVipGradeRespDTO> data = commonResult.getData();
+      if (CollectionUtils.isNotEmpty(data)) {
+        for (MarketingVipGradeRespDTO gradeRespDTO : data) {
+          memberLevelNameMap.put(gradeRespDTO.getId(), gradeRespDTO.getGradeName());
         }
-        Long count = customerMapper.queryCountBy(dto);
-        log.info("list query get count: {}", count);
+      }
+    }
+    log.info("list query get memberLevelNameMap: {}", memberLevelNameMap);
 
-        List<CustomerRespVO> respVOList = Lists.newArrayList();
-        for (Customer customer : customers) {
-            CustomerBaseReqVO baseReqVO = new CustomerBaseReqVO();
-            baseReqVO.setCustomerId(customer.getId());
-            CustomerTotalPointRespVO totalPoint = customerBehaviorService.customerTotalPoint(baseReqVO);
-            CustomerRespVO respVO = buildCustomerRespVO(customer, totalPoint);
-            respVOList.add(respVO);
-        }
-        return new PageResult<>(respVOList, count);
+    List<CustomerRespVO> respVOList = Lists.newArrayList();
+    for (Customer customer : customers) {
+      CustomerBaseReqVO baseReqVO = new CustomerBaseReqVO();
+      baseReqVO.setCustomerId(customer.getId());
+      CustomerTotalPointRespVO totalPoint = customerBehaviorService.customerTotalPoint(baseReqVO);
+      CustomerRespVO respVO = buildCustomerRespVO(customer, totalPoint);
+      Integer memberLevel = customer.getMemberLevel();
+      if (memberLevel != null && memberLevelNameMap.containsKey(memberLevel.longValue())) {
+        respVO.setLevelName(memberLevelNameMap.get(memberLevel.longValue()));
+      }
+      respVOList.add(respVO);
+    }
+    return new PageResult<>(respVOList, count);
+  }
+
+
+  private CustomerRespVO buildCustomerRespVO(Customer customer, CustomerTotalPointRespVO totalResp) {
+    CustomerRespVO respVO = new CustomerRespVO();
+    respVO.setCustomerId(customer.getId());
+    respVO.setThirdPartyId(customer.getThirdPartyId());
+    respVO.setName(customer.getNickname());
+    respVO.setRealName(customer.getRealName());
+    respVO.setMobile(MobileUtils.encryptMobile(customer.getMobile()));
+    respVO.setEmail(customer.getEmail());
+    respVO.setMemberLevel(customer.getMemberLevel());
+    respVO.setSourceChannel(customer.getSourceChannel());
+    respVO.setPlatformName(customer.getPlatformName());
+    respVO.setOrderCount(customer.getOrderCount());
+    respVO.setIsBlackList(customer.getInBlackList());
+    respVO.setRegisterTime(customer.getCreateTime());
+    respVO.setLastOrderTime(customer.getLastOrderTime());
+    if (totalResp != null) {
+      respVO.setTotalGrowth(totalResp.getTotalGrowth());
+      respVO.setTotalPoint(totalResp.getTotalPoint());
     }
 
+    return respVO;
+  }
 
-    private CustomerRespVO buildCustomerRespVO(Customer customer, CustomerTotalPointRespVO totalResp) {
-        CustomerRespVO respVO = new CustomerRespVO();
-        respVO.setCustomerId(customer.getId());
-        respVO.setThirdPartyId(customer.getThirdPartyId());
-        respVO.setName(customer.getNickname());
-        respVO.setRealName(customer.getRealName());
-        respVO.setMobile(MobileUtils.encryptMobile(customer.getMobile()));
-        respVO.setEmail(customer.getEmail());
-        respVO.setMemberLevel(customer.getMemberLevel());
-        respVO.setSourceChannel(customer.getSourceChannel());
-        respVO.setPlatformName(customer.getPlatformName());
-        respVO.setIsBlackList(customer.getInBlackList());
-        respVO.setRegisterTime(customer.getCreateTime());
-        respVO.setLastOrderTime(customer.getLastOrderTime());
-        if (totalResp != null) {
-            respVO.setTotalGrowth(totalResp.getTotalGrowth());
-            respVO.setTotalPoint(totalResp.getTotalPoint());
-        }
+  @Override
+  public CustomerDetailRespVO detail(CustomerBaseReqVO reqVO) {
+    log.info("detail req: {}", reqVO);
+    reqVO.validateParam();
 
-        return respVO;
+    // 客户基础信息
+    CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+    if (baseDetail == null) {
+      log.error("detail CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    // 获取客户关联标签信息
+    List<CustomerLabelRespVO> labelList = getLabel(reqVO);
+
+    // todo 获取客户附件或者扩展信息
+
+    CustomerDetailRespVO detailRespVO = new CustomerDetailRespVO();
+    detailRespVO.setBaseDetail(baseDetail);
+    detailRespVO.setLabelList(labelList);
+
+    return detailRespVO;
+  }
+
+  @Override
+  public CustomerOrderInfo externalInfo(CustomerBaseReqVO reqVO) {
+    log.info("externalInfo req: {}", reqVO);
+    reqVO.validateParam();
+
+    Customer customer = customerMapper.selectById(reqVO.getCustomerId());
+    if (customer == null) {
+      log.error("externalInfo CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    CustomerOrderInfo info = new CustomerOrderInfo();
+    info.setOrderCount(customer.getOrderCount());
+    info.setLastOrderTime(customer.getLastOrderTime());
+
+    CustomerTotalPointRespVO totalPoint = customerBehaviorService.customerTotalPoint(reqVO);
+    if (totalPoint != null) {
+      info.setTotalGrowth(totalPoint.getTotalGrowth());
+      info.setTotalPoint(totalPoint.getTotalPoint());
+    }
+    return info;
+  }
+
+  @Override
+  public void isBlack(CustomerBlackReqVO reqVO) {
+    log.info("isBlack req: {}", reqVO);
+    reqVO.validateParam();
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
+    }
+    List<Customer> customers = customerMapper.queryByIds(reqVO.getCustomerIds());
+    if (CollectionUtils.isEmpty(customers)) {
+      log.error("isBlack CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    List<Long> customerIds = customers.stream().map(Customer::getId).toList();
+    log.info("isBlack customerIds: {}", customerIds);
+
+    customerMapper.updateByBlack(reqVO.getIsBlack(), reqVO.getBlackReason(), customerIds, loginUser.getId(),
+        new Date());
+    customerCacheService.batchClearCache(customerIds);
+
+    List<CustomerLog> customerLogs = Lists.newArrayList();
+    for (Long id : customerIds) {
+      String operateType =
+          reqVO.getIsBlack() == 1 ? OperateTypeEnum.IS_BLACK.getCode() : OperateTypeEnum.UN_BLACK.getCode();
+      CustomerLog cLog = buildCustomerLog(id, operateType, reqVO.getBlackReason(), loginUser.getId());
+      customerLogs.add(cLog);
+    }
+    customerLogMapper.batchInsert(customerLogs);
+  }
+
+  private CustomerLog buildCustomerLog(Long customerId, String operateType, String operateReason, Long operatorId) {
+    CustomerLog customerLog = new CustomerLog();
+    customerLog.setCustomerId(customerId);
+    customerLog.setOperateType(operateType);
+    customerLog.setOperatorId(operatorId);
+    customerLog.setActionDesc(operateReason);
+    customerLog.setCreateBy(operatorId);
+    customerLog.setUpdatedBy(operatorId);
+    customerLog.setCreateTime(new Date());
+    customerLog.setUpdateTime(new Date());
+    customerLog.setIsDeleted(0);
+    return customerLog;
+  }
+
+  @Override
+  public List<CustomerLabelRespVO> getLabel(CustomerBaseReqVO reqVO) {
+    log.info("getLabel req: {}", reqVO);
+    reqVO.validateParam();
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
+    }
+    List<CustomerLabelInfo> customerLabelInfos = customerLabelInfoMapper.queryListByCustomerId(reqVO.getCustomerId());
+    if (CollectionUtils.isEmpty(customerLabelInfos)) {
+      return Collections.emptyList();
+    }
+    List<Long> labelIds = customerLabelInfos.stream().map(CustomerLabelInfo::getLabelId).toList();
+    log.info("getLabel labelIds: {}", labelIds);
+
+    List<LabelInfo> labelInfos = labelInfoMapper.queryByIds(labelIds);
+    return labelInfos.stream().map(labelInfo -> {
+      CustomerLabelRespVO respVO = new CustomerLabelRespVO();
+      respVO.setLabelId(labelInfo.getId());
+      respVO.setName(labelInfo.getName());
+      respVO.setLabelType(labelInfo.getLabelType());
+      respVO.setRemark(labelInfo.getDescription());
+      respVO.setStatus(labelInfo.getLabelStatus());
+      respVO.setCreateTime(labelInfo.getCreateTime());
+      return respVO;
+    }).toList();
+  }
+
+  @Override
+  public void addLabel(CustomerLabelAddVO addVO) {
+    log.info("addLabel addVO: {}", addVO);
+    addVO.validateParam();
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
+    }
+    Customer customer = customerMapper.selectById(addVO.getCustomerId());
+    if (customer == null) {
+      log.error("addLabel CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    List<Long> addLabelIds = Lists.newArrayList();
+    List<Long> delLabelIds = Lists.newArrayList();
+
+    List<CustomerLabelInfo> customerLabelInfos = customerLabelInfoMapper.queryListByCustomerId(addVO.getCustomerId());
+    if (CollectionUtils.isEmpty(customerLabelInfos)) {
+      addLabelIds = addVO.getLabelIds();
+    } else {
+      List<Long> existLabelIds = customerLabelInfos.stream().map(CustomerLabelInfo::getLabelId).toList();
+      addLabelIds = addVO.getLabelIds().stream().filter(labelId -> !existLabelIds.contains(labelId)).toList();
+      delLabelIds = existLabelIds.stream().filter(labelId -> !addVO.getLabelIds().contains(labelId)).toList();
     }
 
-    @Override
-    public CustomerDetailRespVO detail(CustomerBaseReqVO reqVO) {
-        log.info("detail req: {}", reqVO);
-        reqVO.validateParam();
-
-        // 客户基础信息
-        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
-        if (baseDetail == null) {
-            log.error("isBlack CUSTOMER_NOT_EXIST");
-            throw exception(CUSTOMER_NOT_EXIST);
-        }
-        // 获取客户关联标签信息
-        List<CustomerLabelRespVO> labelList = getLabel(reqVO);
-
-        // todo 获取客户附件或者扩展信息
-
-        CustomerDetailRespVO detailRespVO = new CustomerDetailRespVO();
-        detailRespVO.setBaseDetail(baseDetail);
-        detailRespVO.setLabelList(labelList);
-
-        return detailRespVO;
+    log.info("addLabel get addLabelIds: {}, delLabelIds: {}", addLabelIds, delLabelIds);
+    if (CollectionUtils.isNotEmpty(addLabelIds)) {
+      List<CustomerLabelInfo> addLabels = Lists.newArrayList();
+      for (Long labelId : addLabelIds) {
+        CustomerLabelInfo customerLabelInfo = buildCustomerLabelInfo(addVO.getCustomerId(), labelId, loginUser.getId());
+        addLabels.add(customerLabelInfo);
+      }
+      customerLabelInfoMapper.batchInsert(addLabels);
+    }
+    if (CollectionUtils.isNotEmpty(delLabelIds)) {
+      customerLabelInfoMapper.delCustomerLabelIds(addVO.getCustomerId(), delLabelIds);
     }
 
-    @Override
-    public void isBlack(CustomerBlackReqVO reqVO) {
-        log.info("isBlack req: {}", reqVO);
-        reqVO.validateParam();
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        List<Customer> customers = customerMapper.queryByIds(reqVO.getCustomerIds());
-        if (CollectionUtils.isEmpty(customers)) {
-            log.error("isBlack CUSTOMER_NOT_EXIST");
-            throw exception(CUSTOMER_NOT_EXIST);
-        }
-        List<Long> customerIds = customers.stream().map(Customer::getId).toList();
-        log.info("isBlack customerIds: {}", customerIds);
+    CustomerLog customerLog =
+        buildCustomerLog(addVO.getCustomerId(), OperateTypeEnum.ADD_LABEL.getCode(), "", loginUser.getId());
+    customerLogMapper.insert(customerLog);
+  }
 
-        customerMapper.updateByBlack(reqVO.getIsBlack(), reqVO.getBlackReason(), customerIds, loginUser.getId(), new Date());
-        customerCacheService.batchClearCache(customerIds);
+  private CustomerLabelInfo buildCustomerLabelInfo(Long customerId, Long labelId, Long operatorId) {
+    CustomerLabelInfo customerLabelInfo = new CustomerLabelInfo();
+    customerLabelInfo.setCustomerId(customerId);
+    customerLabelInfo.setLabelId(labelId);
+    customerLabelInfo.setCreateBy(operatorId);
+    customerLabelInfo.setUpdatedBy(operatorId);
+    customerLabelInfo.setCreateTime(new Date());
+    customerLabelInfo.setUpdateTime(new Date());
+    customerLabelInfo.setIsDeleted(0);
+    return customerLabelInfo;
+  }
 
-        List<CustomerLog> customerLogs = Lists.newArrayList();
-        for (Long id : customerIds) {
-            String operateType = reqVO.getIsBlack() == 1 ? OperateTypeEnum.IS_BLACK.getCode() : OperateTypeEnum.UN_BLACK.getCode();
-            CustomerLog cLog = buildCustomerLog(id, operateType, reqVO.getBlackReason(), loginUser.getId());
-            customerLogs.add(cLog);
-        }
-        customerLogMapper.batchInsert(customerLogs);
+
+  @Override
+  public CustomerMemberLevelVO checkIsMember(CustomerBaseReqVO reqVO) {
+    log.info("checkIsMember req: {}", reqVO);
+    reqVO.validateParam();
+
+    CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+    if (baseDetail == null) {
+      log.error("isBlack CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    CustomerMemberLevelVO levelVO = new CustomerMemberLevelVO();
+    levelVO.setCustomerId(baseDetail.getCustomerId());
+    levelVO.setMemberLevel(baseDetail.getMemberLevel());
+    return levelVO;
+  }
+
+  @Override
+  public void updateMemberLevel(CustomerMemberLevelVO reqVO) {
+    log.info("updateMemberLevel reqVO: {}", reqVO);
+    reqVO.validateParam();
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
+    }
+    Customer customer = customerMapper.selectById(reqVO.getCustomerId());
+    customer.setMemberLevel(reqVO.getMemberLevel());
+    customer.setUpdatedBy(loginUser.getId());
+    customer.setUpdateTime(new Date());
+    customerMapper.updateById(customer);
+
+    customerCacheService.clearCache(reqVO.getCustomerId());
+  }
+
+  @Override
+  public void addAddress(CustomerAddressVO reqVO) {
+    log.info("addAddress reqVO: {}", reqVO);
+    reqVO.validateParam();
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
+    }
+    CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+    if (baseDetail == null) {
+      log.error("addAddress CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
+    }
+    CustomerAddress address = buildCustomerAddress(reqVO, loginUser);
+    customerAddressMapper.insert(address);
+  }
+
+  private CustomerAddress buildCustomerAddress(CustomerAddressVO reqVO, LoginUser user) {
+    CustomerAddress customerAddress = new CustomerAddress();
+    customerAddress.setCustomerId(reqVO.getCustomerId());
+    customerAddress.setAddressType(reqVO.getAddressType());
+    customerAddress.setReceiverName(reqVO.getName());
+    customerAddress.setReceiverMobile(reqVO.getMobile());
+    customerAddress.setAreaCode(reqVO.getAreaCode());
+    customerAddress.setStreetAddress(reqVO.getStreetAddress());
+    customerAddress.setPostalCode(reqVO.getPostCode());
+    customerAddress.setIsDefault(reqVO.getIsDefault());
+    customerAddress.setCreateBy(user.getId());
+    customerAddress.setUpdatedBy(user.getId());
+    customerAddress.setCreateTime(new Date());
+    customerAddress.setUpdateTime(new Date());
+    customerAddress.setIsDeleted(0);
+    return customerAddress;
+  }
+
+  @Override
+  public PageResult<CustomerAddressVO> addressInfoList(CustomerAddressListVO reqVO) {
+    log.info("addressInfoList reqVO: {}", reqVO);
+    Preconditions.checkArgument(reqVO.getCustomerId() != null, "customerId不能为空");
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
+    }
+    CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
+    if (baseDetail == null) {
+      log.error("addressInfoList CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
     }
 
-    private CustomerLog buildCustomerLog(Long customerId, String operateType, String operateReason, Long operatorId) {
-        CustomerLog customerLog = new CustomerLog();
-        customerLog.setCustomerId(customerId);
-        customerLog.setOperateType(operateType);
-        customerLog.setOperatorId(operatorId);
-        customerLog.setActionDesc(operateReason);
-        customerLog.setCreateBy(operatorId);
-        customerLog.setUpdatedBy(operatorId);
-        customerLog.setCreateTime(new Date());
-        customerLog.setUpdateTime(new Date());
-        customerLog.setIsDeleted(0);
-        return customerLog;
+    Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
+    Integer limit = reqVO.getPageSize();
+    List<CustomerAddress> addressList = customerAddressMapper.queryList(reqVO.getCustomerId(), offset, limit);
+    if (CollectionUtils.isEmpty(addressList)) {
+      return PageResult.empty();
+    }
+    Long count = customerAddressMapper.queryCount(reqVO.getCustomerId());
+    log.info("addressInfoList get count: {}", count);
+
+    List<CustomerAddressVO> respVOList = Lists.newArrayList();
+    for (CustomerAddress address : addressList) {
+      CustomerAddressVO addressVO = new CustomerAddressVO();
+      addressVO.setCustomerId(addressVO.getCustomerId());
+      addressVO.setAddressType(address.getAddressType());
+      addressVO.setName(address.getReceiverName());
+      addressVO.setMobile(address.getReceiverMobile());
+      addressVO.setAreaCode(address.getAreaCode());
+      if (StringUtils.isNotEmpty(address.getAreaCode())) {
+        String areaName = areaService.getFullName(address.getAreaCode());
+        addressVO.setAreaName(areaName);
+      }
+      addressVO.setStreetAddress(address.getStreetAddress());
+      addressVO.setPostCode(address.getPostalCode());
+      addressVO.setIsDefault(address.getIsDefault());
+      addressVO.setCreateTime(address.getCreateTime());
+      respVOList.add(addressVO);
+    }
+    return new PageResult<>(respVOList, count);
+  }
+
+  @Override
+  public PageResult<CustomerInfoRespVO> mobileList(MobileReqVO reqVO) {
+    log.info("mobileList req: {}", reqVO);
+    LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+    if (loginUser == null) {
+      throw exception(LOGIN_EXCEPTION);
     }
 
-    @Override
-    public List<CustomerLabelRespVO> getLabel(CustomerBaseReqVO reqVO) {
-        log.info("getLabel req: {}", reqVO);
-        reqVO.validateParam();
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        List<CustomerLabelInfo> customerLabelInfos = customerLabelInfoMapper.queryListByCustomerId(reqVO.getCustomerId());
-        if (CollectionUtils.isEmpty(customerLabelInfos)) {
-            return Collections.emptyList();
-        }
-        List<Long> labelIds = customerLabelInfos.stream().map(CustomerLabelInfo::getLabelId).toList();
-        log.info("getLabel labelIds: {}", labelIds);
+    Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
+    Integer limit = reqVO.getPageSize();
 
-        List<LabelInfo> labelInfos = labelInfoMapper.queryByIds(labelIds);
-        return labelInfos.stream().map(labelInfo -> {
-            CustomerLabelRespVO respVO = new CustomerLabelRespVO();
-            respVO.setLabelId(labelInfo.getId());
-            respVO.setName(labelInfo.getName());
-            respVO.setLabelType(labelInfo.getLabelType());
-            respVO.setRemark(labelInfo.getDescription());
-            respVO.setStatus(labelInfo.getLabelStatus());
-            respVO.setCreateTime(labelInfo.getCreateTime());
-            return respVO;
-        }).toList();
+    List<Customer> customers = customerMapper.queryListByMobile(reqVO.getMobile(), offset, limit);
+    if (CollectionUtils.isEmpty(customers)) {
+      return PageResult.empty();
+    }
+    Long count = customerMapper.queryCountByMobile(reqVO.getMobile());
+    log.info("mobileList query get count: {}", count);
+
+    List<CustomerInfoRespVO> respVOList = Lists.newArrayList();
+    for (Customer customer : customers) {
+      CustomerInfoRespVO baseReqVO = new CustomerInfoRespVO();
+      baseReqVO.setCustomerId(customer.getId());
+      baseReqVO.setMobile(customer.getMobile());
+      respVOList.add(baseReqVO);
+    }
+    return new PageResult<>(respVOList, count);
+  }
+
+  /**
+   * 根据关键字查询客户手机号和姓名
+   *
+   * @param queryRequest 查询请求
+   * @return 客户基本信息列表
+   */
+  @Override
+  public PageResult<CustomerInfoRespVO> querySimpleCustomerInfoByKey(CustomerQueryRequest queryRequest) {
+    if (StringUtils.isEmpty(queryRequest.getKey())) {
+      return PageResult.empty();
+    }
+    Page<Customer> page = queryRequest.toPage(Customer::getUpdateTime, false);
+    LambdaQueryWrapper<Customer> wrapper = new LambdaQueryWrapper<>();
+    wrapper.select(Customer::getId, Customer::getMobile, Customer::getRealName);
+    if (CustomerQueryRequest.QueryType.ALL == queryRequest.getQueryType()) {
+      wrapper.likeRight(Customer::getMobile, queryRequest.getKey())
+          .or().likeRight(Customer::getRealName, queryRequest.getKey());
+    } else if (CustomerQueryRequest.QueryType.MOBILE == queryRequest.getQueryType()) {
+      wrapper.likeRight(Customer::getMobile, queryRequest.getKey());
+    } else if (CustomerQueryRequest.QueryType.NAME == queryRequest.getQueryType()) {
+      wrapper.likeRight(Customer::getRealName, queryRequest.getKey());
     }
 
-    @Override
-    public void addLabel(CustomerLabelAddVO addVO) {
-        log.info("addLabel addVO: {}", addVO);
-        addVO.validateParam();
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        Customer customer = customerMapper.selectById(addVO.getCustomerId());
-        if (customer == null) {
-            log.error("addLabel CUSTOMER_NOT_EXIST");
-            throw exception(CUSTOMER_NOT_EXIST);
-        }
-        List<Long> addLabelIds = Lists.newArrayList();
-        List<Long> delLabelIds = Lists.newArrayList();
+    IPage<Customer> customerPage = customerMapper.selectPage(page, wrapper);
+    IPage<CustomerInfoRespVO> respVOIPage = customerPage.convert(customer -> {
+      CustomerInfoRespVO respVO = new CustomerInfoRespVO();
+      respVO.setCustomerId(customer.getId());
+      respVO.setMobile(customer.getMobile());
+      respVO.setName(customer.getRealName());
+      return respVO;
+    });
+    return PageResult.of(respVOIPage);
+  }
 
-        List<CustomerLabelInfo> customerLabelInfos = customerLabelInfoMapper.queryListByCustomerId(addVO.getCustomerId());
-        if (CollectionUtils.isEmpty(customerLabelInfos)) {
-            addLabelIds = addVO.getLabelIds();
-        }else {
-            List<Long> existLabelIds = customerLabelInfos.stream().map(CustomerLabelInfo::getLabelId).toList();
-            addLabelIds = addVO.getLabelIds().stream().filter(labelId -> !existLabelIds.contains(labelId)).toList();
-            delLabelIds = existLabelIds.stream().filter(labelId -> !addVO.getLabelIds().contains(labelId)).toList();
-        }
 
-        log.info("addLabel get addLabelIds: {}, delLabelIds: {}", addLabelIds, delLabelIds);
-        if (CollectionUtils.isNotEmpty(addLabelIds)) {
-            List<CustomerLabelInfo> addLabels = Lists.newArrayList();
-            for (Long labelId : addLabelIds) {
-                CustomerLabelInfo customerLabelInfo = buildCustomerLabelInfo(addVO.getCustomerId(), labelId, loginUser.getId());
-                addLabels.add(customerLabelInfo);
-            }
-            customerLabelInfoMapper.batchInsert(addLabels);
-        }
-        if (CollectionUtils.isNotEmpty(delLabelIds)) {
-            customerLabelInfoMapper.delCustomerLabelIds(addVO.getCustomerId(), delLabelIds);
-        }
-
-        CustomerLog customerLog = buildCustomerLog(addVO.getCustomerId(), OperateTypeEnum.ADD_LABEL.getCode(), "", loginUser.getId());
-        customerLogMapper.insert(customerLog);
+  @Override
+  public List<Id2NameDto> queryCustomerNameByIds(Collection<Long> ids) {
+    if (CollectionUtils.isEmpty(ids)) {
+      return Collections.emptyList();
     }
-
-    private CustomerLabelInfo buildCustomerLabelInfo(Long customerId, Long labelId, Long operatorId) {
-        CustomerLabelInfo customerLabelInfo = new CustomerLabelInfo();
-        customerLabelInfo.setCustomerId(customerId);
-        customerLabelInfo.setLabelId(labelId);
-        customerLabelInfo.setCreateBy(operatorId);
-        customerLabelInfo.setUpdatedBy(operatorId);
-        customerLabelInfo.setCreateTime(new Date());
-        customerLabelInfo.setUpdateTime(new Date());
-        customerLabelInfo.setIsDeleted(0);
-        return customerLabelInfo;
+    List<Customer> customers = customerMapper.selectList(
+        new LambdaQueryWrapper<Customer>().select(Customer::getId, Customer::getNickname).in(Customer::getId, ids));
+    if (CollectionUtils.isEmpty(customers)) {
+      return Collections.emptyList();
     }
-
-
-    @Override
-    public CustomerMemberLevelVO checkIsMember(CustomerBaseReqVO reqVO) {
-        log.info("checkIsMember req: {}", reqVO);
-        reqVO.validateParam();
-
-        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
-        if (baseDetail == null) {
-            log.error("isBlack CUSTOMER_NOT_EXIST");
-            throw exception(CUSTOMER_NOT_EXIST);
-        }
-        CustomerMemberLevelVO levelVO = new CustomerMemberLevelVO();
-        levelVO.setCustomerId(baseDetail.getCustomerId());
-        levelVO.setMemberLevel(baseDetail.getMemberLevel());
-        return levelVO;
+    List<Id2NameDto> respVOList = Lists.newArrayList();
+    for (Customer customer : customers) {
+      Id2NameDto id2NameDto = new Id2NameDto();
+      id2NameDto.setId(customer.getId());
+      id2NameDto.setName(customer.getNickname());
+      respVOList.add(id2NameDto);
     }
+    return respVOList;
+  }
 
-    @Override
-    public void updateMemberLevel(CustomerMemberLevelVO reqVO) {
-        log.info("updateMemberLevel reqVO: {}", reqVO);
-        reqVO.validateParam();
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        Customer customer = customerMapper.selectById(reqVO.getCustomerId());
-        customer.setMemberLevel(reqVO.getMemberLevel());
-        customer.setUpdatedBy(loginUser.getId());
-        customer.setUpdateTime(new Date());
-        customerMapper.updateById(customer);
+  @Override
+  public void merge() {
 
-        customerCacheService.clearCache(reqVO.getCustomerId());
+  }
+
+  @Override
+  public void customerOrderUpdate(Long customerId) {
+    log.info("customerOrderUpdate customerId: {}", customerId);
+    CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(customerId);
+    if (baseDetail == null) {
+      log.error("addressInfoList CUSTOMER_NOT_EXIST");
+      throw exception(CUSTOMER_NOT_EXIST);
     }
-
-    @Override
-    public void addAddress(CustomerAddressVO reqVO) {
-        log.info("addAddress reqVO: {}", reqVO);
-        reqVO.validateParam();
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
-        if (baseDetail == null) {
-            log.error("addAddress CUSTOMER_NOT_EXIST");
-            throw exception(CUSTOMER_NOT_EXIST);
-        }
-        CustomerAddress address = buildCustomerAddress(reqVO, loginUser);
-        customerAddressMapper.insert(address);
-    }
-
-    private CustomerAddress buildCustomerAddress(CustomerAddressVO reqVO, LoginUser user ) {
-        CustomerAddress customerAddress = new CustomerAddress();
-        customerAddress.setCustomerId(reqVO.getCustomerId());
-        customerAddress.setAddressType(reqVO.getAddressType());
-        customerAddress.setReceiverName(reqVO.getName());
-        customerAddress.setReceiverMobile(reqVO.getMobile());
-        customerAddress.setAreaCode(reqVO.getAreaCode());
-        customerAddress.setStreetAddress(reqVO.getStreetAddress());
-        customerAddress.setPostalCode(reqVO.getPostCode());
-        customerAddress.setIsDefault(reqVO.getIsDefault());
-        customerAddress.setCreateBy(user.getId());
-        customerAddress.setUpdatedBy(user.getId());
-        customerAddress.setCreateTime(new Date());
-        customerAddress.setUpdateTime(new Date());
-        customerAddress.setIsDeleted(0);
-        return customerAddress;
-    }
-
-    @Override
-    public PageResult<CustomerAddressVO> addressInfoList(CustomerAddressListVO reqVO) {
-        log.info("addressInfoList reqVO: {}", reqVO);
-        Preconditions.checkArgument(reqVO.getCustomerId() != null, "customerId不能为空");
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        CustomerBaseDetail baseDetail = customerCacheService.getBaseInfo(reqVO.getCustomerId());
-        if (baseDetail == null) {
-            log.error("addressInfoList CUSTOMER_NOT_EXIST");
-            throw exception(CUSTOMER_NOT_EXIST);
-        }
-
-        Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
-        Integer limit = reqVO.getPageSize();
-        List<CustomerAddress> addressList = customerAddressMapper.queryList(reqVO.getCustomerId(), offset, limit);
-        if (CollectionUtils.isEmpty(addressList)) {
-            return PageResult.empty();
-        }
-        Long count = customerAddressMapper.queryCount(reqVO.getCustomerId());
-        log.info("addressInfoList get count: {}", count);
-
-        List<CustomerAddressVO> respVOList = Lists.newArrayList();
-        for (CustomerAddress address : addressList) {
-            CustomerAddressVO addressVO = new CustomerAddressVO();
-            addressVO.setCustomerId(addressVO.getCustomerId());
-            addressVO.setAddressType(address.getAddressType());
-            addressVO.setName(address.getReceiverName());
-            addressVO.setMobile(address.getReceiverMobile());
-            addressVO.setAreaCode(address.getAreaCode());
-            addressVO.setStreetAddress(address.getStreetAddress());
-            addressVO.setPostCode(address.getPostalCode());
-            addressVO.setIsDefault(address.getIsDefault());
-            addressVO.setCreateTime(address.getCreateTime());
-            respVOList.add(addressVO);
-        }
-        return new PageResult<>(respVOList, count);
-    }
-
-    @Override
-    public PageResult<CustomerInfoRespVO> mobileList(MobileReqVO reqVO) {
-        log.info("mobileList req: {}", reqVO);
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
-        if (loginUser == null) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-
-        Integer offset = (reqVO.getPageNo() - 1) * reqVO.getPageSize();
-        Integer limit = reqVO.getPageSize();
-
-        List<Customer> customers = customerMapper.queryListByMobile(reqVO.getMobile(), offset, limit);
-        if (CollectionUtils.isEmpty(customers)) {
-            return PageResult.empty();
-        }
-        Long count = customerMapper.queryCountByMobile(reqVO.getMobile());
-        log.info("mobileList query get count: {}", count);
-
-        List<CustomerInfoRespVO> respVOList = Lists.newArrayList();
-        for (Customer customer : customers) {
-            CustomerInfoRespVO baseReqVO = new CustomerInfoRespVO();
-            baseReqVO.setCustomerId(customer.getId());
-            baseReqVO.setMobile(customer.getMobile());
-            respVOList.add(baseReqVO);
-        }
-        return new PageResult<>(respVOList, count);
-    }
-
-    @Override
-    public List<Id2NameDto> queryCustomerNameByIds(Collection<Long> ids) {
-        if(CollectionUtils.isEmpty(ids)) {
-            return Collections.emptyList();
-        }
-        List<Customer> customers = customerMapper.selectList(new LambdaQueryWrapper<Customer>().select(Customer::getId, Customer::getNickname).in(Customer::getId, ids));
-        if(CollectionUtils.isEmpty(customers)) {
-            return Collections.emptyList();
-        }
-        List<Id2NameDto> respVOList = Lists.newArrayList();
-        for (Customer customer : customers) {
-            Id2NameDto id2NameDto = new Id2NameDto();
-            id2NameDto.setId(customer.getId());
-            id2NameDto.setName(customer.getNickname());
-            respVOList.add(id2NameDto);
-        }
-        return respVOList;
-    }
-
-    @Override
-    public void merge() {
-
-    }
+    customerMapper.updateOrderCountAndLastOrderTime(customerId);
+  }
 }
