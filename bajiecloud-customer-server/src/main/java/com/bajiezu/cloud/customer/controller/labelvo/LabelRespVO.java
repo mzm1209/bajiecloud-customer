@@ -1,5 +1,6 @@
 package com.bajiezu.cloud.customer.controller.labelvo;
 
+import com.alibaba.excel.annotation.ExcelIgnoreUnannotated;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import java.util.Date;
 
 @Data
+@ExcelIgnoreUnannotated
 public class LabelRespVO {
 
     @Schema(description = "ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
