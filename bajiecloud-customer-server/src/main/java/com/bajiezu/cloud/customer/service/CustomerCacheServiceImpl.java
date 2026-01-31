@@ -85,6 +85,7 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
         baseDetail.setWechatMobile(customer.getWechatMobile());
         baseDetail.setCustomerId(customer.getId());
         baseDetail.setRegisterTime(customer.getCreateTime());
+        baseDetail.setIsBlackList(customer.getInBlackList() ? 1 : 0);
 
         Map<Long, String> memberLevelNameMap = Maps.newHashMap();
         MarketingVipGradeReqDTO gradeReqDTO = new MarketingVipGradeReqDTO();
