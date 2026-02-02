@@ -58,7 +58,7 @@ public class CustomerBaseDetail {
     private String idCardHash;
 
     @Schema(description = "昵称", example = "xxx")
-    private String nickName;
+    private String nickname;
 
     @Schema(description = "头像URL", example = "xxx")
     private String avatarUrl;
@@ -83,7 +83,10 @@ public class CustomerBaseDetail {
     private String levelName;
 
     @Schema(description = "是否进黑名单：0-否，1-是", example = "xxx")
-    private Integer isBlackList;
+    private Integer inBlackList;
+
+    @Schema(description = "进黑名单原因")
+    private String inBlackReason;
 
     @Schema(description = "是否匿名：0-否，1-是", example = "xxx")
     private Integer isAnonymous;
@@ -93,4 +96,25 @@ public class CustomerBaseDetail {
 
     @Schema(description = "注册时间")
     private Date registerTime;
+
+    @Schema(description = "最后登录时间")
+    private Date lastLoginTime;
+
+    @Schema(description = "最后登录IP")
+    private String lastLoginIp;
+
+    @Schema(description = "下单次数")
+    private Integer orderCount;
+
+    @Schema(description = "最后下单时间")
+    private Date lastOrderTime;
+
+    @Schema(description = "最近一次来源")
+    private String lastSource;
+
+    @Schema(description = "紧急联系人姓名")
+    private String emergencyContactName;
+
+    @Schema(description = "版本号")
+    private Integer version;
 }
