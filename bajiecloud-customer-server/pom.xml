@@ -26,6 +26,11 @@
 
     <dependency>
       <groupId>com.bajiezu.cloud</groupId>
+      <artifactId>bajiecloud-spring-boot-starter-rocketmq</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.bajiezu.cloud</groupId>
       <artifactId>bajiecloud-customer-api</artifactId>
     </dependency>
 

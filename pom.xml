@@ -16,6 +16,7 @@
   </modules>
   <properties>
     <bajiecloud-common.version>1.0.0-SNAPSHOT</bajiecloud-common.version>
+    <bajiecloud-framework.version>1.0.0-SNAPSHOT</bajiecloud-framework.version>
   </properties>
 
   <dependencyManagement>
@@ -30,6 +31,12 @@
         <groupId>com.bajiezu.cloud</groupId>
         <artifactId>bajiecloud-customer-api</artifactId>
         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.bajiezu.cloud</groupId>
+        <artifactId>bajiecloud-spring-boot-starter-rocketmq</artifactId>
+        <version>${bajiecloud-framework.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
