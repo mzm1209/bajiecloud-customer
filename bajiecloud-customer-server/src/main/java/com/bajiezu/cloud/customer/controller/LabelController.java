@@ -86,7 +86,7 @@ public class LabelController {
     }
 
     @PostMapping("/label/export")
-    @Operation(summary = "导出标准商品")
+    @Operation(summary = "导出标签")
     public CommonResult<Boolean> export(@Validated @RequestBody LabelListReqVO exportReqVO) {
         LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
         labelExportService.executeDownload(loginUser.getId(), loginUser.getPartnerId(), exportReqVO, exportReqVO.getSource());
