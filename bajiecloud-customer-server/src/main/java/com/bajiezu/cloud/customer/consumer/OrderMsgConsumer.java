@@ -1,8 +1,10 @@
 package com.bajiezu.cloud.customer.consumer;
 
 
+import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorVO;
 import com.bajiezu.cloud.customer.dal.entity.CustomerOrderLog;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerOrderLogMapper;
+import com.bajiezu.cloud.customer.service.CustomerBehaviorService;
 import com.bajiezu.cloud.customer.service.CustomerService;
 import com.fasterxml.jackson.databind.JavaType;
 import jakarta.annotation.Resource;
@@ -33,6 +35,9 @@ public class OrderMsgConsumer extends AbstractRocketMQConsumer{
 
     @Autowired
     private CustomerOrderLogMapper customerOrderLogMapper;
+
+    @Autowired
+    private CustomerBehaviorService customerBehaviorService;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -117,6 +122,14 @@ public class OrderMsgConsumer extends AbstractRocketMQConsumer{
         log.info("handleMessage get msgId: {}, orderNo: {}, customerId: {}, orderId: {}", msgId, orderNo, customerId, orderId);
         insertCustomerOrderLog(msgId, orderNo, customerId, orderId);
         customerService.customerOrderUpdate(customerId);
+        try {
+            CustomerBehaviorVO behaviorVO = new CustomerBehaviorVO();
+            behaviorVO.setCustomerId(customerId);
+            behaviorVO.setBehaviorCode(1);
+            customerBehaviorService.handleCustomerBehavior(behaviorVO);
+        }catch (Exception e) {
+            log.error("handleMessage customerBehavior error");
+        }
     }
 
 
