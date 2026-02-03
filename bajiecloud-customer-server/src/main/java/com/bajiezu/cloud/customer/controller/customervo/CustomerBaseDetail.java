@@ -76,6 +76,9 @@ public class CustomerBaseDetail {
     @Schema(description = "归属地,精确到市的区划代码", example = "xxx")
     private String areaCode;
 
+    @Schema(description = "归属地省市区", example = "xxx")
+    private String areaName;
+
     @Schema(description = "会员等级：0- 普通用户 1-普通会员，2-高级会员，3-VIP会员", example = "xxx")
     private Integer memberLevel;
 

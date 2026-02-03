@@ -209,6 +209,12 @@ public class CustomerServiceImpl implements CustomerService {
       log.error("detail CUSTOMER_NOT_EXIST");
       throw exception(CUSTOMER_NOT_EXIST);
     }
+
+    if (StringUtils.isNotEmpty(baseDetail.getAreaCode())) {
+      String areaName = areaService.getFullName(baseDetail.getAreaCode());
+      baseDetail.setAreaName(areaName);
+    }
+
     // 获取客户关联标签信息
     List<CustomerLabelRespVO> labelList = getLabel(reqVO);
 
