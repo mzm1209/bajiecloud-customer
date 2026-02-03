@@ -64,7 +64,7 @@ public class CustomerBaseDetail {
     private String avatarUrl;
 
     @Schema(description = "真实姓名", example = "xxx")
-//    @ChineseNameDesensitize(prefixKeep = 1)
+    @ChineseNameDesensitize(prefixKeep = 1)
     private String realName;
 
     @Schema(description = "性别：0-未知，1-男，2-女", example = "xxx")
