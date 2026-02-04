@@ -51,7 +51,6 @@ public class CustomerBaseDetail {
     private String wechatMobile;
 
     @Schema(description = "证件号", example = "xxx")
-    @IdCardDesensitize
     private String idCard;
 
     @Schema(description = "年龄", example = "xxx")

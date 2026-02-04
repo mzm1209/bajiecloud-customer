@@ -71,4 +71,25 @@ public class IdCardUtil {
         }
         return age;
     }
+
+    /**
+     * 身份证脱敏：前6位 + 中间* + 后4位
+     * 支持 18位、15位
+     */
+    public static String desensitize(String idCard) {
+        if (idCard == null || idCard.isBlank()) {
+            return idCard;
+        }
+        int len = idCard.length();
+        // 18位：前6 + 中间8个* + 后4
+        if (len == 18) {
+            return idCard.substring(0, 6) + "********" + idCard.substring(14);
+        }
+        // 15位：前6 + 中间5个* + 后3
+        if (len == 15) {
+            return idCard.substring(0, 6) + "*****" + idCard.substring(11);
+        }
+        // 其他长度不处理（或按需求返回原串/空）
+        return idCard;
+    }
 }

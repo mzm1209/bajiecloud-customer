@@ -91,6 +91,9 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
             Integer age = IdCardUtil.getAgeByIdCard(customer.getIdCard());
             baseDetail.setAge(age);
         }
+        if (StringUtils.isNotEmpty(customer.getIdCard())) {
+            baseDetail.setIdCard(IdCardUtil.desensitize(customer.getIdCard()));
+        }
 
         Map<Long, String> memberLevelNameMap = Maps.newHashMap();
         MarketingVipGradeReqDTO gradeReqDTO = new MarketingVipGradeReqDTO();
