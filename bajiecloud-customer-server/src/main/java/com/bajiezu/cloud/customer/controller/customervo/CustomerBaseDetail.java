@@ -54,6 +54,9 @@ public class CustomerBaseDetail {
     @IdCardDesensitize
     private String idCard;
 
+    @Schema(description = "年龄", example = "xxx")
+    private Integer age;
+
     @Schema(description = "证件号hash", example = "xxx")
     private String idCardHash;
 

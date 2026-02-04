@@ -10,6 +10,7 @@ import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.customer.enums.IRedisKey;
 import com.bajiezu.cloud.customer.enums.RedisKeyEnum;
+import com.bajiezu.cloud.customer.utils.IdCardUtil;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
 import com.bajiezu.cloud.customer.utils.ReflectUtils;
 import com.bajiezu.cloud.marketing.api.vip.MarketingVipGradeApi;
@@ -86,6 +87,10 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
         baseDetail.setCustomerId(customer.getId());
         baseDetail.setRegisterTime(customer.getCreateTime());
         baseDetail.setInBlackList(customer.getInBlackList() ? 1 : 0);
+        if (StringUtils.isNotEmpty(customer.getIdCard())) {
+            Integer age = IdCardUtil.getAgeByIdCard(customer.getIdCard());
+            baseDetail.setAge(age);
+        }
 
         Map<Long, String> memberLevelNameMap = Maps.newHashMap();
         MarketingVipGradeReqDTO gradeReqDTO = new MarketingVipGradeReqDTO();
