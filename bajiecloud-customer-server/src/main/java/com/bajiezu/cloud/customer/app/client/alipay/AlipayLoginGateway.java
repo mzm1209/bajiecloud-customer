@@ -1,11 +1,9 @@
 package com.bajiezu.cloud.customer.app.client.alipay;
 
-import com.alipay.api.AlipayClient;
 import com.alipay.api.AlipayApiException;
+import com.alipay.api.AlipayClient;
 import com.alipay.api.request.AlipaySystemOauthTokenRequest;
-import com.alipay.api.request.AlipayUserPhoneGetRequest;
 import com.alipay.api.response.AlipaySystemOauthTokenResponse;
-import com.alipay.api.response.AlipayUserPhoneGetResponse;
 import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +23,19 @@ public class AlipayLoginGateway {
     private ApplicationContext applicationContext;
 
     public String getOpenId(String authCode) {
+        AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
+        return response.getOpenId();
+    }
+
+    public AlipayPhoneInfo getPhone(String authCode) {
+        AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
+        AlipayPhoneInfo info = new AlipayPhoneInfo();
+        info.setOpenId(response.getOpenId());
+        // TODO 当前 SDK 版本缺少 AlipayUserPhoneGetRequest/Response，待升级 SDK 后补充手机号授权获取。
+        return info;
+    }
+
+    private AlipaySystemOauthTokenResponse exchangeToken(String authCode) {
         try {
             AlipayClient client = miniappClient();
             AlipaySystemOauthTokenRequest request = new AlipaySystemOauthTokenRequest();
@@ -34,34 +45,9 @@ public class AlipayLoginGateway {
             if (response == null || !response.isSuccess()) {
                 throw exception(LOGIN_EXCEPTION);
             }
-            return response.getOpenId();
+            return response;
         } catch (AlipayApiException e) {
-            log.error("alipay getOpenId failed", e);
-            throw exception(LOGIN_EXCEPTION);
-        }
-    }
-
-    public AlipayPhoneInfo getPhone(String authCode) {
-        try {
-            AlipayClient client = miniappClient();
-            AlipaySystemOauthTokenRequest tokenRequest = new AlipaySystemOauthTokenRequest();
-            tokenRequest.setGrantType("authorization_code");
-            tokenRequest.setCode(authCode);
-            AlipaySystemOauthTokenResponse tokenResponse = client.certificateExecute(tokenRequest);
-            if (tokenResponse == null || !tokenResponse.isSuccess()) {
-                throw exception(LOGIN_EXCEPTION);
-            }
-
-            AlipayUserPhoneGetRequest request = new AlipayUserPhoneGetRequest();
-            AlipayUserPhoneGetResponse response = client.certificateExecute(request, tokenResponse.getAccessToken());
-            AlipayPhoneInfo info = new AlipayPhoneInfo();
-            info.setOpenId(tokenResponse.getOpenId());
-            if (response != null && response.isSuccess()) {
-                info.setMobile(response.getMobile());
-            }
-            return info;
-        } catch (AlipayApiException e) {
-            log.error("alipay getPhone failed", e);
+            log.error("alipay exchange token failed", e);
             throw exception(LOGIN_EXCEPTION);
         }
     }
