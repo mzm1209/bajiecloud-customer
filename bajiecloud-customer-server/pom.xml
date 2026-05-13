@@ -60,6 +60,11 @@
 
     <dependency>
       <groupId>com.bajiezu.cloud</groupId>
+      <artifactId>bajiecloud-spring-boot-starter-alipay</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.bajiezu.cloud</groupId>
       <artifactId>bajiecloud-system-api</artifactId>
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
