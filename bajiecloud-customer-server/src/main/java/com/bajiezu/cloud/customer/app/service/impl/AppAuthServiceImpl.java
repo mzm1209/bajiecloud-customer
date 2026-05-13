@@ -2,13 +2,13 @@ package com.bajiezu.cloud.customer.app.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
-import com.bajiezu.cloud.customer.app.client.alipay.AlipayLoginGateway;
-import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
 import com.bajiezu.cloud.customer.app.dto.AppAlipayLoginReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppMobileLoginReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppAuthService;
 import com.bajiezu.cloud.customer.app.vo.AppLoginRespVO;
+import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
+import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
@@ -27,9 +27,9 @@ import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTIO
 public class AppAuthServiceImpl implements AppAuthService {
 
     @Resource
-    private AlipayLoginGateway alipayLoginGateway;
-    @Resource
     private CustomerMapper customerMapper;
+    @Resource
+    private AppSmsCodeLogMapper appSmsCodeLogMapper;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -37,58 +37,67 @@ public class AppAuthServiceImpl implements AppAuthService {
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
-        if (StrUtil.isBlank(reqDTO.getAuthCode())) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-        AlipayPhoneInfo phoneInfo = alipayLoginGateway.getPhone(reqDTO.getAuthCode());
-        String openId = phoneInfo.getOpenId();
-        if (StrUtil.isBlank(openId)) {
-            openId = alipayLoginGateway.getOpenId(reqDTO.getAuthCode());
-        }
-        if (StrUtil.isBlank(openId)) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-
-        Customer customer = customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
-                .eq(Customer::getThirdPartyId, openId)
-                .eq(Customer::getSourceChannel, "AliPay")
-                .last("limit 1"));
-        String encryptedMobile = encryptMobileIfPresent(phoneInfo.getMobile());
-        if (customer == null) {
-            customer = new Customer();
-            customer.setThirdPartyId(openId);
-            customer.setSourceChannel("AliPay");
-            customer.setPlatformName("AliPay");
-            customer.setMobile(encryptedMobile);
-            customer.setCreateTime(new Date());
-            customer.setUpdateTime(new Date());
-            customer.setLastLoginTime(new Date());
-            customer.setAccountStatus(1);
-            customer.setIsDeleted(0);
-            customerMapper.insert(customer);
-            // TODO 如果线上 customer 表与 third_party_id 映射策略不同，需要按真实字段重新映射。
-        } else {
-            customer.setLastLoginTime(new Date());
-            if (StrUtil.isNotBlank(encryptedMobile)) {
-                customer.setMobile(encryptedMobile);
-            }
-            customer.setUpdateTime(new Date());
-            customerMapper.updateById(customer);
-        }
-
-        String token = createToken(customer.getId(), maskMobile(phoneInfo.getMobile()), reqDTO.getDeviceId());
-        AppLoginRespVO respVO = new AppLoginRespVO();
-        respVO.setToken(token);
-        respVO.setCustomerId(customer.getId());
-        respVO.setMobile(maskMobile(phoneInfo.getMobile()));
-        respVO.setRealnameStatus(0);
-        respVO.setFaceAuthStatus(0);
-        return respVO;
+        throw exception(LOGIN_EXCEPTION);
     }
 
     @Override
     public AppLoginRespVO mobileLogin(AppMobileLoginReqDTO reqDTO) {
-        return new AppLoginRespVO();
+        if (StrUtil.hasBlank(reqDTO.getCountryCode(), reqDTO.getMobile(), reqDTO.getSmsCode())) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        String mobileHash = SecureUtil.sha256(reqDTO.getCountryCode() + reqDTO.getMobile());
+        AppSmsCodeLogDO log = appSmsCodeLogMapper.selectOne(new LambdaQueryWrapper<AppSmsCodeLogDO>()
+                .eq(AppSmsCodeLogDO::getMobileHash, mobileHash)
+                .eq(AppSmsCodeLogDO::getScene, "LOGIN")
+                .eq(AppSmsCodeLogDO::getVerifyStatus, 0)
+                .ge(AppSmsCodeLogDO::getExpireTime, new Date())
+                .orderByDesc(AppSmsCodeLogDO::getId)
+                .last("limit 1"));
+        if (log == null || log.getVerifyCount() >= 5) throw exception(LOGIN_EXCEPTION);
+        String hash = SecureUtil.sha256(reqDTO.getSmsCode() + log.getSalt());
+        if (!StrUtil.equals(hash, log.getSmsCodeHash())) {
+            log.setVerifyCount(log.getVerifyCount() + 1);
+            log.setUpdateTime(new Date());
+            appSmsCodeLogMapper.updateById(log);
+            throw exception(LOGIN_EXCEPTION);
+        }
+        log.setVerifyStatus(1);
+        log.setUpdateTime(new Date());
+        appSmsCodeLogMapper.updateById(log);
+
+        String encryptedMobile = encryptMobileIfPresent(reqDTO.getMobile());
+        Customer customer = customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
+                .eq(Customer::getMobile, encryptedMobile)
+                .last("limit 1"));
+        if (customer == null) {
+            customer = new Customer();
+            customer.setMobile(encryptedMobile);
+            customer.setSourceChannel(StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
+            customer.setPlatformName("AliPay");
+            customer.setAccountStatus(1);
+            customer.setCreateTime(new Date());
+            customer.setUpdateTime(new Date());
+            customer.setLastLoginTime(new Date());
+            customer.setIsDeleted(0);
+            customerMapper.insert(customer);
+        } else {
+            customer.setLastLoginTime(new Date());
+            customer.setUpdateTime(new Date());
+            customerMapper.updateById(customer);
+        }
+        String masked = maskMobile(reqDTO.getMobile());
+        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId());
+        AppLoginRespVO vo = new AppLoginRespVO();
+        vo.setTokenName("app-user-token");
+        vo.setToken(token);
+        vo.setExpireTime(7200);
+        vo.setCustomerId(customer.getId());
+        vo.setHasMobile(true);
+        vo.setMobile(masked);
+        vo.setRealnameStatus(0);
+        vo.setFaceAuthStatus(0);
+        vo.setAccountStatus(1);
+        return vo;
     }
 
     private String encryptMobileIfPresent(String mobile) {
