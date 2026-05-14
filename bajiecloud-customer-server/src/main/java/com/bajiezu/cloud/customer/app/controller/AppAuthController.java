@@ -28,6 +28,6 @@ public class AppAuthController {
 
     @PostMapping("/mobile-login")
     public CommonResult<AppLoginRespVO> mobileLogin(@RequestBody @Valid AppMobileLoginReqDTO reqDTO) {
-        return CommonResult.success(new AppLoginRespVO());
+        return CommonResult.success(appAuthService.mobileLogin(reqDTO));
     }
 }

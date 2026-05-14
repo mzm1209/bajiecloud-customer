@@ -58,12 +58,17 @@ public class AppSmsServiceImpl implements AppSmsService {
         logDO.setMobile(reqDTO.getMobile());
         logDO.setMobileHash(mobileHash);
         logDO.setScene(reqDTO.getScene());
-        logDO.setSmsCodeHash(codeHash);
-        logDO.setSalt(salt);
-        logDO.setExpireTime(DateUtil.offsetMinute(now, 5));
-        logDO.setVerifyStatus(0);
-        logDO.setVerifyCount(0);
         logDO.setSendStatus(sent ? 1 : 0);
+        if (sent) {
+            logDO.setSmsCodeHash(codeHash);
+            logDO.setSalt(salt);
+            logDO.setExpireTime(DateUtil.offsetMinute(now, 5));
+            logDO.setVerifyStatus(0);
+            logDO.setVerifyCount(0);
+        } else {
+            logDO.setVerifyStatus(2);
+            logDO.setVerifyCount(0);
+        }
         logDO.setDeviceId(reqDTO.getDeviceId());
         logDO.setRequestIp(requestIp);
         logDO.setCreateTime(now);
