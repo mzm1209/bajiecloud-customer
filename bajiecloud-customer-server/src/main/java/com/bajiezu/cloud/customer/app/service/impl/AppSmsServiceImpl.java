@@ -12,24 +12,28 @@ import com.bajiezu.cloud.customer.app.vo.AppSmsSendRespVO;
 import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
 
+@Slf4j
 @Service
 public class AppSmsServiceImpl implements AppSmsService {
     @Resource
     private AppSmsCodeLogMapper appSmsCodeLogMapper;
     @Resource
     private Environment environment;
-    @Resource(name = "weiDaoYunSmsServiceImpl")
-    private Object weiDaoYunSmsService;
+    @Resource
+    private ApplicationContext applicationContext;
 
     @Override
     public AppSmsSendRespVO sendLoginSms(AppSmsSendReqDTO reqDTO, String requestIp) {
@@ -47,38 +51,55 @@ public class AppSmsServiceImpl implements AppSmsService {
         String tpl = environment.getProperty("sms.weidaoyun.login-sms.verificationCodeContent");
         if (StrUtil.isBlank(tpl)) throw exception(LOGIN_EXCEPTION);
         String content = MessageFormat.format(tpl, reqDTO.getCountryCode() + reqDTO.getMobile(), code);
-        boolean sent = sendSms(reqDTO.getMobile(), content);
+        boolean sent = sendBySystemApi(reqDTO.getMobile(), content);
 
-        AppSmsCodeLogDO log = new AppSmsCodeLogDO();
-        log.setCountryCode(reqDTO.getCountryCode());
-        log.setMobile(reqDTO.getMobile());
-        log.setMobileHash(mobileHash);
-        log.setScene(reqDTO.getScene());
-        log.setSmsCodeHash(codeHash);
-        log.setSalt(salt);
-        log.setExpireTime(DateUtil.offsetMinute(now, 5));
-        log.setVerifyStatus(0);
-        log.setVerifyCount(0);
-        log.setSendStatus(sent ? 1 : 0);
-        log.setDeviceId(reqDTO.getDeviceId());
-        log.setRequestIp(requestIp);
-        log.setCreateTime(now);
-        log.setUpdateTime(now);
-        appSmsCodeLogMapper.insert(log);
+        AppSmsCodeLogDO logDO = new AppSmsCodeLogDO();
+        logDO.setCountryCode(reqDTO.getCountryCode());
+        logDO.setMobile(reqDTO.getMobile());
+        logDO.setMobileHash(mobileHash);
+        logDO.setScene(reqDTO.getScene());
+        logDO.setSmsCodeHash(codeHash);
+        logDO.setSalt(salt);
+        logDO.setExpireTime(DateUtil.offsetMinute(now, 5));
+        logDO.setVerifyStatus(0);
+        logDO.setVerifyCount(0);
+        logDO.setSendStatus(sent ? 1 : 0);
+        logDO.setDeviceId(reqDTO.getDeviceId());
+        logDO.setRequestIp(requestIp);
+        logDO.setCreateTime(now);
+        logDO.setUpdateTime(now);
+        appSmsCodeLogMapper.insert(logDO);
         if (!sent) throw exception(LOGIN_EXCEPTION);
-        AppSmsSendRespVO vo = new AppSmsSendRespVO();
-        vo.setCooldownSeconds(60);
-        vo.setExpireSeconds(300);
-        return vo;
+
+        AppSmsSendRespVO respVO = new AppSmsSendRespVO();
+        respVO.setCooldownSeconds(60);
+        respVO.setExpireSeconds(300);
+        return respVO;
     }
 
-    private boolean sendSms(String mobile, String content) {
+    private boolean sendBySystemApi(String mobile, String content) {
         try {
-            weiDaoYunSmsService.getClass().getMethod("sendSingleMessage", String.class, String.class)
-                    .invoke(weiDaoYunSmsService, mobile, content);
+            Object client = resolveSystemSmsClient();
+            Method method = client.getClass().getMethod("sendSingleMessage", String.class, String.class);
+            method.invoke(client, mobile, content);
             return true;
         } catch (Exception e) {
+            log.warn("send sms via system-api failed: {}", e.getMessage());
             return false;
         }
+    }
+
+    private Object resolveSystemSmsClient() {
+        Map<String, Object> beans = applicationContext.getBeansWithAnnotation(org.springframework.cloud.openfeign.FeignClient.class);
+        for (Object bean : beans.values()) {
+            if (bean.getClass().getName().contains("system") || bean.getClass().getName().contains("WeiDao")) {
+                for (Method m : bean.getClass().getMethods()) {
+                    if ("sendSingleMessage".equals(m.getName()) && m.getParameterCount() == 2) {
+                        return bean;
+                    }
+                }
+            }
+        }
+        throw exception(LOGIN_EXCEPTION);
     }
 }
