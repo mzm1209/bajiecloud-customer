@@ -71,6 +71,8 @@ public class AppAuthServiceImpl implements AppAuthService {
                 .last("limit 1"));
         if (customer == null) {
             customer = new Customer();
+            customer.setPlatformUid(buildPlatformUid(reqDTO));
+            customer.setThirdPartyId(reqDTO.getCountryCode() + "_" + reqDTO.getMobile());
             customer.setMobile(encryptedMobile);
             customer.setSourceChannel(StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
             customer.setPlatformName("AliPay");
@@ -98,6 +100,11 @@ public class AppAuthServiceImpl implements AppAuthService {
         vo.setFaceAuthStatus(0);
         vo.setAccountStatus(1);
         return vo;
+    }
+
+
+    private String buildPlatformUid(AppMobileLoginReqDTO reqDTO) {
+        return "app_" + reqDTO.getCountryCode().replace("+", "") + "_" + System.currentTimeMillis();
     }
 
     private String encryptMobileIfPresent(String mobile) {
