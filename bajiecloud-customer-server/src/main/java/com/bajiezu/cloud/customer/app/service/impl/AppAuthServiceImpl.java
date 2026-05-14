@@ -127,13 +127,25 @@ public class AppAuthServiceImpl implements AppAuthService {
 
     private String createToken(Long customerId, String mobile, String deviceId) {
         try {
-            Object tokenService = applicationContext.getBean("appTokenService");
+            Object tokenService = resolveAppTokenService();
             Object loginUser = buildLoginUser(customerId, mobile, deviceId);
             Method method = tokenService.getClass().getMethod("createToken", loginUser.getClass());
             return (String) method.invoke(tokenService, loginUser);
         } catch (Exception e) {
             throw exception(LOGIN_EXCEPTION);
         }
+    }
+
+    private Object resolveAppTokenService() {
+        if (applicationContext.containsBean("appTokenService")) {
+            return applicationContext.getBean("appTokenService");
+        }
+        for (Object bean : applicationContext.getBeansOfType(Object.class).values()) {
+            if (bean.getClass().getSimpleName().contains("AppTokenService")) {
+                return bean;
+            }
+        }
+        throw exception(LOGIN_EXCEPTION);
     }
 
     private Object buildLoginUser(Long customerId, String mobile, String deviceId) throws Exception {
