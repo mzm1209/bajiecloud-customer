@@ -127,21 +127,27 @@ public class AppAuthServiceImpl implements AppAuthService {
 
     private String createToken(Long customerId, String mobile, String deviceId) {
         try {
-            Object tokenService = resolveAppTokenService();
+            Object tokenService = resolveAppLoginTokenService();
             Object loginUser = buildLoginUser(customerId, mobile, deviceId);
-            Method method = tokenService.getClass().getMethod("createToken", loginUser.getClass());
-            return (String) method.invoke(tokenService, loginUser);
+            Method method = tokenService.getClass().getMethod("generateToken", loginUser.getClass());
+            Object tokenRet = method.invoke(tokenService, loginUser);
+            if (tokenRet instanceof String) {
+                return (String) tokenRet;
+            }
+            Method getToken = loginUser.getClass().getMethod("getToken");
+            Object tokenObj = getToken.invoke(loginUser);
+            return tokenObj == null ? null : tokenObj.toString();
         } catch (Exception e) {
             throw exception(LOGIN_EXCEPTION);
         }
     }
 
-    private Object resolveAppTokenService() {
-        if (applicationContext.containsBean("appTokenService")) {
-            return applicationContext.getBean("appTokenService");
+    private Object resolveAppLoginTokenService() {
+        if (applicationContext.containsBean("appLoginTokenService")) {
+            return applicationContext.getBean("appLoginTokenService");
         }
         for (Object bean : applicationContext.getBeansOfType(Object.class).values()) {
-            if (bean.getClass().getSimpleName().contains("AppTokenService")) {
+            if (bean.getClass().getSimpleName().contains("AppLoginTokenService") || bean.getClass().getSimpleName().contains("AppTokenService")) {
                 return bean;
             }
         }
