@@ -26,12 +26,19 @@
 
     <dependency>
       <groupId>com.bajiezu.cloud</groupId>
-      <artifactId>bajiecloud-spring-boot-starter-rocketmq</artifactId>
+      <artifactId>bajiecloud-customer-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>com.bajiezu.cloud</groupId>
-      <artifactId>bajiecloud-customer-api</artifactId>
+      <artifactId>bajiecloud-marketing-api</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.bajiezu.cloud</groupId>
+      <artifactId>bajiecloud-spring-boot-starter-alipay</artifactId>
+      <version>${bajiecloud-common.version}</version>
     </dependency>
 
     <dependency>
@@ -42,8 +49,7 @@
 
     <dependency>
       <groupId>com.bajiezu.cloud</groupId>
-      <artifactId>bajiecloud-marketing-api</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <artifactId>bajiecloud-spring-boot-starter-rocketmq</artifactId>
     </dependency>
 
     <dependency>
@@ -55,12 +61,6 @@
     <dependency>
       <groupId>com.bajiezu.cloud</groupId>
       <artifactId>bajiecloud-spring-boot-starter-security</artifactId>
-      <version>${bajiecloud-common.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.bajiezu.cloud</groupId>
-      <artifactId>bajiecloud-spring-boot-starter-alipay</artifactId>
       <version>${bajiecloud-common.version}</version>
     </dependency>
 

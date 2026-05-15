@@ -74,7 +74,7 @@ public class AppAuthServiceImpl implements AppAuthService {
         if (customer == null) {
             customer = new Customer();
             customer.setPlatformUid(buildPlatformUid(reqDTO));
-            customer.setThirdPartyId(reqDTO.getCountryCode() + "_" + reqDTO.getMobile());
+//            customer.setThirdPartyId(buildPlatformUid(reqDTO));
             customer.setMobile(encryptedMobile);
             customer.setSourceChannel(StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
             customer.setPlatformName("AliPay");
@@ -112,7 +112,7 @@ public class AppAuthServiceImpl implements AppAuthService {
                 .build();
         LoginUser<CustomerInfo> loginUser = new LoginUser<>();
         loginUser.setId(customerId);
-        loginUser.setUserType(UserTypeEnum.APP_CUSTOMER.getValue());
+        loginUser.setUserType(UserTypeEnum.CUSTOMER.getValue());
         loginUser.setLoginType(LoginUser.LoginType.PHONE);
         loginUser.setLoginInfo(customerInfo);
         loginUser.setLoginTime(LocalDateTime.now());
