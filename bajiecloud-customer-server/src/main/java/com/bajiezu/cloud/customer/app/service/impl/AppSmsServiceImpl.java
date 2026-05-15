@@ -11,16 +11,14 @@ import com.bajiezu.cloud.customer.app.service.AppSmsService;
 import com.bajiezu.cloud.customer.app.vo.AppSmsSendRespVO;
 import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
+import com.bajiezu.cloud.system.api.sms.SmsApi;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Date;
-import java.util.Map;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
@@ -33,7 +31,7 @@ public class AppSmsServiceImpl implements AppSmsService {
     @Resource
     private Environment environment;
     @Resource
-    private ApplicationContext applicationContext;
+    private SmsApi smsApi;
 
     @Override
     public AppSmsSendRespVO sendLoginSms(AppSmsSendReqDTO reqDTO, String requestIp) {
@@ -84,27 +82,11 @@ public class AppSmsServiceImpl implements AppSmsService {
 
     private boolean sendBySystemApi(String mobile, String content) {
         try {
-            Object client = resolveSystemSmsClient();
-            Method method = client.getClass().getMethod("sendSingleMessage", String.class, String.class);
-            method.invoke(client, mobile, content);
+            smsApi.sendSingleMessage(mobile, content);
             return true;
         } catch (Exception e) {
             log.warn("send sms via system-api failed: {}", e.getMessage());
             return false;
         }
-    }
-
-    private Object resolveSystemSmsClient() {
-        Map<String, Object> beans = applicationContext.getBeansWithAnnotation(org.springframework.cloud.openfeign.FeignClient.class);
-        for (Object bean : beans.values()) {
-            if (bean.getClass().getName().contains("system") || bean.getClass().getName().contains("WeiDao")) {
-                for (Method m : bean.getClass().getMethods()) {
-                    if ("sendSingleMessage".equals(m.getName()) && m.getParameterCount() == 2) {
-                        return bean;
-                    }
-                }
-            }
-        }
-        throw exception(LOGIN_EXCEPTION);
     }
 }
