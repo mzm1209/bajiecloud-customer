@@ -10,7 +10,7 @@ import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
 import com.bajiezu.cloud.framework.security.po.CustomerInfo;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
-import com.bajiezu.cloud.framework.security.util.SecurityFrameworkUtils;
+import com.bajiezu.cloud.framework.security.util.AppSecurityFrameworkUtils;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -43,7 +43,7 @@ public class AppCustomerServiceImpl implements AppCustomerService {
 
     @Override
     public AppCustomerProfileRespVO getProfile() {
-        LoginUser<?> loginUser = SecurityFrameworkUtils.getLoginUser();
+        LoginUser<?> loginUser = AppSecurityFrameworkUtils.getLoginUser();
         if (loginUser == null || !Objects.equals(loginUser.getUserType(), UserTypeEnum.CUSTOMER.getValue())) {
             throw exception(CUSTOMER_NOT_EXIST);
         }
