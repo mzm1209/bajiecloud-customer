@@ -2,6 +2,7 @@ package com.bajiezu.cloud.customer.app.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.bajiezu.cloud.common.constants.UserTypeEnum;
 import com.bajiezu.cloud.customer.app.dto.AppAlipayLoginReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppMobileLoginReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppAuthService;
@@ -10,13 +11,15 @@ import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
+import com.bajiezu.cloud.framework.security.po.CustomerInfo;
+import com.bajiezu.cloud.framework.security.po.LoginUser;
+import com.bajiezu.cloud.framework.security.service.AppLoginTokenService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
@@ -32,7 +35,7 @@ public class AppAuthServiceImpl implements AppAuthService {
     @Resource
     private Environment environment;
     @Resource
-    private ApplicationContext applicationContext;
+    private AppLoginTokenService appLoginTokenService;
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
@@ -101,71 +104,21 @@ public class AppAuthServiceImpl implements AppAuthService {
         return vo;
     }
 
-    private String createToken(Long customerId, String mobile, String deviceId, String sourceChannel) {
-        try {
-            Object tokenService = resolveAppLoginTokenService();
-            Method generateToken = resolveGenerateTokenMethod(tokenService);
-            Object loginUser = buildPlatformLoginUser(customerId, mobile, deviceId, sourceChannel);
-            Object ret = generateToken.invoke(tokenService, loginUser);
-            if (ret instanceof String) {
-                return (String) ret;
-            }
-            Method getToken = loginUser.getClass().getMethod("getToken");
-            Object token = getToken.invoke(loginUser);
-            return token == null ? null : token.toString();
-        } catch (Exception e) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-    }
-
-    private Object buildPlatformLoginUser(Long customerId, String mobile, String deviceId, String sourceChannel) throws Exception {
-        Class<?> loginUserClass = Class.forName("com.bajiezu.cloud.framework.security.po.LoginUser");
-        Class<?> customerInfoClass = Class.forName("com.bajiezu.cloud.framework.security.po.CustomerInfo");
-        Object loginUser = loginUserClass.getDeclaredConstructor().newInstance();
-        Object customerInfo = customerInfoClass.getDeclaredConstructor().newInstance();
-
-        invokeIfPresent(customerInfo, "setCustomerId", Long.class, customerId);
-        invokeIfPresent(customerInfo, "setUserType", String.class, "APP_CUSTOMER");
-        invokeIfPresent(customerInfo, "setMobile", String.class, mobile);
-        invokeIfPresent(customerInfo, "setMobileBound", Boolean.class, Boolean.TRUE);
-        invokeIfPresent(customerInfo, "setRealnameStatus", Integer.class, 0);
-        invokeIfPresent(customerInfo, "setRealnamePassed", Boolean.class, Boolean.FALSE);
-        invokeIfPresent(customerInfo, "setFaceAuthStatus", Integer.class, 0);
-        invokeIfPresent(customerInfo, "setDeviceId", String.class, deviceId);
-        invokeIfPresent(customerInfo, "setSourceChannel", String.class, sourceChannel);
-
-        invokeIfPresent(loginUser, "setLoginInfo", Object.class, customerInfo);
-        invokeIfPresent(loginUser, "setLoginTime", Date.class, new Date());
-        return loginUser;
-    }
-
-    private Object resolveAppLoginTokenService() {
-        if (applicationContext.containsBean("appLoginTokenService")) {
-            return applicationContext.getBean("appLoginTokenService");
-        }
-        for (Object bean : applicationContext.getBeansOfType(Object.class).values()) {
-            if (bean.getClass().getSimpleName().contains("AppLoginTokenService")) {
-                return bean;
-            }
-        }
-        throw exception(LOGIN_EXCEPTION);
-    }
-
-    private Method resolveGenerateTokenMethod(Object tokenService) {
-        for (Method method : tokenService.getClass().getMethods()) {
-            if ("generateToken".equals(method.getName()) && method.getParameterCount() == 1) {
-                return method;
-            }
-        }
-        throw exception(LOGIN_EXCEPTION);
-    }
-
-    private void invokeIfPresent(Object target, String methodName, Class<?> argType, Object value) {
-        try {
-            Method method = target.getClass().getMethod(methodName, argType);
-            method.invoke(target, value);
-        } catch (Exception ignored) {
-        }
+    private String createToken(Long customerId, String maskedMobile, String deviceId, String sourceChannel) {
+        CustomerInfo customerInfo = CustomerInfo.builder()
+                .customerId(customerId)
+                .phone(maskedMobile)
+                .miniProgramOpenId(String.valueOf(customerId))
+                .build();
+        LoginUser<CustomerInfo> loginUser = new LoginUser<>();
+        loginUser.setId(customerId);
+        loginUser.setUserType(UserTypeEnum.APP_CUSTOMER.getValue());
+        loginUser.setLoginType(LoginUser.LoginType.PHONE);
+        loginUser.setLoginInfo(customerInfo);
+        loginUser.setLoginTime(LocalDateTime.now());
+        loginUser.setLoginSource(sourceChannel);
+        String token = appLoginTokenService.generateToken(loginUser);
+        return StrUtil.isNotBlank(token) ? token : loginUser.getToken();
     }
 
     private String buildPlatformUid(AppMobileLoginReqDTO reqDTO) {
