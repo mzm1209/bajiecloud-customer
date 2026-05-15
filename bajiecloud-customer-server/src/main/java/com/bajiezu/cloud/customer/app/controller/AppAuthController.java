@@ -5,6 +5,7 @@ import com.bajiezu.cloud.customer.app.dto.AppAlipayLoginReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppMobileLoginReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppAuthService;
 import com.bajiezu.cloud.customer.app.vo.AppLoginRespVO;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -22,11 +23,13 @@ public class AppAuthController {
     private AppAuthService appAuthService;
 
     @PostMapping("/alipay-login")
+    @PermitAll
     public CommonResult<AppLoginRespVO> alipayLogin(@RequestBody @Valid AppAlipayLoginReqDTO reqDTO) {
         return CommonResult.success(appAuthService.alipayLogin(reqDTO));
     }
 
     @PostMapping("/mobile-login")
+    @PermitAll
     public CommonResult<AppLoginRespVO> mobileLogin(@RequestBody @Valid AppMobileLoginReqDTO reqDTO) {
         return CommonResult.success(appAuthService.mobileLogin(reqDTO));
     }

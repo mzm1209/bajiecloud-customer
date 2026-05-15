@@ -5,6 +5,7 @@ import com.bajiezu.cloud.customer.app.dto.AppSmsSendReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppSmsService;
 import com.bajiezu.cloud.customer.app.vo.AppSmsSendRespVO;
 import jakarta.annotation.Resource;
+import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ public class AppSmsController {
     private AppSmsService appSmsService;
 
     @PostMapping("/send")
+    @PermitAll
     public CommonResult<AppSmsSendRespVO> send(@RequestBody @Valid AppSmsSendReqDTO reqDTO, HttpServletRequest request) {
         return CommonResult.success(appSmsService.sendLoginSms(reqDTO, request.getRemoteAddr()));
     }
