@@ -48,8 +48,9 @@ public class AppSmsServiceImpl implements AppSmsService {
         String salt = RandomUtil.randomString(16);
         String codeHash = SecureUtil.sha256(code + salt);
         String tpl = environment.getProperty("sms.weidaoyun.login-sms.verificationCodeContent");
-        if (StrUtil.isBlank(tpl)) throw exception(LOGIN_EXCEPTION);
-        String content = MessageFormat.format(tpl, reqDTO.getCountryCode() + reqDTO.getMobile(), code);
+        String defaultSignature = environment.getProperty("sms.weidaoyun.defaultSignature");
+        if (StrUtil.hasBlank(tpl, defaultSignature)) throw exception(LOGIN_EXCEPTION);
+        String content = MessageFormat.format(tpl, defaultSignature, code);
         boolean sent = sendBySystemApi(buildPhone(reqDTO.getCountryCode(), reqDTO.getMobile()), content);
 
         AppSmsCodeLogDO logDO = new AppSmsCodeLogDO();
