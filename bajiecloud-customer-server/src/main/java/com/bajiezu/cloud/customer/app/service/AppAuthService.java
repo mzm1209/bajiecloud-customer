@@ -9,4 +9,6 @@ public interface AppAuthService {
     AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO);
 
     AppLoginRespVO mobileLogin(AppMobileLoginReqDTO reqDTO);
+
+    Boolean logout(String token);
 }

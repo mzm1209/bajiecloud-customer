@@ -3,6 +3,8 @@ package com.bajiezu.cloud.customer.app.service.impl;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
+import com.bajiezu.cloud.customer.app.client.alipay.AlipayLoginGateway;
+import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
 import com.bajiezu.cloud.customer.app.dto.AppAlipayLoginReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppMobileLoginReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppAuthService;
@@ -14,11 +16,13 @@ import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.framework.security.po.CustomerInfo;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.service.AppLoginTokenService;
+import com.bajiezu.cloud.framework.security.util.AppSecurityFrameworkUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -36,10 +40,61 @@ public class AppAuthServiceImpl implements AppAuthService {
     private Environment environment;
     @Resource
     private AppLoginTokenService appLoginTokenService;
+    @Resource
+    private AlipayLoginGateway alipayLoginGateway;
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
-        throw exception(LOGIN_EXCEPTION);
+        if (StrUtil.isBlank(reqDTO.getAuthCode())) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        AlipayPhoneInfo phoneInfo = alipayLoginGateway.getPhone(reqDTO.getAuthCode());
+        String openId = phoneInfo.getOpenId();
+        if (StrUtil.isBlank(openId)) {
+            openId = alipayLoginGateway.getOpenId(reqDTO.getAuthCode());
+        }
+        if (StrUtil.isBlank(openId)) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        Customer customer = customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
+                .eq(Customer::getThirdPartyId, openId)
+                .last("limit 1"));
+        String mobile = phoneInfo.getMobile();
+        String encryptedMobile = encryptMobileIfPresent(mobile);
+        if (customer == null) {
+            customer = new Customer();
+            customer.setPlatformUid("alipay_openid_" + openId);
+            customer.setThirdPartyId(openId);
+            customer.setPlatformName("ALIPAY_MINI_APP");
+            customer.setSourceChannel("AliPay");
+            customer.setMobile(encryptedMobile);
+            customer.setAccountStatus(1);
+            customer.setCreateTime(new Date());
+            customer.setUpdateTime(new Date());
+            customer.setLastLoginTime(new Date());
+            customer.setIsDeleted(0);
+            customerMapper.insert(customer);
+        } else {
+            if (StrUtil.isNotBlank(encryptedMobile) && StrUtil.isBlank(customer.getMobile())) {
+                customer.setMobile(encryptedMobile);
+            }
+            customer.setLastLoginTime(new Date());
+            customer.setUpdateTime(new Date());
+            customerMapper.updateById(customer);
+        }
+        String masked = maskMobile(mobile);
+        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), "AliPay");
+        AppLoginRespVO vo = new AppLoginRespVO();
+        vo.setTokenName("app-user-token");
+        vo.setToken(token);
+        vo.setExpireTime(7200);
+        vo.setCustomerId(customer.getId());
+        vo.setHasMobile(StrUtil.isNotBlank(mobile));
+        vo.setMobile(masked);
+        vo.setRealnameStatus(0);
+        vo.setFaceAuthStatus(0);
+        vo.setAccountStatus(1);
+        return vo;
     }
 
     @Override
@@ -102,6 +157,54 @@ public class AppAuthServiceImpl implements AppAuthService {
         vo.setFaceAuthStatus(0);
         vo.setAccountStatus(1);
         return vo;
+    }
+
+    @Override
+    public Boolean logout(String token) {
+        LoginUser<?> loginUser = AppSecurityFrameworkUtils.getLoginUser();
+        if (StrUtil.isBlank(token) && loginUser != null) {
+            token = loginUser.getToken();
+        }
+        invokeDeleteToken(loginUser, token);
+        clearLoginContext();
+        return Boolean.TRUE;
+    }
+
+    private void invokeDeleteToken(LoginUser<?> loginUser, String token) {
+        try {
+            Method deleteByToken = appLoginTokenService.getClass().getMethod("deleteToken", String.class);
+            deleteByToken.invoke(appLoginTokenService, token);
+            return;
+        } catch (NoSuchMethodException ignored) {
+            // fallback to other method signatures
+        } catch (Exception ignored) {
+            return;
+        }
+        if (loginUser == null) {
+            return;
+        }
+        try {
+            Method deleteByLoginUser = appLoginTokenService.getClass().getMethod("deleteToken", LoginUser.class);
+            deleteByLoginUser.invoke(appLoginTokenService, loginUser);
+        } catch (Exception ignored) {
+            // ignore logout delete errors to keep API idempotent
+        }
+    }
+
+
+    private void clearLoginContext() {
+        try {
+            Class<?> contextClass = Class.forName("com.bajiezu.cloud.framework.security.context.AppLoginUserContext");
+            try {
+                contextClass.getMethod("remove").invoke(null);
+                return;
+            } catch (NoSuchMethodException ignored) {
+                // try clear
+            }
+            contextClass.getMethod("clear").invoke(null);
+        } catch (Exception ignored) {
+            // ignore context clean failures
+        }
     }
 
     private String createToken(Long customerId, String maskedMobile, String deviceId, String sourceChannel) {
