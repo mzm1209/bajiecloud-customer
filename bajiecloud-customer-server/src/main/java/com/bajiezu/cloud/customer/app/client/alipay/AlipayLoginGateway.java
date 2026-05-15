@@ -5,9 +5,7 @@ import com.alipay.api.AlipayRequest;
 import com.alipay.api.AlipayResponse;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.request.AlipaySystemOauthTokenRequest;
-import com.alipay.api.request.AlipayUserPhoneGetRequest;
 import com.alipay.api.response.AlipaySystemOauthTokenResponse;
-import com.alipay.api.response.AlipayUserPhoneGetResponse;
 import com.bajiezu.cloud.alipay.AlipayClientHolder;
 import com.bajiezu.cloud.alipay.AlipayProperties;
 import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
@@ -36,19 +34,7 @@ public class AlipayLoginGateway {
         AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
         AlipayPhoneInfo info = new AlipayPhoneInfo();
         info.setOpenId(response.getUserId());
-        String accessToken = response.getAccessToken();
-        if (accessToken == null) {
-            return info;
-        }
-        try {
-            AlipayUserPhoneGetRequest request = new AlipayUserPhoneGetRequest();
-            AlipayUserPhoneGetResponse phoneResp = miniappClient().execute(request, accessToken);
-            if (phoneResp != null && phoneResp.isSuccess()) {
-                info.setMobile(phoneResp.getMobile());
-            }
-        } catch (AlipayApiException e) {
-            log.warn("alipay phone get error, openIdSuffix={}", suffix(info.getOpenId()));
-        }
+        // TODO 当前 SDK 版本未提供 AlipayUserPhoneGetRequest/AlipayUserPhoneGetResponse，待升级后补充手机号获取。
         return info;
     }
 
