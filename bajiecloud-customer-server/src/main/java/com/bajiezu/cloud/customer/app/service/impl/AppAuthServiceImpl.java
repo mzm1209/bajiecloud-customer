@@ -10,14 +10,13 @@ import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
+import com.bajiezu.cloud.framework.security.app.AppLoginTokenService;
+import com.bajiezu.cloud.framework.security.app.AppLoginUserInfo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Method;
 import java.util.Date;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
@@ -30,10 +29,10 @@ public class AppAuthServiceImpl implements AppAuthService {
     private CustomerMapper customerMapper;
     @Resource
     private AppSmsCodeLogMapper appSmsCodeLogMapper;
-    @Autowired
-    private ApplicationContext applicationContext;
-    @Autowired
+    @Resource
     private Environment environment;
+    @Resource
+    private AppLoginTokenService appLoginTokenService;
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
@@ -102,6 +101,18 @@ public class AppAuthServiceImpl implements AppAuthService {
         return vo;
     }
 
+    private String createToken(Long customerId, String mobile, String deviceId) {
+        AppLoginUserInfo loginUser = new AppLoginUserInfo();
+        loginUser.setCustomerId(customerId);
+        loginUser.setMobile(mobile);
+        loginUser.setUserType("APP_CUSTOMER");
+        loginUser.setRealnameStatus(0);
+        loginUser.setFaceAuthStatus(0);
+        loginUser.setLoginTime(new Date());
+        loginUser.setDeviceId(deviceId);
+        String token = appLoginTokenService.generateToken(loginUser);
+        return StrUtil.isNotBlank(token) ? token : loginUser.getToken();
+    }
 
     private String buildPlatformUid(AppMobileLoginReqDTO reqDTO) {
         return "app_" + reqDTO.getCountryCode().replace("+", "") + "_" + System.currentTimeMillis();
@@ -123,63 +134,5 @@ public class AppAuthServiceImpl implements AppAuthService {
             return mobile;
         }
         return mobile.substring(0, 3) + "****" + mobile.substring(mobile.length() - 4);
-    }
-
-    private String createToken(Long customerId, String mobile, String deviceId) {
-        try {
-            Object tokenService = resolveAppLoginTokenService();
-            Method generateTokenMethod = resolveGenerateTokenMethod(tokenService);
-            Object loginUser = buildLoginUser(generateTokenMethod.getParameterTypes()[0], customerId, mobile, deviceId);
-            Object tokenRet = generateTokenMethod.invoke(tokenService, loginUser);
-            if (tokenRet instanceof String) {
-                return (String) tokenRet;
-            }
-            Method getToken = loginUser.getClass().getMethod("getToken");
-            Object tokenObj = getToken.invoke(loginUser);
-            return tokenObj == null ? null : tokenObj.toString();
-        } catch (Exception e) {
-            throw exception(LOGIN_EXCEPTION);
-        }
-    }
-
-    private Method resolveGenerateTokenMethod(Object tokenService) {
-        for (Method method : tokenService.getClass().getMethods()) {
-            if ("generateToken".equals(method.getName()) && method.getParameterCount() == 1) {
-                return method;
-            }
-        }
-        throw exception(LOGIN_EXCEPTION);
-    }
-
-    private Object resolveAppLoginTokenService() {
-        if (applicationContext.containsBean("appLoginTokenService")) {
-            return applicationContext.getBean("appLoginTokenService");
-        }
-        for (Object bean : applicationContext.getBeansOfType(Object.class).values()) {
-            if (bean.getClass().getSimpleName().contains("AppLoginTokenService") || bean.getClass().getSimpleName().contains("AppTokenService")) {
-                return bean;
-            }
-        }
-        throw exception(LOGIN_EXCEPTION);
-    }
-
-    private Object buildLoginUser(Class<?> loginUserClass, Long customerId, String mobile, String deviceId) throws Exception {
-        Object obj = loginUserClass.getDeclaredConstructor().newInstance();
-        invokeIfPresent(obj, "setCustomerId", Long.class, customerId);
-        invokeIfPresent(obj, "setMobile", String.class, mobile);
-        invokeIfPresent(obj, "setUserType", String.class, "APP_CUSTOMER");
-        invokeIfPresent(obj, "setRealnameStatus", Integer.class, 0);
-        invokeIfPresent(obj, "setFaceAuthStatus", Integer.class, 0);
-        invokeIfPresent(obj, "setLoginTime", Date.class, new Date());
-        invokeIfPresent(obj, "setDeviceId", String.class, deviceId);
-        return obj;
-    }
-
-    private void invokeIfPresent(Object target, String methodName, Class<?> argType, Object value) {
-        try {
-            Method method = target.getClass().getMethod(methodName, argType);
-            method.invoke(target, value);
-        } catch (Exception ignored) {
-        }
     }
 }
