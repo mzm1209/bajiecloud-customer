@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 import java.util.Date;
+import java.util.Objects;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
@@ -49,7 +50,7 @@ public class AppSmsServiceImpl implements AppSmsService {
         String tpl = environment.getProperty("sms.weidaoyun.login-sms.verificationCodeContent");
         if (StrUtil.isBlank(tpl)) throw exception(LOGIN_EXCEPTION);
         String content = MessageFormat.format(tpl, reqDTO.getCountryCode() + reqDTO.getMobile(), code);
-        boolean sent = sendBySystemApi(reqDTO.getMobile(), content);
+        boolean sent = sendBySystemApi(buildPhone(reqDTO.getCountryCode(), reqDTO.getMobile()), content);
 
         AppSmsCodeLogDO logDO = new AppSmsCodeLogDO();
         logDO.setCountryCode(reqDTO.getCountryCode());
@@ -82,10 +83,37 @@ public class AppSmsServiceImpl implements AppSmsService {
 
     private boolean sendBySystemApi(String mobile, String content) {
         try {
-            smsApi.sendSingleMessage(mobile, content);
-            return true;
+            Object resp = smsApi.sendSingleMessage(mobile, content);
+            return isSendSuccess(resp);
         } catch (Exception e) {
             log.warn("send sms via system-api failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private String buildPhone(String countryCode, String mobile) {
+        if (StrUtil.isBlank(countryCode)) {
+            return mobile;
+        }
+        String cc = StrUtil.trim(countryCode).replace(" ", "");
+        if (cc.startsWith("+")) {
+            cc = cc.substring(1);
+        }
+        return cc + mobile;
+    }
+
+    private boolean isSendSuccess(Object response) {
+        if (response == null) {
+            return false;
+        }
+        try {
+            Object code = response.getClass().getMethod("getCode").invoke(response);
+            if (code instanceof Number number) {
+                return number.intValue() == 0;
+            }
+            return Objects.equals("0", String.valueOf(code));
+        } catch (Exception ignored) {
+            log.warn("unable to parse sms response code, responseClass={}", response.getClass().getName());
             return false;
         }
     }
