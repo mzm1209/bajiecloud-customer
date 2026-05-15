@@ -3,6 +3,8 @@ package com.bajiezu.cloud.customer.app.service.impl;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
+import com.bajiezu.cloud.customer.app.client.alipay.AlipayLoginGateway;
+import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
 import com.bajiezu.cloud.customer.app.dto.AppAlipayLoginReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppMobileLoginReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppAuthService;
@@ -38,10 +40,61 @@ public class AppAuthServiceImpl implements AppAuthService {
     private Environment environment;
     @Resource
     private AppLoginTokenService appLoginTokenService;
+    @Resource
+    private AlipayLoginGateway alipayLoginGateway;
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
-        throw exception(LOGIN_EXCEPTION);
+        if (StrUtil.isBlank(reqDTO.getAuthCode())) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        AlipayPhoneInfo phoneInfo = alipayLoginGateway.getPhone(reqDTO.getAuthCode());
+        String openId = phoneInfo.getOpenId();
+        if (StrUtil.isBlank(openId)) {
+            openId = alipayLoginGateway.getOpenId(reqDTO.getAuthCode());
+        }
+        if (StrUtil.isBlank(openId)) {
+            throw exception(LOGIN_EXCEPTION);
+        }
+        Customer customer = customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
+                .eq(Customer::getThirdPartyId, openId)
+                .last("limit 1"));
+        String mobile = phoneInfo.getMobile();
+        String encryptedMobile = encryptMobileIfPresent(mobile);
+        if (customer == null) {
+            customer = new Customer();
+            customer.setPlatformUid("alipay_openid_" + openId);
+            customer.setThirdPartyId(openId);
+            customer.setPlatformName("ALIPAY_MINI_APP");
+            customer.setSourceChannel("AliPay");
+            customer.setMobile(encryptedMobile);
+            customer.setAccountStatus(1);
+            customer.setCreateTime(new Date());
+            customer.setUpdateTime(new Date());
+            customer.setLastLoginTime(new Date());
+            customer.setIsDeleted(0);
+            customerMapper.insert(customer);
+        } else {
+            if (StrUtil.isNotBlank(encryptedMobile) && StrUtil.isBlank(customer.getMobile())) {
+                customer.setMobile(encryptedMobile);
+            }
+            customer.setLastLoginTime(new Date());
+            customer.setUpdateTime(new Date());
+            customerMapper.updateById(customer);
+        }
+        String masked = maskMobile(mobile);
+        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), "AliPay");
+        AppLoginRespVO vo = new AppLoginRespVO();
+        vo.setTokenName("app-user-token");
+        vo.setToken(token);
+        vo.setExpireTime(7200);
+        vo.setCustomerId(customer.getId());
+        vo.setHasMobile(StrUtil.isNotBlank(mobile));
+        vo.setMobile(masked);
+        vo.setRealnameStatus(0);
+        vo.setFaceAuthStatus(0);
+        vo.setAccountStatus(1);
+        return vo;
     }
 
     @Override
