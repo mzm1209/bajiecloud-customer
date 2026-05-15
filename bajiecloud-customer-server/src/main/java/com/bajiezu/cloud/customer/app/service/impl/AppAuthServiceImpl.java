@@ -128,9 +128,9 @@ public class AppAuthServiceImpl implements AppAuthService {
     private String createToken(Long customerId, String mobile, String deviceId) {
         try {
             Object tokenService = resolveAppLoginTokenService();
-            Object loginUser = buildLoginUser(customerId, mobile, deviceId);
-            Method method = tokenService.getClass().getMethod("generateToken", loginUser.getClass());
-            Object tokenRet = method.invoke(tokenService, loginUser);
+            Method generateTokenMethod = resolveGenerateTokenMethod(tokenService);
+            Object loginUser = buildLoginUser(generateTokenMethod.getParameterTypes()[0], customerId, mobile, deviceId);
+            Object tokenRet = generateTokenMethod.invoke(tokenService, loginUser);
             if (tokenRet instanceof String) {
                 return (String) tokenRet;
             }
@@ -140,6 +140,15 @@ public class AppAuthServiceImpl implements AppAuthService {
         } catch (Exception e) {
             throw exception(LOGIN_EXCEPTION);
         }
+    }
+
+    private Method resolveGenerateTokenMethod(Object tokenService) {
+        for (Method method : tokenService.getClass().getMethods()) {
+            if ("generateToken".equals(method.getName()) && method.getParameterCount() == 1) {
+                return method;
+            }
+        }
+        throw exception(LOGIN_EXCEPTION);
     }
 
     private Object resolveAppLoginTokenService() {
@@ -154,16 +163,23 @@ public class AppAuthServiceImpl implements AppAuthService {
         throw exception(LOGIN_EXCEPTION);
     }
 
-    private Object buildLoginUser(Long customerId, String mobile, String deviceId) throws Exception {
-        Class<?> cls = Class.forName("com.bajiezu.cloud.framework.security.app.AppLoginUserInfo");
-        Object obj = cls.getDeclaredConstructor().newInstance();
-        cls.getMethod("setCustomerId", Long.class).invoke(obj, customerId);
-        cls.getMethod("setMobile", String.class).invoke(obj, mobile);
-        cls.getMethod("setUserType", String.class).invoke(obj, "APP_CUSTOMER");
-        cls.getMethod("setRealnameStatus", Integer.class).invoke(obj, 0);
-        cls.getMethod("setFaceAuthStatus", Integer.class).invoke(obj, 0);
-        cls.getMethod("setLoginTime", Date.class).invoke(obj, new Date());
-        cls.getMethod("setDeviceId", String.class).invoke(obj, deviceId);
+    private Object buildLoginUser(Class<?> loginUserClass, Long customerId, String mobile, String deviceId) throws Exception {
+        Object obj = loginUserClass.getDeclaredConstructor().newInstance();
+        invokeIfPresent(obj, "setCustomerId", Long.class, customerId);
+        invokeIfPresent(obj, "setMobile", String.class, mobile);
+        invokeIfPresent(obj, "setUserType", String.class, "APP_CUSTOMER");
+        invokeIfPresent(obj, "setRealnameStatus", Integer.class, 0);
+        invokeIfPresent(obj, "setFaceAuthStatus", Integer.class, 0);
+        invokeIfPresent(obj, "setLoginTime", Date.class, new Date());
+        invokeIfPresent(obj, "setDeviceId", String.class, deviceId);
         return obj;
+    }
+
+    private void invokeIfPresent(Object target, String methodName, Class<?> argType, Object value) {
+        try {
+            Method method = target.getClass().getMethod(methodName, argType);
+            method.invoke(target, value);
+        } catch (Exception ignored) {
+        }
     }
 }
