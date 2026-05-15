@@ -14,9 +14,11 @@ import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.framework.security.po.CustomerInfo;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.service.AppLoginTokenService;
+import com.bajiezu.cloud.framework.security.util.AppSecurityFrameworkUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -36,6 +38,8 @@ public class AppAuthServiceImpl implements AppAuthService {
     private Environment environment;
     @Resource
     private AppLoginTokenService appLoginTokenService;
+    @Resource
+    private RedisTemplate<String, String> redisTemplate;
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
@@ -102,6 +106,47 @@ public class AppAuthServiceImpl implements AppAuthService {
         vo.setFaceAuthStatus(0);
         vo.setAccountStatus(1);
         return vo;
+    }
+
+    @Override
+    public Boolean logout(String token) {
+        LoginUser<?> loginUser = AppSecurityFrameworkUtils.getLoginUser();
+        Long customerId = null;
+        if (loginUser != null && loginUser.getLoginInfo() instanceof CustomerInfo customerInfo) {
+            customerId = customerInfo.getCustomerId();
+            if (StrUtil.isBlank(token)) {
+                token = loginUser.getToken();
+            }
+        }
+        if (StrUtil.isNotBlank(token)) {
+            redisTemplate.delete("bajie:auth:app-user:" + token);
+        }
+        if (customerId != null && StrUtil.isNotBlank(token)) {
+            String tokenSetKey = "bajie:auth:app-user-tokens:" + customerId;
+            redisTemplate.opsForSet().remove(tokenSetKey, token);
+            Long size = redisTemplate.opsForSet().size(tokenSetKey);
+            if (size != null && size == 0L) {
+                redisTemplate.delete(tokenSetKey);
+            }
+        }
+        clearLoginContext();
+        return Boolean.TRUE;
+    }
+
+
+    private void clearLoginContext() {
+        try {
+            Class<?> contextClass = Class.forName("com.bajiezu.cloud.framework.security.context.AppLoginUserContext");
+            try {
+                contextClass.getMethod("remove").invoke(null);
+                return;
+            } catch (NoSuchMethodException ignored) {
+                // try clear
+            }
+            contextClass.getMethod("clear").invoke(null);
+        } catch (Exception ignored) {
+            // ignore context clean failures
+        }
     }
 
     private String createToken(Long customerId, String maskedMobile, String deviceId, String sourceChannel) {
