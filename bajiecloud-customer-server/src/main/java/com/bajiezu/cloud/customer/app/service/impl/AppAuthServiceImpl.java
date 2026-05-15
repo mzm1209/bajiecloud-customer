@@ -18,9 +18,9 @@ import com.bajiezu.cloud.framework.security.util.AppSecurityFrameworkUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import org.springframework.core.env.Environment;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -38,8 +38,6 @@ public class AppAuthServiceImpl implements AppAuthService {
     private Environment environment;
     @Resource
     private AppLoginTokenService appLoginTokenService;
-    @Resource
-    private RedisTemplate<String, String> redisTemplate;
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
@@ -111,26 +109,33 @@ public class AppAuthServiceImpl implements AppAuthService {
     @Override
     public Boolean logout(String token) {
         LoginUser<?> loginUser = AppSecurityFrameworkUtils.getLoginUser();
-        Long customerId = null;
-        if (loginUser != null && loginUser.getLoginInfo() instanceof CustomerInfo customerInfo) {
-            customerId = customerInfo.getCustomerId();
-            if (StrUtil.isBlank(token)) {
-                token = loginUser.getToken();
-            }
+        if (StrUtil.isBlank(token) && loginUser != null) {
+            token = loginUser.getToken();
         }
-        if (StrUtil.isNotBlank(token)) {
-            redisTemplate.delete("bajie:auth:app-user:" + token);
-        }
-        if (customerId != null && StrUtil.isNotBlank(token)) {
-            String tokenSetKey = "bajie:auth:app-user-tokens:" + customerId;
-            redisTemplate.opsForSet().remove(tokenSetKey, token);
-            Long size = redisTemplate.opsForSet().size(tokenSetKey);
-            if (size != null && size == 0L) {
-                redisTemplate.delete(tokenSetKey);
-            }
-        }
+        invokeDeleteToken(loginUser, token);
         clearLoginContext();
         return Boolean.TRUE;
+    }
+
+    private void invokeDeleteToken(LoginUser<?> loginUser, String token) {
+        try {
+            Method deleteByToken = appLoginTokenService.getClass().getMethod("deleteToken", String.class);
+            deleteByToken.invoke(appLoginTokenService, token);
+            return;
+        } catch (NoSuchMethodException ignored) {
+            // fallback to other method signatures
+        } catch (Exception ignored) {
+            return;
+        }
+        if (loginUser == null) {
+            return;
+        }
+        try {
+            Method deleteByLoginUser = appLoginTokenService.getClass().getMethod("deleteToken", LoginUser.class);
+            deleteByLoginUser.invoke(appLoginTokenService, loginUser);
+        } catch (Exception ignored) {
+            // ignore logout delete errors to keep API idempotent
+        }
     }
 
 
