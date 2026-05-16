@@ -11,7 +11,7 @@ import com.bajiezu.cloud.customer.app.service.AppSmsService;
 import com.bajiezu.cloud.customer.app.vo.AppSmsSendRespVO;
 import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
-import com.bajiezu.cloud.rpc.FeginMethodExecuteUtils;
+import com.bajiezu.cloud.framework.security.util.FeginMethodExecuteUtils;
 import com.bajiezu.cloud.system.api.third.SmsApi;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
