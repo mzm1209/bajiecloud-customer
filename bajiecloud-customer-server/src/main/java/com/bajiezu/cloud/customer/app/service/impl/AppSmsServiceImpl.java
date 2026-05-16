@@ -11,6 +11,7 @@ import com.bajiezu.cloud.customer.app.service.AppSmsService;
 import com.bajiezu.cloud.customer.app.vo.AppSmsSendRespVO;
 import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
+import com.bajiezu.cloud.framework.security.util.FeginMethodExecuteUtils;
 import com.bajiezu.cloud.system.api.third.SmsApi;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +86,11 @@ public class AppSmsServiceImpl implements AppSmsService {
 
     private boolean sendBySystemApi(String mobile, String content) {
         try {
-            Object resp = smsApi.sendSingleMessage(mobile, content);
+            Object resp = FeginMethodExecuteUtils.execute(
+                    () -> smsApi.sendSingleMessage(mobile, content),
+                    true,
+                    LOGIN_EXCEPTION,
+                    "send sms via system-api failed");
             return isSendSuccess(resp);
         } catch (Exception e) {
             log.warn("send sms via system-api failed: {}", e.getMessage());
