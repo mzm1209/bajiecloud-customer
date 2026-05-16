@@ -11,6 +11,7 @@ import com.bajiezu.cloud.customer.app.service.AppSmsService;
 import com.bajiezu.cloud.customer.app.vo.AppSmsSendRespVO;
 import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
+import com.bajiezu.cloud.rpc.FeginMethodExecuteUtils;
 import com.bajiezu.cloud.system.api.third.SmsApi;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -82,30 +83,14 @@ public class AppSmsServiceImpl implements AppSmsService {
         return respVO;
     }
 
-    /**
-     * 统一封装短信 RPC 调用，调用方式与常见的 execute 包装模式一致：
-     * 1) 传入具体 feign/rpc 方法引用；
-     * 2) 统一做异常拦截与日志；
-     * 3) 由调用方解析返回值是否成功。
-     */
     private boolean sendBySystemApi(String mobile, String content) {
-        Object resp = executeRpc(() -> smsApi.sendSingleMessage(mobile, content),
-                "send sms via system-api failed");
-        return isSendSuccess(resp);
-    }
-
-    private Object executeRpc(RpcInvoker rpcInvoker, String errorMessage) {
         try {
-            return rpcInvoker.invoke();
+            Object resp = FeginMethodExecuteUtils.execute(() -> smsApi.sendSingleMessage(mobile, content));
+            return isSendSuccess(resp);
         } catch (Exception e) {
-            log.warn("{}: {}", errorMessage, e.getMessage());
-            return null;
+            log.warn("send sms via system-api failed: {}", e.getMessage());
+            return false;
         }
-    }
-
-    @FunctionalInterface
-    private interface RpcInvoker {
-        Object invoke();
     }
 
     private String buildPhone(String countryCode, String mobile) {
