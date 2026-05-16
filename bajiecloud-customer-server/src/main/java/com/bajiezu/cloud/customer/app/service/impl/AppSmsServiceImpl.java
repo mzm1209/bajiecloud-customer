@@ -34,6 +34,7 @@ public class AppSmsServiceImpl implements AppSmsService {
     @Resource
     private SmsApi smsApi;
 
+
     @Override
     public AppSmsSendRespVO sendLoginSms(AppSmsSendReqDTO reqDTO, String requestIp) {
         if (!AppSmsSceneEnum.LOGIN.name().equals(reqDTO.getScene())) throw exception(LOGIN_EXCEPTION);
