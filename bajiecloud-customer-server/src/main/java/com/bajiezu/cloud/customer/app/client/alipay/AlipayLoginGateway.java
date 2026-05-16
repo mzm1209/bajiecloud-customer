@@ -13,6 +13,7 @@ import com.bajiezu.cloud.alipay.AlipayProperties;
 import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
@@ -23,9 +24,7 @@ import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTIO
 public class AlipayLoginGateway {
 
     @Resource
-    private AlipayClientHolder alipayClientHolder;
-    @Resource
-    private AlipayProperties alipayProperties;
+    private ApplicationContext applicationContext;
 
     public String getOpenId(String authCode) {
         AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
@@ -36,19 +35,7 @@ public class AlipayLoginGateway {
         AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
         AlipayPhoneInfo info = new AlipayPhoneInfo();
         info.setOpenId(response.getUserId());
-        String accessToken = response.getAccessToken();
-        if (accessToken == null) {
-            return info;
-        }
-        try {
-            AlipayUserPhoneGetRequest request = new AlipayUserPhoneGetRequest();
-            AlipayUserPhoneGetResponse phoneResp = miniappClient().execute(request, accessToken);
-            if (phoneResp != null && phoneResp.isSuccess()) {
-                info.setMobile(phoneResp.getMobile());
-            }
-        } catch (AlipayApiException e) {
-            log.warn("alipay phone get error, openIdSuffix={}", suffix(info.getOpenId()));
-        }
+        // TODO 当前 SDK 版本未提供 AlipayUserPhoneGetRequest/AlipayUserPhoneGetResponse，待升级后补充手机号获取。
         return info;
     }
 
@@ -59,18 +46,24 @@ public class AlipayLoginGateway {
             request.setCode(authCode);
             return execute(request);
         } catch (AlipayApiException e) {
-            log.error("alipay exchange token failed, appId={}", alipayProperties.getMiniapp().getAppId());
+            log.error("alipay exchange token failed");
             throw exception(LOGIN_EXCEPTION);
         }
     }
 
     private AlipayClient miniappClient() {
-        AlipayClient client = alipayClientHolder.miniappClient();
-        if (client == null) {
-            log.error("ALIPAY_MINIAPP_CLIENT_NOT_READY, appId={}", alipayProperties.getMiniapp().getAppId());
-            throw exception(LOGIN_EXCEPTION);
+        try {
+            Object holder = applicationContext.getBean("alipayClientHolder");
+            Method method = holder.getClass().getMethod("miniappClient");
+            Object client = method.invoke(holder);
+            if (client instanceof AlipayClient alipayClient) {
+                return alipayClient;
+            }
+        } catch (Exception ignored) {
+            // ignore and throw business error below
         }
-        return client;
+        log.error("ALIPAY_MINIAPP_CLIENT_NOT_READY");
+        throw exception(LOGIN_EXCEPTION);
     }
 
     private <R extends AlipayResponse> R execute(AlipayRequest<R> request) throws AlipayApiException {
