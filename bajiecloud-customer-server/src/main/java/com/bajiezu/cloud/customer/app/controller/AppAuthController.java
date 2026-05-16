@@ -5,6 +5,7 @@ import com.bajiezu.cloud.customer.app.dto.AppAlipayLoginReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppMobileLoginReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppAuthService;
 import com.bajiezu.cloud.customer.app.vo.AppLoginRespVO;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import jakarta.annotation.Resource;
@@ -32,5 +33,11 @@ public class AppAuthController {
     @PermitAll
     public CommonResult<AppLoginRespVO> mobileLogin(@RequestBody @Valid AppMobileLoginReqDTO reqDTO) {
         return CommonResult.success(appAuthService.mobileLogin(reqDTO));
+    }
+
+    @PostMapping("/logout")
+    public CommonResult<Boolean> logout(HttpServletRequest request) {
+        String token = request.getHeader("app-user-token");
+        return CommonResult.success(appAuthService.logout(token));
     }
 }
