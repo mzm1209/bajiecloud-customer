@@ -85,7 +85,11 @@ public class AppSmsServiceImpl implements AppSmsService {
 
     private boolean sendBySystemApi(String mobile, String content) {
         try {
-            Object resp = FeginMethodExecuteUtils.execute(() -> smsApi.sendSingleMessage(mobile, content));
+            Object resp = FeginMethodExecuteUtils.execute(
+                    () -> smsApi.sendSingleMessage(mobile, content),
+                    true,
+                    LOGIN_EXCEPTION,
+                    "send sms via system-api failed");
             return isSendSuccess(resp);
         } catch (Exception e) {
             log.warn("send sms via system-api failed: {}", e.getMessage());
