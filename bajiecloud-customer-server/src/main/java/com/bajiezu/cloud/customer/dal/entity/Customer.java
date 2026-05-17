@@ -118,6 +118,16 @@ public class Customer implements Serializable {
     @TableField("merge_master_id")
     private Long mergeMasterId;
 
+
+    @TableField("realname_status")
+    private Integer realnameStatus;
+
+    @TableField("realname_time")
+    private Date realnameTime;
+
+    @TableField("face_auth_status")
+    private Integer faceAuthStatus;
+
     /** 最后登录时间 */
     @TableField("last_login_time")
     private Date lastLoginTime;
