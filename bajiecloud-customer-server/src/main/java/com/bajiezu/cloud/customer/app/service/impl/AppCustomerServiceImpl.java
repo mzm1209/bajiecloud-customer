@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
 import com.bajiezu.cloud.customer.app.service.AppCustomerService;
+import com.bajiezu.cloud.customer.app.dto.AddressCreateRequest;
+import com.bajiezu.cloud.customer.app.dto.AddressUpdateRequest;
 import com.bajiezu.cloud.customer.app.vo.AddressDetailVO;
 import com.bajiezu.cloud.customer.app.vo.AddressListVO;
 import com.bajiezu.cloud.customer.app.vo.AppCustomerProfileRespVO;
@@ -13,6 +15,7 @@ import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bajiezu.cloud.framework.security.po.CustomerInfo;
 import com.bajiezu.cloud.framework.security.po.LoginUser;
 import com.bajiezu.cloud.framework.security.util.AppSecurityFrameworkUtils;
@@ -20,6 +23,7 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.io.IOException;
@@ -27,10 +31,15 @@ import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_ACCOUNT_ABNORMAL;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.ADDRESS_NOT_EXIST;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.ADDRESS_LIMIT_EXCEEDED;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.ADDRESS_TYPE_INVALID;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_NOT_EXIST;
 
 @Service
@@ -38,6 +47,8 @@ public class AppCustomerServiceImpl implements AppCustomerService {
 
     private static final String CUSTOMER_BASE_INFO_KEY = "customer_base_info:%s";
     private static final long PROFILE_CACHE_TTL_SECONDS = 1800L;
+    private static final int MAX_ADDRESS_COUNT = 20;
+    private static final Set<Integer> VALID_ADDRESS_TYPES = Set.of(1, 2, 3, 4, 5, 9);
 
     @Value("${spring.redis.key.prefix:}")
     private String redisPrefix;
@@ -133,6 +144,132 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         vo.setLatitude(address.getLatitude());
         vo.setIsDefault(Objects.equals(address.getIsDefault(), 1));
         return vo;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Long> createAddress(AddressCreateRequest req) {
+        Long customerId = getCurrentCustomerId();
+        validateAddressType(req.getAddressType());
+        Long count = customerAddressMapper.selectCount(new LambdaQueryWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0));
+        if (count != null && count >= MAX_ADDRESS_COUNT) {
+            throw exception(ADDRESS_LIMIT_EXCEEDED);
+        }
+        boolean firstAddress = count == null || count == 0;
+        Integer isDefault = resolveIsDefault(req.getIsDefault(), firstAddress);
+        if (isDefault == 1) {
+            clearDefaultByCustomerId(customerId);
+        }
+        CustomerAddress entity = new CustomerAddress();
+        fillAddress(entity, req.getReceiverName(), req.getReceiverMobile(), req.getProvinceCode(), req.getProvinceName(), req.getCityCode(), req.getCityName(), req.getAreaCode(), req.getAreaName(), req.getStreetAddress(), req.getPostalCode(), req.getAddressType(), req.getAddressTag(), req.getLongitude(), req.getLatitude(), isDefault);
+        entity.setCustomerId(customerId);
+        entity.setIsDeleted(0);
+        entity.setCreateTime(new Date());
+        entity.setUpdateTime(new Date());
+        entity.setCreateBy(customerId);
+        entity.setUpdatedBy(customerId);
+        customerAddressMapper.insert(entity);
+        Map<String, Long> resp = new HashMap<>();
+        resp.put("id", entity.getId());
+        return resp;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean updateAddress(AddressUpdateRequest req) {
+        Long customerId = getCurrentCustomerId();
+        validateAddressType(req.getAddressType());
+        CustomerAddress exist = customerAddressMapper.selectOne(new LambdaQueryWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getId, req.getId())
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0)
+                .last("limit 1"));
+        if (exist == null) {
+            throw exception(ADDRESS_NOT_EXIST);
+        }
+        Integer isDefault = Boolean.TRUE.equals(req.getIsDefault()) ? 1 : 0;
+        if (isDefault == 1) {
+            clearDefaultByCustomerId(customerId);
+        }
+        CustomerAddress entity = new CustomerAddress();
+        fillAddress(entity, req.getReceiverName(), req.getReceiverMobile(), req.getProvinceCode(), req.getProvinceName(), req.getCityCode(), req.getCityName(), req.getAreaCode(), req.getAreaName(), req.getStreetAddress(), req.getPostalCode(), req.getAddressType(), req.getAddressTag(), req.getLongitude(), req.getLatitude(), isDefault);
+        entity.setId(req.getId());
+        entity.setCustomerId(customerId);
+        entity.setIsDeleted(0);
+        entity.setUpdateTime(new Date());
+        entity.setUpdatedBy(customerId);
+        return customerAddressMapper.updateById(entity) > 0;
+    }
+
+    private void fillAddress(CustomerAddress entity, String receiverName, String receiverMobile, String provinceCode,
+                             String provinceName, String cityCode, String cityName, String areaCode, String areaName,
+                             String streetAddress, String postalCode, Integer addressType, String addressTag,
+                             java.math.BigDecimal longitude, java.math.BigDecimal latitude, Integer isDefault) {
+        entity.setReceiverName(receiverName);
+        entity.setReceiverMobile(encryptIfPresent(receiverMobile));
+        entity.setProvinceCode(provinceCode);
+        entity.setProvinceName(provinceName);
+        entity.setCityCode(cityCode);
+        entity.setCityName(cityName);
+        entity.setAreaCode(areaCode);
+        entity.setAreaName(areaName);
+        entity.setStreetAddress(streetAddress);
+        entity.setPostalCode(postalCode);
+        entity.setAddressType(addressType);
+        entity.setAddressTag(resolveAddressTag(addressType, addressTag));
+        entity.setLongitude(longitude);
+        entity.setLatitude(latitude);
+        entity.setIsDefault(isDefault);
+        entity.setFullAddress(buildFullAddress(provinceName, cityName, areaName, streetAddress));
+    }
+
+    private void clearDefaultByCustomerId(Long customerId) {
+        customerAddressMapper.update(null, new LambdaUpdateWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0)
+                .eq(CustomerAddress::getIsDefault, 1)
+                .set(CustomerAddress::getIsDefault, 0));
+    }
+
+    private Integer resolveIsDefault(Boolean isDefault, boolean firstAddress) {
+        if (firstAddress) {
+            return 1;
+        }
+        return Boolean.TRUE.equals(isDefault) ? 1 : 0;
+    }
+
+    private void validateAddressType(Integer addressType) {
+        if (addressType == null || !VALID_ADDRESS_TYPES.contains(addressType)) {
+            throw exception(ADDRESS_TYPE_INVALID);
+        }
+    }
+
+    private String resolveAddressTag(Integer addressType, String addressTag) {
+        if (StrUtil.isNotBlank(addressTag)) {
+            return addressTag;
+        }
+        return switch (addressType) {
+            case 1 -> "家";
+            case 2 -> "公司";
+            case 3 -> "学校";
+            case 4 -> "父母";
+            case 5 -> "朋友";
+            default -> "其他";
+        };
+    }
+
+    private String buildFullAddress(String provinceName, String cityName, String areaName, String streetAddress) {
+        return StrUtil.blankToDefault(provinceName, "") + StrUtil.blankToDefault(cityName, "")
+                + StrUtil.blankToDefault(areaName, "") + StrUtil.blankToDefault(streetAddress, "");
+    }
+
+    private String encryptIfPresent(String plain) {
+        if (StrUtil.hasBlank(plain, aesKey)) {
+            return plain;
+        }
+        return SecureUtil.aes(aesKey.getBytes()).encryptBase64(plain);
     }
 
     private Long getCurrentCustomerId() {
