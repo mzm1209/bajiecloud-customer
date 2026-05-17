@@ -4,6 +4,7 @@ import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.customer.app.dto.AppRealnameSubmitReqDTO;
 import com.bajiezu.cloud.customer.app.service.AppRealnameService;
 import com.bajiezu.cloud.customer.app.vo.AppIdCardUploadRespVO;
+import com.bajiezu.cloud.customer.app.vo.AppRealnameStatusRespVO;
 import com.bajiezu.cloud.customer.app.vo.AppRealnameSubmitRespVO;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotBlank;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -23,6 +25,11 @@ public class AppRealnameController {
 
     @Resource
     private AppRealnameService appRealnameService;
+
+    @GetMapping("/status")
+    public CommonResult<AppRealnameStatusRespVO> status() {
+        return CommonResult.success(appRealnameService.getStatus());
+    }
 
     @PostMapping("/idcard/upload")
     public CommonResult<AppIdCardUploadRespVO> uploadIdCard(@RequestParam("side") @NotBlank String side,
@@ -36,4 +43,3 @@ public class AppRealnameController {
     }
 
 }
-

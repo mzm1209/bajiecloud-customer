@@ -7,6 +7,7 @@ import com.bajiezu.cloud.customer.app.client.AliyunCloudauthClient;
 import com.bajiezu.cloud.customer.app.client.AliyunVerifyMaterialResult;
 import com.bajiezu.cloud.customer.app.dto.AppRealnameSubmitReqDTO;
 import com.bajiezu.cloud.customer.app.vo.AppRealnameSubmitRespVO;
+import com.bajiezu.cloud.customer.app.vo.AppRealnameStatusRespVO;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.entity.CustomerRealnameAuthDO;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
@@ -83,6 +84,63 @@ public class AppRealnameServiceImpl implements AppRealnameService {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
     private static final Set<String> ALLOWED_MIME = Set.of("image/jpeg", "image/png");
+
+    @Override
+    public AppRealnameStatusRespVO getStatus() {
+        LoginUser<?> loginUser = AppSecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录");
+        }
+        if (!UserTypeEnum.CUSTOMER.getValue().equals(loginUser.getUserType())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "用户类型非法");
+        }
+        Long customerId = extractCustomerId(loginUser);
+        Customer customer = customerMapper.selectById(customerId);
+        if (customer == null || !Integer.valueOf(0).equals(customer.getIsDeleted())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "用户不存在");
+        }
+        if (!Integer.valueOf(1).equals(customer.getAccountStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "账户异常");
+        }
+
+        CustomerRealnameAuthDO latestAuth = customerRealnameAuthMapper.selectOne(new LambdaQueryWrapper<CustomerRealnameAuthDO>()
+                .eq(CustomerRealnameAuthDO::getCustomerId, customerId)
+                .eq(CustomerRealnameAuthDO::getIsDeleted, 0)
+                .orderByDesc(CustomerRealnameAuthDO::getSubmitTime)
+                .orderByDesc(CustomerRealnameAuthDO::getId)
+                .last("limit 1"));
+
+        AppRealnameStatusRespVO respVO = new AppRealnameStatusRespVO();
+        Integer faceAuthStatus = customer.getFaceAuthStatus() == null ? 0 : customer.getFaceAuthStatus();
+        respVO.setFaceAuthStatus(faceAuthStatus);
+        respVO.setFaceAuthUrl(null);
+        respVO.setExpireSeconds(null);
+
+        if (latestAuth == null) {
+            Integer realnameStatus = customer.getRealnameStatus() == null ? 0 : customer.getRealnameStatus();
+            respVO.setRealnameStatus(realnameStatus);
+            respVO.setAuthStatus(null);
+            fillStatusFields(respVO, realnameStatus);
+            return respVO;
+        }
+
+        Integer authStatus = latestAuth.getAuthStatus();
+        Integer realnameStatus = customer.getRealnameStatus();
+        if (realnameStatus == null) {
+            realnameStatus = mapAuthStatusToRealnameStatus(authStatus);
+        }
+        if (realnameStatus == null) {
+            realnameStatus = 0;
+        }
+        respVO.setRealnameStatus(realnameStatus);
+        respVO.setAuthStatus(authStatus);
+        respVO.setFailReason(latestAuth.getFailReason());
+        respVO.setAuthOrderNo(String.valueOf(latestAuth.getId()));
+        respVO.setRealName(maskName(decrypt(getFirstNotBlank(customer.getRealName(), latestAuth.getRealName()))));
+        respVO.setIdCard(IdCardUtil.desensitize(decrypt(getFirstNotBlank(customer.getIdCard(), latestAuth.getIdCard()))));
+        fillStatusFields(respVO, realnameStatus);
+        return respVO;
+    }
 
     @Override
     public AppIdCardUploadRespVO uploadIdCard(String side, MultipartFile file) {
@@ -237,7 +295,11 @@ public class AppRealnameServiceImpl implements AppRealnameService {
     }
     private Date parseDate(String v){ if(StrUtil.isBlank(v)) return null; try{return java.sql.Date.valueOf(v);}catch(Exception e){return null;}}
     private String encrypt(String plain){ if(StrUtil.isBlank(plain)) return plain; String key=environment.getProperty("app.security.aes-key"); return StrUtil.isBlank(key)?plain:SecureUtil.aes(key.getBytes()).encryptBase64(plain); }
+    private String decrypt(String encrypted){ if(StrUtil.isBlank(encrypted)) return encrypted; String key=environment.getProperty("app.security.aes-key"); return StrUtil.isBlank(key)?encrypted:SecureUtil.aes(key.getBytes()).decryptStr(encrypted); }
     private String maskName(String n){ if(StrUtil.isBlank(n)) return n; return n.length()==1?"*":n.charAt(0)+"*"; }
+    private String getFirstNotBlank(String first, String second) { return StrUtil.isNotBlank(first) ? first : second; }
+    private Integer mapAuthStatusToRealnameStatus(Integer authStatus) { if (authStatus == null) return 0; if (authStatus == 1) return 1; if (authStatus == 2) return 2; return 0; }
+    private void fillStatusFields(AppRealnameStatusRespVO respVO, Integer realnameStatus) { if (realnameStatus != null && realnameStatus == 1) { respVO.setStatusDesc("已实名"); respVO.setCanSubmit(false); return; } if (realnameStatus != null && realnameStatus == 2) { respVO.setStatusDesc("实名失败"); respVO.setCanSubmit(true); return; } respVO.setStatusDesc("未实名"); respVO.setCanSubmit(true); }
     private AppRealnameSubmitRespVO buildResp(Integer rs,Integer fs,Integer as,String desc,String orderNo,String name,String id,String fail){ AppRealnameSubmitRespVO v=new AppRealnameSubmitRespVO(); v.setRealnameStatus(rs);v.setFaceAuthStatus(fs);v.setAuthStatus(as);v.setStatusDesc(desc);v.setAuthOrderNo(orderNo);v.setRealName(maskName(name));v.setIdCard(IdCardUtil.desensitize(id));v.setFailReason(fail); return v; }
     private void afterSubmitUpdateRedis(Long customerId, boolean passed, String name, String idCard){
         String idxKey="bajie:auth:app-user-tokens:"+customerId; Set<String> tokens=redisTemplate.opsForSet().members(idxKey);
