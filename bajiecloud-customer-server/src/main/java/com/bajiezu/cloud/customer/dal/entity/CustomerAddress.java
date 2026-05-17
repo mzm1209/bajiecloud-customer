@@ -27,7 +27,7 @@ public class CustomerAddress implements Serializable {
     @TableField("customer_id")
     private Long customerId;
 
-    /** 地址类型：1-家庭，2-公司，3-学校，4-其他 */
+    /** 地址类型：1-家，2-公司，3-学校，4-父母，5-朋友，9-其他/自定义 */
     @TableField("address_type")
     private Integer addressType;
 
@@ -39,9 +39,30 @@ public class CustomerAddress implements Serializable {
     @TableField("receiver_mobile")
     private String receiverMobile;
 
+
+    /** 省编码 */
+    @TableField("province_code")
+    private String provinceCode;
+
+    /** 省名称 */
+    @TableField("province_name")
+    private String provinceName;
+
+    /** 市编码 */
+    @TableField("city_code")
+    private String cityCode;
+
+    /** 市名称 */
+    @TableField("city_name")
+    private String cityName;
+
     /** 选中的区县代码，关联地址表的code字段 */
     @TableField("area_code")
     private String areaCode;
+
+    /** 区县名称 */
+    @TableField("area_name")
+    private String areaName;
 
     /** 详细街道地址 */
     @TableField("street_address")
@@ -50,6 +71,22 @@ public class CustomerAddress implements Serializable {
     /** 邮政编码 */
     @TableField("postal_code")
     private String postalCode;
+
+    /** 地址标签 */
+    @TableField("address_tag")
+    private String addressTag;
+
+    /** 经度 */
+    @TableField("longitude")
+    private java.math.BigDecimal longitude;
+
+    /** 纬度 */
+    @TableField("latitude")
+    private java.math.BigDecimal latitude;
+
+    /** 完整地址快照 */
+    @TableField("full_address")
+    private String fullAddress;
 
     /** 是否默认地址：0-否，1-是 */
     @TableField("is_default")

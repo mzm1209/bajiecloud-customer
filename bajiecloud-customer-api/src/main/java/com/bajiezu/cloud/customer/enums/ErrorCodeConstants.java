@@ -18,5 +18,11 @@ public interface ErrorCodeConstants {
 
     ErrorCode AREA_CODE_NO_EXIST = new ErrorCode(1_004_001_006, "地区编码不存在");
 
+    ErrorCode ADDRESS_NOT_EXIST = new ErrorCode(1_004_001_008, "地址不存在");
+
+    ErrorCode ADDRESS_LIMIT_EXCEEDED = new ErrorCode(1_004_001_009, "地址数量已达上限20条");
+
+    ErrorCode ADDRESS_TYPE_INVALID = new ErrorCode(1_004_001_010, "addressType不合法");
+
 
 }
