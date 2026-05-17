@@ -8,9 +8,18 @@
         <result column="address_type" property="addressType"/>
         <result column="receiver_name" property="receiverName"/>
         <result column="receiver_mobile" property="receiverMobile"/>
+        <result column="province_code" property="provinceCode"/>
+        <result column="province_name" property="provinceName"/>
+        <result column="city_code" property="cityCode"/>
+        <result column="city_name" property="cityName"/>
         <result column="area_code" property="areaCode"/>
+        <result column="area_name" property="areaName"/>
         <result column="street_address" property="streetAddress"/>
         <result column="postal_code" property="postalCode"/>
+        <result column="address_tag" property="addressTag"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="full_address" property="fullAddress"/>
         <result column="is_default" property="isDefault"/>
         <result column="create_by" property="createBy"/>
         <result column="updated_by" property="updatedBy"/>
@@ -20,7 +29,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, customer_id, address_type, receiver_name, receiver_mobile, area_code, street_address, postal_code, is_default,
+        id, customer_id, address_type, receiver_name, receiver_mobile, province_code, province_name, city_code, city_name, area_code, area_name, street_address, postal_code, address_tag, longitude, latitude, full_address, is_default,
         create_by, updated_by, create_time, update_time, is_deleted
     </sql>
 
