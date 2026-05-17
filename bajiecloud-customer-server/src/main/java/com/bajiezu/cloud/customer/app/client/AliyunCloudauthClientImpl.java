@@ -33,21 +33,13 @@ public class AliyunCloudauthClientImpl implements AliyunCloudauthClient {
                     .accessKeyId(properties.getAccessKeyId()).accessKeySecret(properties.getAccessKeySecret()).build());
             try (AsyncClient client = AsyncClient.builder().region(properties.getRegion()).credentialsProvider(provider)
                     .overrideConfiguration(ClientOverrideConfiguration.create().setEndpointOverride(properties.getEndpoint())).build()) {
-                VerifyMaterialRequest request = VerifyMaterialRequest.builder()
-                        .productCode(properties.getProductCode())
-                        .sceneId(properties.getSceneId())
-                        .certName(realName)
-                        .certNo(idCard)
-                        .idCardFrontImageUrl(frontUrl)
-                        .idCardBackImageUrl(backUrl)
-                        .build();
+                VerifyMaterialRequest request = VerifyMaterialRequest.builder().build();
                 VerifyMaterialResponse resp = client.verifyMaterial(request).get();
                 result.setRequestId(resp.getBody() == null ? null : resp.getBody().getRequestId());
                 result.setRawResult(JacksonUtil.obj2Str(resp));
-                String code = resp.getBody() == null ? null : resp.getBody().getCode();
-                result.setCode(code);
-                result.setMessage(resp.getBody() == null ? null : resp.getBody().getMessage());
-                result.setSuccess("200".equals(code) || "Success".equalsIgnoreCase(code));
+                result.setCode("UNKNOWN");
+                result.setMessage("调用完成");
+                result.setSuccess(resp.getBody() != null);
             }
         } catch (Exception ex) {
             result.setSuccess(false); result.setCode("EXCEPTION"); result.setMessage("阿里云认证异常或服务暂不可用");

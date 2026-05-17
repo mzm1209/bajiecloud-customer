@@ -12,6 +12,7 @@ import com.bajiezu.cloud.customer.dal.entity.CustomerRealnameAuthDO;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerRealnameAuthMapper;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
+import com.bajiezu.cloud.customer.utils.IdCardUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
