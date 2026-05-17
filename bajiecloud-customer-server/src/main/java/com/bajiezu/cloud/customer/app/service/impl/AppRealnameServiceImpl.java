@@ -11,6 +11,10 @@ import com.bajiezu.cloud.customer.app.service.AppRealnameService;
 import com.bajiezu.cloud.customer.app.vo.AppIdCardOcrBackVO;
 import com.bajiezu.cloud.customer.app.vo.AppIdCardOcrFrontVO;
 import com.bajiezu.cloud.customer.app.vo.AppIdCardUploadRespVO;
+import com.bajiezu.cloud.customer.domain.dto.ocr.IdCardOcrRequestDTO;
+import com.bajiezu.cloud.customer.domain.dto.ocr.IdCardOcrResultDTO;
+import com.bajiezu.cloud.customer.service.AliyunIdCardOcrService;
+import com.bajiezu.cloud.customer.utils.IdCardUtil;
 import com.bajiezu.cloud.customer.dal.entity.AppFileUploadDO;
 import com.bajiezu.cloud.customer.dal.mapper.AppFileUploadMapper;
 import com.bajiezu.cloud.framework.security.po.CustomerInfo;
@@ -44,6 +48,8 @@ public class AppRealnameServiceImpl implements AppRealnameService {
 
     @Resource
     private UploadService uploadService;
+    @Resource
+    private AliyunIdCardOcrService aliyunIdCardOcrService;
 
     @Value("${app.realname.idcard.max-file-size:10485760}")
     private long maxFileSize;
@@ -137,6 +143,18 @@ public class AppRealnameServiceImpl implements AppRealnameService {
             respVO.setOcrResult(ocrResult);
         }
         return respVO;
+    }
+
+
+    @Override
+    public IdCardOcrResultDTO idCardOcr(IdCardOcrRequestDTO requestDTO) {
+        AppIdCardSideEnum cardSide = parseSide(requestDTO.getSide());
+        IdCardOcrResultDTO result = StrUtil.isNotBlank(requestDTO.getImageUrl())
+                ? aliyunIdCardOcrService.recognizeByUrl(requestDTO.getImageUrl(), cardSide.name())
+                : aliyunIdCardOcrService.recognizeByFileKey(requestDTO.getFileKey(), cardSide.name());
+        result.setIdNumber(IdCardUtil.desensitize(result.getIdNumber()));
+        result.setRawData(null);
+        return result;
     }
 
     private Long extractCustomerId(LoginUser<?> loginUser) {
