@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.bajiezu.cloud.customer.app.service.WeiDaoYunSmsService;
+import com.bajiezu.cloud.customer.app.vo.wdy.SmsSendOneResponse;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bajiezu.cloud.customer.app.dto.AppSmsSendReqDTO;
 import com.bajiezu.cloud.customer.app.enums.AppSmsSceneEnum;
@@ -11,7 +13,6 @@ import com.bajiezu.cloud.customer.app.service.AppSmsService;
 import com.bajiezu.cloud.customer.app.vo.AppSmsSendRespVO;
 import com.bajiezu.cloud.customer.dal.entity.AppSmsCodeLogDO;
 import com.bajiezu.cloud.customer.dal.mapper.AppSmsCodeLogMapper;
-import com.bajiezu.cloud.framework.security.util.FeginMethodExecuteUtils;
 import com.bajiezu.cloud.system.api.third.SmsApi;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import java.util.Objects;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
+import static com.bajiezu.cloud.system.enums.ErrorCodeConstants.AUTH_LOGIN_SMS_SEND_FAIL;
 
 @Slf4j
 @Service
@@ -34,6 +36,8 @@ public class AppSmsServiceImpl implements AppSmsService {
     private Environment environment;
     @Resource
     private SmsApi smsApi;
+    @Resource
+    private WeiDaoYunSmsService weiDaoYunSmsService;
 
 
     @Override
@@ -43,8 +47,8 @@ public class AppSmsServiceImpl implements AppSmsService {
         Date now = new Date();
         Long cooldown = appSmsCodeLogMapper.selectCount(new LambdaQueryWrapper<AppSmsCodeLogDO>()
                 .eq(AppSmsCodeLogDO::getMobileHash, mobileHash)
-                .ge(AppSmsCodeLogDO::getCreateTime, DateUtil.offsetSecond(now, -60)));
-        if (cooldown > 0) throw exception(LOGIN_EXCEPTION);
+                .ge(AppSmsCodeLogDO::getCreateTime, DateUtil.offsetSecond(now, -300)));
+        if (cooldown > 0) throw exception(AUTH_LOGIN_SMS_SEND_FAIL);
 
         String code = RandomUtil.randomNumbers(6);
         String salt = RandomUtil.randomString(16);
@@ -53,8 +57,8 @@ public class AppSmsServiceImpl implements AppSmsService {
         String defaultSignature = environment.getProperty("sms.weidaoyun.defaultSignature");
         if (StrUtil.hasBlank(tpl, defaultSignature)) throw exception(LOGIN_EXCEPTION);
         String content = MessageFormat.format(tpl, defaultSignature, code);
-        boolean sent = sendBySystemApi(buildPhone(reqDTO.getCountryCode(), reqDTO.getMobile()), content);
-
+//        boolean sent = sendBySystemApi(buildPhone(reqDTO.getCountryCode(), reqDTO.getMobile()), content);
+        boolean sent = sendBySystemApi(reqDTO.getMobile(), content);
         AppSmsCodeLogDO logDO = new AppSmsCodeLogDO();
         logDO.setCountryCode(reqDTO.getCountryCode());
         logDO.setMobile(reqDTO.getMobile());
@@ -85,16 +89,13 @@ public class AppSmsServiceImpl implements AppSmsService {
     }
 
     private boolean sendBySystemApi(String mobile, String content) {
-        try {
-            Object resp = FeginMethodExecuteUtils.execute(
-                    () -> smsApi.sendSingleMessage(mobile, content),
-                    true,
-                    LOGIN_EXCEPTION,
-                    "send sms via system-api failed");
-            return isSendSuccess(resp);
-        } catch (Exception e) {
-            log.warn("send sms via system-api failed: {}", e.getMessage());
-            return false;
+
+        SmsSendOneResponse smsSendOneResponse = weiDaoYunSmsService.sendSingleMessage(mobile, content);
+        if (smsSendOneResponse.getCode() != 0) {
+            log.error("发送短信失败，错误码：{}，错误信息：{}", smsSendOneResponse.getCode(), smsSendOneResponse.getMessage());
+            throw exception(AUTH_LOGIN_SMS_SEND_FAIL);
+        }else {
+            return isSendSuccess(smsSendOneResponse);
         }
     }
 

@@ -6,15 +6,15 @@ import lombok.Data;
 @Data
 public class AppIdCardUploadRespVO {
 
-    @Schema(description = "文件ID")
-    private String fileId;
+    @Schema(description = "文件记录ID")
+    private Long fileId;
 
-    @Schema(description = "文件类型，FRONT/BACK")
-    private String fileType;
+    @Schema(description = "身份证面，FRONT/BACK")
+    private String side;
 
-    @Schema(description = "文件名")
-    private String fileName;
+    @Schema(description = "短时签名预览地址")
+    private String previewUrl;
 
-    @Schema(description = "上传状态")
-    private String uploadStatus;
+    @Schema(description = "OCR结果")
+    private Object ocrResult;
 }
