@@ -1,4 +1,4 @@
-package com.bajiezu.cloud.customer.config;
+package com.bajiezu.cloud.customer.app.config;
 
 import com.aliyun.auth.credentials.Credential;
 import com.aliyun.auth.credentials.provider.StaticCredentialProvider;

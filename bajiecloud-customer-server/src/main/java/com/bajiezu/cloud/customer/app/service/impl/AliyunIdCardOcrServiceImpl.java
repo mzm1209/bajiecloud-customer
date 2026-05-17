@@ -1,11 +1,11 @@
-package com.bajiezu.cloud.customer.service.impl;
+package com.bajiezu.cloud.customer.app.service.impl;
 
 import com.aliyun.sdk.service.ocr_api20210707.AsyncClient;
 import com.aliyun.sdk.service.ocr_api20210707.models.RecognizeIdcardRequest;
 import com.aliyun.sdk.service.ocr_api20210707.models.RecognizeIdcardResponse;
 import com.bajiezu.cloud.customer.app.client.OssPrivateFileService;
-import com.bajiezu.cloud.customer.domain.dto.ocr.IdCardOcrResultDTO;
-import com.bajiezu.cloud.customer.service.AliyunIdCardOcrService;
+import com.bajiezu.cloud.customer.app.dto.ocr.IdCardOcrResultDTO;
+import com.bajiezu.cloud.customer.app.service.AliyunIdCardOcrService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;

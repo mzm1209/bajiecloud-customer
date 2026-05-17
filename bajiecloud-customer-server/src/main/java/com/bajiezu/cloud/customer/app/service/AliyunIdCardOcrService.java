@@ -1,6 +1,6 @@
-package com.bajiezu.cloud.customer.service;
+package com.bajiezu.cloud.customer.app.service;
 
-import com.bajiezu.cloud.customer.domain.dto.ocr.IdCardOcrResultDTO;
+import com.bajiezu.cloud.customer.app.dto.ocr.IdCardOcrResultDTO;
 
 public interface AliyunIdCardOcrService {
 

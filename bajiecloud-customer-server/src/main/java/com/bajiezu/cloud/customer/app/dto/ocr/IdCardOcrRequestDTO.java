@@ -1,4 +1,4 @@
-package com.bajiezu.cloud.customer.domain.dto.ocr;
+package com.bajiezu.cloud.customer.app.dto.ocr;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;

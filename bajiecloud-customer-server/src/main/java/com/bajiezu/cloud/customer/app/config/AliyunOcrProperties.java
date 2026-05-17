@@ -1,4 +1,4 @@
-package com.bajiezu.cloud.customer.config;
+package com.bajiezu.cloud.customer.app.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
