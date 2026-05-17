@@ -5,6 +5,7 @@ import com.aliyun.cloudauth20190307.models.Id2MetaStandardVerifyRequest;
 import com.aliyun.cloudauth20190307.models.Id2MetaStandardVerifyResponse;
 import com.aliyun.cloudauth20190307.models.InitCardVerifyRequest;
 import com.aliyun.cloudauth20190307.models.InitCardVerifyResponse;
+import com.aliyun.credentials.models.Config;
 import com.aliyun.tea.TeaException;
 import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.teautil.models.RuntimeOptions;
@@ -78,11 +79,15 @@ public class AliyunCloudauthClientImpl implements AliyunCloudauthClient {
     }
 
     private Client createClient() throws Exception {
-        com.aliyun.credentials.Client credential = new com.aliyun.credentials.Client();
-        credential.setAccessKeyId(properties.getAccessKeyId());
-        credential.setAccessKeySecret(properties.getAccessKeySecret());
-        Config config = new Config().setCredential(credential);
-        config.endpoint = properties.getEndpoint();
+        Config credentialConfig = new Config();
+        credentialConfig.setType("access_key");
+        credentialConfig.setAccessKeyId(properties.getAccessKeyId());
+        credentialConfig.setAccessKeySecret(properties.getAccessKeySecret());
+
+        com.aliyun.credentials.Client credentialClient = new com.aliyun.credentials.Client(credentialConfig);
+        com.aliyun.teaopenapi.models.Config config = new com.aliyun.teaopenapi.models.Config()
+                .setCredential(credentialClient);
+        config.setEndpoint(properties.getEndpoint());
         return new Client(config);
     }
 }
