@@ -3,6 +3,7 @@ package com.bajiezu.cloud.customer.app.service.impl;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
+import com.bajiezu.cloud.common.service.UploadService;
 import com.bajiezu.cloud.customer.app.client.OcrClient;
 import com.bajiezu.cloud.customer.app.client.OssPrivateFileService;
 import com.bajiezu.cloud.customer.app.enums.AppIdCardSideEnum;
@@ -40,6 +41,9 @@ public class AppRealnameServiceImpl implements AppRealnameService {
     private OssPrivateFileService ossPrivateFileService;
     @Resource
     private OcrClient ocrClient;
+
+    @Resource
+    private UploadService uploadService;
 
     @Value("${app.realname.idcard.max-file-size:10485760}")
     private long maxFileSize;
@@ -92,7 +96,7 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         uploadDO.setBizType("REALNAME");
         uploadDO.setFileType(cardSide == AppIdCardSideEnum.FRONT ? "ID_CARD_FRONT" : "ID_CARD_BACK");
         uploadDO.setFileName(originalFileName);
-        uploadDO.setFileKey(fileKey);
+        uploadDO.setFileKey(originalFileName);
         uploadDO.setFileSize(file.getSize());
         uploadDO.setMimeType(file.getContentType());
         uploadDO.setFileHash(fileHash);
@@ -102,6 +106,12 @@ public class AppRealnameServiceImpl implements AppRealnameService {
 
         try {
             ossPrivateFileService.upload(fileKey, content, file.getContentType());
+            String url = uploadService.upload(file);
+
+            if (url == null) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "上传oss失败");
+            }
+
             uploadDO.setUploadStatus(1);
             appFileUploadMapper.insert(uploadDO);
         } catch (Exception ex) {
