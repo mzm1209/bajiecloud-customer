@@ -15,5 +15,5 @@ public class AddressListVO {
     private String fullAddress;
     private Integer addressType;
     private String addressTag;
-    private Integer isDefault;
+    private Boolean isDefault;
 }

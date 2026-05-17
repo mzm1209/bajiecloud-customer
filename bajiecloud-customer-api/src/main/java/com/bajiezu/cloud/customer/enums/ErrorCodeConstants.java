@@ -18,5 +18,7 @@ public interface ErrorCodeConstants {
 
     ErrorCode AREA_CODE_NO_EXIST = new ErrorCode(1_004_001_006, "地区编码不存在");
 
+    ErrorCode ADDRESS_NOT_EXIST = new ErrorCode(1_004_001_008, "地址不存在");
+
 
 }

@@ -22,5 +22,5 @@ public class AddressDetailVO {
     private String addressTag;
     private BigDecimal longitude;
     private BigDecimal latitude;
-    private Integer isDefault;
+    private Boolean isDefault;
 }
