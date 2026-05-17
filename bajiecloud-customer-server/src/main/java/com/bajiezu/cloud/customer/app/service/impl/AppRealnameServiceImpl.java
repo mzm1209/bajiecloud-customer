@@ -2,6 +2,21 @@ package com.bajiezu.cloud.customer.app.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
+import com.bajiezu.cloud.customer.app.client.AliyunCloudauthClient;
+import com.bajiezu.cloud.customer.app.client.AliyunVerifyMaterialResult;
+import com.bajiezu.cloud.customer.app.dto.AppRealnameSubmitReqDTO;
+import com.bajiezu.cloud.customer.app.vo.AppRealnameSubmitRespVO;
+import com.bajiezu.cloud.customer.dal.entity.Customer;
+import com.bajiezu.cloud.customer.dal.entity.CustomerRealnameAuthDO;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerRealnameAuthMapper;
+import com.bajiezu.cloud.customer.utils.JacksonUtil;
+import com.bajiezu.cloud.customer.utils.IdCardUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
 import com.bajiezu.cloud.common.service.UploadService;
 import com.bajiezu.cloud.customer.app.client.OcrClient;
@@ -26,10 +41,14 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.Locale;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -44,6 +63,16 @@ public class AppRealnameServiceImpl implements AppRealnameService {
 
     @Resource
     private UploadService uploadService;
+    @Resource
+    private CustomerMapper customerMapper;
+    @Resource
+    private CustomerRealnameAuthMapper customerRealnameAuthMapper;
+    @Resource
+    private AliyunCloudauthClient aliyunCloudauthClient;
+    @Resource
+    private Environment environment;
+    @Resource
+    private RedisTemplate<String, String> redisTemplate;
 
     @Value("${app.realname.idcard.max-file-size:10485760}")
     private long maxFileSize;
@@ -137,6 +166,83 @@ public class AppRealnameServiceImpl implements AppRealnameService {
             respVO.setOcrResult(ocrResult);
         }
         return respVO;
+    }
+
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AppRealnameSubmitRespVO submit(AppRealnameSubmitReqDTO reqDTO) {
+        LoginUser<?> loginUser = AppSecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录");
+        if (!UserTypeEnum.CUSTOMER.getValue().equals(loginUser.getUserType())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "用户类型非法");
+        Long customerId = extractCustomerId(loginUser);
+        if (!Boolean.TRUE.equals(reqDTO.getAgreeAuth())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "请同意实名认证协议");
+        if (StrUtil.isBlank(reqDTO.getRealName()) || StrUtil.isBlank(reqDTO.getIdCard())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "姓名和身份证号不能为空");
+        if (IdCardUtil.getBirthDateStr(reqDTO.getIdCard()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "身份证号格式错误");
+
+        Customer customer = customerMapper.selectById(customerId);
+        if (customer == null || !Integer.valueOf(0).equals(customer.getIsDeleted())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "用户不存在");
+        if (!Integer.valueOf(1).equals(customer.getAccountStatus())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "账户状态不允许实名认证");
+        if (Integer.valueOf(1).equals(customer.getRealnameStatus())) return buildResp(1,0,1,"已实名",null,reqDTO.getRealName(),reqDTO.getIdCard(),null);
+
+        AppFileUploadDO front = appFileUploadMapper.selectById(reqDTO.getIdCardFrontFileId());
+        AppFileUploadDO back = appFileUploadMapper.selectById(reqDTO.getIdCardBackFileId());
+        validateFile(front, customerId, "ID_CARD_FRONT");
+        validateFile(back, customerId, "ID_CARD_BACK");
+
+        String idHash = SecureUtil.sha256(reqDTO.getIdCard().toUpperCase(Locale.ROOT));
+        Customer other = customerMapper.selectOne(new LambdaQueryWrapper<Customer>().eq(Customer::getIdCardHash,idHash).eq(Customer::getRealnameStatus,1).ne(Customer::getId,customerId).last("limit 1"));
+        if (other != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "该身份证已被其他账号实名");
+
+        Date now = new Date();
+        String encName = encrypt(reqDTO.getRealName());
+        String encId = encrypt(reqDTO.getIdCard());
+        String encAddr = encrypt(reqDTO.getAddress());
+
+        CustomerRealnameAuthDO auth = new CustomerRealnameAuthDO();
+        auth.setCustomerId(customerId); auth.setRealName(encName); auth.setIdCard(encId); auth.setIdCardHash(idHash);
+        auth.setGender(reqDTO.getGender()); auth.setBirthday(parseDate(reqDTO.getBirthday())); auth.setEthnicity(reqDTO.getEthnicity());
+        auth.setAddress(encAddr); auth.setIssueAuthority(reqDTO.getIssueAuthority());
+        auth.setIdCardValidStart(parseDate(reqDTO.getValidStart())); auth.setIdCardValidEnd(parseDate(reqDTO.getValidEnd()));
+        auth.setIdCardFrontFileId(front.getId()); auth.setIdCardBackFileId(back.getId()); auth.setAuthStatus(0); auth.setFaceAuthStatus(0);
+        auth.setSubmitTime(now); auth.setCreateTime(now); auth.setUpdateTime(now); auth.setIsDeleted(0);
+        customerRealnameAuthMapper.insert(auth);
+
+        String frontUrl = ossPrivateFileService.generatePreviewUrl(front.getFileKey(), 600);
+        String backUrl = ossPrivateFileService.generatePreviewUrl(back.getFileKey(), 600);
+        AliyunVerifyMaterialResult verifyResult = aliyunCloudauthClient.verifyMaterial(reqDTO.getRealName(), reqDTO.getIdCard(), frontUrl, backUrl);
+        auth.setFaceAuthResult(verifyResult.getRawResult()); // 本期暂存 VerifyMaterial 原始结果
+        if (verifyResult.isSuccess()) {
+            auth.setAuthStatus(1); auth.setPassTime(now); auth.setFailReason(null);
+            customer.setRealnameStatus(1); customer.setRealnameTime(now); customer.setFaceAuthStatus(0);
+            customer.setRealName(encName); customer.setIdCard(encId); customer.setIdCardHash(idHash);
+            customer.setGender(reqDTO.getGender()); customer.setBirthday(parseDate(reqDTO.getBirthday())); customer.setIsAnonymous(false);
+            customerMapper.updateById(customer);
+            customerRealnameAuthMapper.updateById(auth);
+            afterSubmitUpdateRedis(customerId, true, reqDTO.getRealName(), reqDTO.getIdCard());
+            return buildResp(1,0,1,"已实名",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),null);
+        }
+        auth.setAuthStatus(2); auth.setFailReason(StrUtil.blankToDefault(verifyResult.getMessage(), "阿里云认证异常或服务暂不可用"));
+        customer.setRealnameStatus(2); customer.setFaceAuthStatus(0);
+        customerMapper.updateById(customer); customerRealnameAuthMapper.updateById(auth);
+        afterSubmitUpdateRedis(customerId, false, reqDTO.getRealName(), reqDTO.getIdCard());
+        return buildResp(2,0,2,"实名失败",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),auth.getFailReason());
+    }
+
+    private void validateFile(AppFileUploadDO file, Long customerId, String fileType) {
+        if (file == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "身份证文件不存在");
+        if (!customerId.equals(file.getCustomerId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "身份证文件不属于当前用户");
+        if (!fileType.equals(file.getFileType())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "身份证文件类型错误");
+    }
+    private Date parseDate(String v){ if(StrUtil.isBlank(v)) return null; try{return java.sql.Date.valueOf(v);}catch(Exception e){return null;}}
+    private String encrypt(String plain){ if(StrUtil.isBlank(plain)) return plain; String key=environment.getProperty("app.security.aes-key"); return StrUtil.isBlank(key)?plain:SecureUtil.aes(key.getBytes()).encryptBase64(plain); }
+    private String maskName(String n){ if(StrUtil.isBlank(n)) return n; return n.length()==1?"*":n.charAt(0)+"*"; }
+    private AppRealnameSubmitRespVO buildResp(Integer rs,Integer fs,Integer as,String desc,String orderNo,String name,String id,String fail){ AppRealnameSubmitRespVO v=new AppRealnameSubmitRespVO(); v.setRealnameStatus(rs);v.setFaceAuthStatus(fs);v.setAuthStatus(as);v.setStatusDesc(desc);v.setAuthOrderNo(orderNo);v.setRealName(maskName(name));v.setIdCard(IdCardUtil.desensitize(id));v.setFailReason(fail); return v; }
+    private void afterSubmitUpdateRedis(Long customerId, boolean passed, String name, String idCard){
+        String idxKey="bajie:auth:app-user-tokens:"+customerId; Set<String> tokens=redisTemplate.opsForSet().members(idxKey);
+        if(tokens!=null){ Iterator<String> it=tokens.iterator(); while(it.hasNext()){ String t=it.next(); String userKey="bajie:auth:app-user:"+t; String val=redisTemplate.opsForValue().get(userKey); if(StrUtil.isBlank(val)){ redisTemplate.opsForSet().remove(idxKey,t); continue;} try{ Map m=JacksonUtil.str2Obj(val, Map.class); m.put("realnameStatus", passed?1:2); m.put("faceAuthStatus",0); m.put("realnamePassed",passed); if(passed){ m.put("realNameMasked", maskName(name)); m.put("idCardMasked", IdCardUtil.desensitize(idCard)); } redisTemplate.opsForValue().set(userKey, JacksonUtil.obj2Str(m), 2, TimeUnit.HOURS);}catch(Exception ignore){} }}
+        redisTemplate.delete("customer_base_info:"+customerId);
     }
 
     private Long extractCustomerId(LoginUser<?> loginUser) {

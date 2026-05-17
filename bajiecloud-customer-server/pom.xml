@@ -109,7 +109,12 @@
       <version>0.3.2</version>
     </dependency>
 
-  </dependencies>
+      <dependency>
+      <groupId>com.aliyun</groupId>
+      <artifactId>cloudauth20190307</artifactId>
+      <version>3.13.2</version>
+    </dependency>
+</dependencies>
 
   <build>
     <!-- 设置构建的 jar 包名 -->

@@ -8,4 +8,6 @@ public class AppIdCardOcrFrontVO {
     private String idCard;
     private Integer gender;
     private String birthday;
+    private String ethnicity;
+    private String address;
 }
