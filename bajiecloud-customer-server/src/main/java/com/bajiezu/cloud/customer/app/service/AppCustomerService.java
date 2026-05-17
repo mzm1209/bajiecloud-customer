@@ -1,5 +1,9 @@
 package com.bajiezu.cloud.customer.app.service;
 
+import com.bajiezu.cloud.customer.app.dto.AddressCreateRequest;
+import com.bajiezu.cloud.customer.app.dto.AddressDeleteRequest;
+import com.bajiezu.cloud.customer.app.dto.AddressSetDefaultRequest;
+import com.bajiezu.cloud.customer.app.dto.AddressUpdateRequest;
 import com.bajiezu.cloud.customer.app.vo.AppCustomerProfileRespVO;
 import com.bajiezu.cloud.customer.app.vo.AddressDetailVO;
 import com.bajiezu.cloud.customer.app.vo.AddressListVO;
@@ -18,4 +22,8 @@ public interface AppCustomerService {
     Map<String, Long> createAddress(AddressCreateRequest req);
 
     Boolean updateAddress(AddressUpdateRequest req);
+
+    Boolean deleteAddress(AddressDeleteRequest req);
+
+    Boolean setDefaultAddress(AddressSetDefaultRequest req);
 }

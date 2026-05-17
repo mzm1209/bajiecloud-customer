@@ -5,6 +5,8 @@ import cn.hutool.crypto.SecureUtil;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
 import com.bajiezu.cloud.customer.app.service.AppCustomerService;
 import com.bajiezu.cloud.customer.app.dto.AddressCreateRequest;
+import com.bajiezu.cloud.customer.app.dto.AddressDeleteRequest;
+import com.bajiezu.cloud.customer.app.dto.AddressSetDefaultRequest;
 import com.bajiezu.cloud.customer.app.dto.AddressUpdateRequest;
 import com.bajiezu.cloud.customer.app.vo.AddressDetailVO;
 import com.bajiezu.cloud.customer.app.vo.AddressListVO;
@@ -34,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Date;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_ACCOUNT_ABNORMAL;
@@ -203,6 +206,33 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         return customerAddressMapper.updateById(entity) > 0;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean deleteAddress(AddressDeleteRequest req) {
+        Long customerId = getCurrentCustomerId();
+        CustomerAddress exist = getByIdAndCustomerId(req.getId(), customerId);
+        boolean wasDefault = Objects.equals(exist.getIsDefault(), 1);
+        logicDeleteByIdAndCustomerId(req.getId(), customerId);
+        if (wasDefault) {
+            CustomerAddress latest = findLatestAddressByCustomerId(customerId);
+            if (latest != null) {
+                clearDefaultByCustomerId(customerId);
+                setDefaultByIdAndCustomerId(latest.getId(), customerId);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean setDefaultAddress(AddressSetDefaultRequest req) {
+        Long customerId = getCurrentCustomerId();
+        getByIdAndCustomerId(req.getId(), customerId);
+        clearDefaultByCustomerId(customerId);
+        setDefaultByIdAndCustomerId(req.getId(), customerId);
+        return true;
+    }
+
     private void fillAddress(CustomerAddress entity, String receiverName, String receiverMobile, String provinceCode,
                              String provinceName, String cityCode, String cityName, String areaCode, String areaName,
                              String streetAddress, String postalCode, Integer addressType, String addressTag,
@@ -231,6 +261,53 @@ public class AppCustomerServiceImpl implements AppCustomerService {
                 .eq(CustomerAddress::getIsDeleted, 0)
                 .eq(CustomerAddress::getIsDefault, 1)
                 .set(CustomerAddress::getIsDefault, 0));
+    }
+
+    private CustomerAddress getByIdAndCustomerId(Long id, Long customerId) {
+        CustomerAddress address = customerAddressMapper.selectOne(new LambdaQueryWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getId, id)
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0)
+                .last("limit 1"));
+        if (address == null) {
+            throw exception(ADDRESS_NOT_EXIST);
+        }
+        return address;
+    }
+
+    private void logicDeleteByIdAndCustomerId(Long id, Long customerId) {
+        int rows = customerAddressMapper.update(null, new LambdaUpdateWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getId, id)
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0)
+                .set(CustomerAddress::getIsDeleted, 1)
+                .set(CustomerAddress::getIsDefault, 0)
+                .set(CustomerAddress::getUpdatedBy, customerId)
+                .set(CustomerAddress::getUpdateTime, new Date()));
+        if (rows <= 0) {
+            throw exception(ADDRESS_NOT_EXIST);
+        }
+    }
+
+    private void setDefaultByIdAndCustomerId(Long id, Long customerId) {
+        int rows = customerAddressMapper.update(null, new LambdaUpdateWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getId, id)
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0)
+                .set(CustomerAddress::getIsDefault, 1)
+                .set(CustomerAddress::getUpdatedBy, customerId)
+                .set(CustomerAddress::getUpdateTime, new Date()));
+        if (rows <= 0) {
+            throw exception(ADDRESS_NOT_EXIST);
+        }
+    }
+
+    private CustomerAddress findLatestAddressByCustomerId(Long customerId) {
+        return customerAddressMapper.selectOne(new LambdaQueryWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0)
+                .orderByDesc(CustomerAddress::getUpdateTime)
+                .last("limit 1"));
     }
 
     private Integer resolveIsDefault(Boolean isDefault, boolean firstAddress) {
