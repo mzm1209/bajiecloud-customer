@@ -3,14 +3,11 @@ package com.bajiezu.cloud.customer.app.controller;
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.customer.app.service.AppRealnameService;
 import com.bajiezu.cloud.customer.app.vo.AppIdCardUploadRespVO;
-import com.bajiezu.cloud.customer.app.dto.ocr.IdCardOcrRequestDTO;
-import com.bajiezu.cloud.customer.app.dto.ocr.IdCardOcrResultDTO;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,9 +27,5 @@ public class AppRealnameController {
         return CommonResult.success(appRealnameService.uploadIdCard(side, file));
     }
 
-    @PostMapping("/ocr/id-card")
-    public CommonResult<IdCardOcrResultDTO> idCardOcr(@RequestBody @Validated IdCardOcrRequestDTO requestDTO) {
-        return CommonResult.success(appRealnameService.idCardOcr(requestDTO));
-    }
 }
 
