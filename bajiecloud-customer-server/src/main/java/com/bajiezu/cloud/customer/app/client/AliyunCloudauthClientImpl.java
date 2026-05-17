@@ -5,9 +5,7 @@ import com.aliyun.cloudauth20190307.models.Id2MetaStandardVerifyRequest;
 import com.aliyun.cloudauth20190307.models.Id2MetaStandardVerifyResponse;
 import com.aliyun.cloudauth20190307.models.InitCardVerifyRequest;
 import com.aliyun.cloudauth20190307.models.InitCardVerifyResponse;
-import com.aliyun.credentials.models.Config;
 import com.aliyun.tea.TeaException;
-import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.teautil.models.RuntimeOptions;
 import com.bajiezu.cloud.customer.app.config.AliyunCloudauthProperties;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
@@ -79,7 +77,7 @@ public class AliyunCloudauthClientImpl implements AliyunCloudauthClient {
     }
 
     private Client createClient() throws Exception {
-        Config credentialConfig = new Config();
+        com.aliyun.credentials.models.Config credentialConfig = new com.aliyun.credentials.models.Config();
         credentialConfig.setType("access_key");
         credentialConfig.setAccessKeyId(properties.getAccessKeyId());
         credentialConfig.setAccessKeySecret(properties.getAccessKeySecret());
