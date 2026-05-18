@@ -5,7 +5,11 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.bajiezu.cloud.customer.app.client.AliyunCloudauthClient;
 import com.bajiezu.cloud.customer.app.client.AliyunVerifyMaterialResult;
+import com.bajiezu.cloud.customer.app.dto.AppIdentityListReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppRealnameSubmitReqDTO;
+import com.bajiezu.cloud.customer.app.vo.AppIdentityDetailRespVO;
+import com.bajiezu.cloud.customer.app.vo.AppIdentityListItemVO;
+import com.bajiezu.cloud.customer.app.vo.AppIdentityListRespVO;
 import com.bajiezu.cloud.customer.app.vo.AppRealnameSubmitRespVO;
 import com.bajiezu.cloud.customer.app.vo.AppRealnameStatusRespVO;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
@@ -288,6 +292,79 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         return buildResp(2,0,2,"实名失败",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),auth.getFailReason());
     }
 
+
+    @Override
+    public AppIdentityListRespVO identityList(AppIdentityListReqDTO reqDTO) {
+        Long customerId = extractCustomerId(requireLoginUser());
+        int pageNo = reqDTO.getPageNo() == null || reqDTO.getPageNo() < 1 ? 1 : reqDTO.getPageNo();
+        int pageSize = reqDTO.getPageSize() == null || reqDTO.getPageSize() < 1 ? 10 : Math.min(reqDTO.getPageSize(), 50);
+        LambdaQueryWrapper<CustomerRealnameAuthDO> qw = new LambdaQueryWrapper<CustomerRealnameAuthDO>()
+                .eq(CustomerRealnameAuthDO::getCustomerId, customerId)
+                .eq(CustomerRealnameAuthDO::getIsDeleted, 0)
+                .orderByDesc(CustomerRealnameAuthDO::getSubmitTime)
+                .orderByDesc(CustomerRealnameAuthDO::getId);
+        if (reqDTO.getAuthStatus() != null) qw.eq(CustomerRealnameAuthDO::getAuthStatus, reqDTO.getAuthStatus());
+        Long total = customerRealnameAuthMapper.selectCount(qw);
+        qw.last("limit " + (pageNo - 1) * pageSize + "," + pageSize);
+        java.util.List<CustomerRealnameAuthDO> rows = customerRealnameAuthMapper.selectList(qw);
+        java.util.List<AppIdentityListItemVO> list = new java.util.ArrayList<>();
+        for (CustomerRealnameAuthDO row : rows) {
+            AppIdentityListItemVO vo = new AppIdentityListItemVO();
+            vo.setId(row.getId());
+            vo.setAuthStatus(row.getAuthStatus());
+            vo.setRealnameStatus(mapAuthStatusToRealnameStatus(row.getAuthStatus()));
+            vo.setStatusDesc(statusDesc(vo.getRealnameStatus()));
+            vo.setSubmitTime(formatDateTime(row.getSubmitTime()));
+            vo.setPassTime(formatDateTime(row.getPassTime()));
+            vo.setRealName(maskName(decrypt(row.getRealName())));
+            vo.setIdCard(IdCardUtil.desensitize(decrypt(row.getIdCard())));
+            vo.setFailReason(row.getFailReason());
+            list.add(vo);
+        }
+        AppIdentityListRespVO resp = new AppIdentityListRespVO();
+        resp.setTotal(total == null ? 0L : total);
+        resp.setList(list);
+        return resp;
+    }
+
+    @Override
+    public AppIdentityDetailRespVO identityDetail(Long id) {
+        Long customerId = extractCustomerId(requireLoginUser());
+        CustomerRealnameAuthDO row = customerRealnameAuthMapper.selectOne(new LambdaQueryWrapper<CustomerRealnameAuthDO>()
+                .eq(CustomerRealnameAuthDO::getId, id)
+                .eq(CustomerRealnameAuthDO::getCustomerId, customerId)
+                .eq(CustomerRealnameAuthDO::getIsDeleted, 0)
+                .last("limit 1"));
+        if (row == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "记录不存在");
+        Customer customer = customerMapper.selectById(customerId);
+        AppIdentityDetailRespVO vo = new AppIdentityDetailRespVO();
+        vo.setId(row.getId());
+        vo.setAuthStatus(row.getAuthStatus());
+        vo.setRealnameStatus(mapAuthStatusToRealnameStatus(row.getAuthStatus()));
+        vo.setStatusDesc(statusDesc(vo.getRealnameStatus()));
+        vo.setSubmitTime(formatDateTime(row.getSubmitTime()));
+        vo.setPassTime(formatDateTime(row.getPassTime()));
+        vo.setFailReason(row.getFailReason());
+        vo.setRealName(maskName(decrypt(row.getRealName())));
+        vo.setIdCard(IdCardUtil.desensitize(decrypt(row.getIdCard())));
+        vo.setMobile(maskMobile(decrypt(customer == null ? null : customer.getMobile())));
+        vo.setEmail(maskEmail(decrypt(customer == null ? null : customer.getEmail())));
+        vo.setGender(row.getGender());
+        vo.setBirthday(formatDate(row.getBirthday()));
+        vo.setEthnicity(row.getEthnicity());
+        vo.setAddress(decrypt(row.getAddress()));
+        vo.setIssueAuthority(row.getIssueAuthority());
+        vo.setValidStart(formatDate(row.getIdCardValidStart()));
+        vo.setValidEnd(formatDate(row.getIdCardValidEnd()));
+        vo.setIdCardFrontFileId(row.getIdCardFrontFileId());
+        vo.setIdCardBackFileId(row.getIdCardBackFileId());
+        AppFileUploadDO front = appFileUploadMapper.selectById(row.getIdCardFrontFileId());
+        AppFileUploadDO back = appFileUploadMapper.selectById(row.getIdCardBackFileId());
+        if (front != null) vo.setIdCardFrontUrl(ossPrivateFileService.generatePreviewUrl(front.getFileKey(), previewExpireSeconds));
+        if (back != null) vo.setIdCardBackUrl(ossPrivateFileService.generatePreviewUrl(back.getFileKey(), previewExpireSeconds));
+        return vo;
+    }
+
     private void validateFile(AppFileUploadDO file, Long customerId, String fileType) {
         if (file == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "身份证文件不存在");
         if (!customerId.equals(file.getCustomerId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "身份证文件不属于当前用户");
@@ -306,6 +383,23 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         if(tokens!=null){ Iterator<String> it=tokens.iterator(); while(it.hasNext()){ String t=it.next(); String userKey="bajie:auth:app-user:"+t; String val=redisTemplate.opsForValue().get(userKey); if(StrUtil.isBlank(val)){ redisTemplate.opsForSet().remove(idxKey,t); continue;} try{ Map m=JacksonUtil.str2Obj(val, Map.class); m.put("realnameStatus", passed?1:2); m.put("faceAuthStatus",0); m.put("realnamePassed",passed); if(passed){ m.put("realNameMasked", maskName(name)); m.put("idCardMasked", IdCardUtil.desensitize(idCard)); } redisTemplate.opsForValue().set(userKey, JacksonUtil.obj2Str(m), 2, TimeUnit.HOURS);}catch(Exception ignore){} }}
         redisTemplate.delete("customer_base_info:"+customerId);
     }
+
+    private LoginUser<?> requireLoginUser() {
+        LoginUser<?> loginUser = AppSecurityFrameworkUtils.getLoginUser();
+        if (loginUser == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录");
+        if (!UserTypeEnum.CUSTOMER.getValue().equals(loginUser.getUserType())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "用户类型非法");
+        return loginUser;
+    }
+
+    private String statusDesc(Integer realnameStatus) {
+        if (realnameStatus != null && realnameStatus == 1) return "已实名";
+        if (realnameStatus != null && realnameStatus == 2) return "实名失败";
+        return "未实名";
+    }
+    private String formatDateTime(Date d){ return d==null?null: new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);}
+    private String formatDate(Date d){ return d==null?null: new java.text.SimpleDateFormat("yyyy-MM-dd").format(d);}
+    private String maskMobile(String m){ if(StrUtil.isBlank(m)||m.length()<7) return m; return m.substring(0,3)+"****"+m.substring(m.length()-4);}
+    private String maskEmail(String e){ if(StrUtil.isBlank(e)||!e.contains("@")) return e; String[] p=e.split("@",2); String u=p[0]; if(u.length()<=1) return "***@"+p[1]; return u.charAt(0)+"***"+u.charAt(u.length()-1)+"@"+p[1];}
 
     private Long extractCustomerId(LoginUser<?> loginUser) {
         if (loginUser.getLoginInfo() instanceof CustomerInfo info && info.getCustomerId() != null) {
