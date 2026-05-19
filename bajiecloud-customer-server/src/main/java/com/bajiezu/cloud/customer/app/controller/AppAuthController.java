@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/app/auth")
+@RequestMapping("/customer/app/auth")
 @Validated
 public class AppAuthController {
 
