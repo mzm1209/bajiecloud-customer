@@ -48,6 +48,7 @@ public class AppAuthServiceImpl implements AppAuthService {
         if (StrUtil.isBlank(reqDTO.getAuthCode())) {
             throw exception(LOGIN_EXCEPTION);
         }
+        //获取 openid
         AlipayPhoneInfo phoneInfo = alipayLoginGateway.getPhone(reqDTO.getAuthCode());
         String openId = phoneInfo.getOpenId();
         if (StrUtil.isBlank(openId)) {
