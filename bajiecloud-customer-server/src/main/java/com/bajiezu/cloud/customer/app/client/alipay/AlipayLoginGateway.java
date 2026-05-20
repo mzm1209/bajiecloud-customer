@@ -57,6 +57,7 @@ public class AlipayLoginGateway {
             Method method = holder.getClass().getMethod("miniappClient");
             log.debug("miniappClient："+method);
             Object client = method.invoke(holder);
+            log.debug("创建完成 client：======"+method);
             if (client instanceof AlipayClient alipayClient) {
                 return alipayClient;
             }
