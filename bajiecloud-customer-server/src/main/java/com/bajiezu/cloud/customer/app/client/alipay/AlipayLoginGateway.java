@@ -51,8 +51,11 @@ public class AlipayLoginGateway {
 
     private AlipayClient miniappClient() {
         try {
+            log.debug("开始创建 client");
             Object holder = applicationContext.getBean("alipayClientHolder");
+            log.debug("alipayClientHolder："+holder);
             Method method = holder.getClass().getMethod("miniappClient");
+            log.debug("miniappClient："+method);
             Object client = method.invoke(holder);
             if (client instanceof AlipayClient alipayClient) {
                 return alipayClient;
