@@ -2,6 +2,7 @@ package com.bajiezu.cloud.customer.app.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
 import com.bajiezu.cloud.customer.app.client.alipay.AlipayLoginGateway;
 import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
@@ -19,6 +20,8 @@ import com.bajiezu.cloud.framework.security.service.AppLoginTokenService;
 import com.bajiezu.cloud.framework.security.util.AppSecurityFrameworkUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,7 @@ import java.util.Date;
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
 
+@Slf4j
 @Service
 public class AppAuthServiceImpl implements AppAuthService {
 
@@ -42,18 +46,22 @@ public class AppAuthServiceImpl implements AppAuthService {
     private AppLoginTokenService appLoginTokenService;
     @Resource
     private AlipayLoginGateway alipayLoginGateway;
+    @Autowired
+    private SpringUtil springUtil;
 
     @Override
     public AppLoginRespVO alipayLogin(AppAlipayLoginReqDTO reqDTO) {
         if (StrUtil.isBlank(reqDTO.getAuthCode())) {
             throw exception(LOGIN_EXCEPTION);
         }
+        log.debug("开始获取ali openid");
         //获取 openid 测试 url拦截器
         AlipayPhoneInfo phoneInfo = alipayLoginGateway.getPhone(reqDTO.getAuthCode());
         String openId = phoneInfo.getOpenId();
         if (StrUtil.isBlank(openId)) {
             openId = alipayLoginGateway.getOpenId(reqDTO.getAuthCode());
         }
+        log.debug("已获取ali openid："+openId);
         if (StrUtil.isBlank(openId)) {
             throw exception(LOGIN_EXCEPTION);
         }
@@ -84,7 +92,11 @@ public class AppAuthServiceImpl implements AppAuthService {
             customerMapper.updateById(customer);
         }
         String masked = maskMobile(mobile);
+
+        log.debug("开始获取用户登录token");
         String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), "AliPay");
+        log.debug("已获取用户登录token："+token);
+
         AppLoginRespVO vo = new AppLoginRespVO();
         vo.setTokenName("app-user-token");
         vo.setToken(token);
