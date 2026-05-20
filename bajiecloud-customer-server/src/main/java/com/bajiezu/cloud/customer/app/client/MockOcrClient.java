@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile({"local", "dev"})
+@Profile({"local", "dev", "test"})
 public class MockOcrClient implements OcrClient {
 
     @Override
