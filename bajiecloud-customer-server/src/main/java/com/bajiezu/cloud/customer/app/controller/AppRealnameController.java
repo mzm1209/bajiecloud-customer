@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/app/realname")
+@RequestMapping("/app/customer/realname")
 @Validated
 public class AppRealnameController {
 

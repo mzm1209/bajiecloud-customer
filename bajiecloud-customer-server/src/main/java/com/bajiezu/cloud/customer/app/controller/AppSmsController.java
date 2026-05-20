@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/app/sms")
+@RequestMapping("/app/customer/sms")
 public class AppSmsController {
     @Resource
     private AppSmsService appSmsService;
