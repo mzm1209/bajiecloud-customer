@@ -24,6 +24,25 @@
       <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
     </dependency>
 
+    <!-- 添加 阿里云 OCR 依赖 -->
+    <dependency>
+      <groupId>com.aliyun</groupId>
+      <artifactId>alibabacloud-ocr_api20210707</artifactId>
+      <version>3.0.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.aliyun</groupId>
+      <artifactId>cloudauth20190307</artifactId>
+      <version>3.13.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.aliyun</groupId>
+      <artifactId>tea-openapi</artifactId>
+      <version>0.3.2</version>
+    </dependency>
+
     <dependency>
       <groupId>com.bajiezu.cloud</groupId>
       <artifactId>bajiecloud-customer-api</artifactId>
@@ -95,26 +114,7 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-web</artifactId>
     </dependency>
-
-    <!-- 添加 阿里云 OCR 依赖 -->
-    <dependency>
-      <groupId>com.aliyun</groupId>
-      <artifactId>alibabacloud-ocr_api20210707</artifactId>
-      <version>3.0.4</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.aliyun</groupId>
-      <artifactId>tea-openapi</artifactId>
-      <version>0.3.2</version>
-    </dependency>
-
-      <dependency>
-      <groupId>com.aliyun</groupId>
-      <artifactId>cloudauth20190307</artifactId>
-      <version>3.13.2</version>
-    </dependency>
-</dependencies>
+  </dependencies>
 
   <build>
     <!-- 设置构建的 jar 包名 -->
