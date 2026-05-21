@@ -37,6 +37,7 @@ public class WeiDaoYunSmsServiceImpl implements WeiDaoYunSmsService {
     public SmsSendOneResponse sendSingleMessage(String phone, String content) {
         List<MessageItem> messageList = new ArrayList<>();
         messageList.add(new MessageItem(phone, content));
+        log.debug("待发送内容===== "+messageList);
         return sendMessageOne(messageList);
     }
 
