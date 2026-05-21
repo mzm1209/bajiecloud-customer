@@ -92,7 +92,7 @@ public class AppSmsServiceImpl implements AppSmsService {
 
         SmsSendOneResponse smsSendOneResponse = weiDaoYunSmsService.sendSingleMessage(mobile, content);
         if (smsSendOneResponse.getCode() != 0) {
-            log.error("发送短信失败，错误码：{}，错误信息：{}", smsSendOneResponse.getCode(), smsSendOneResponse.getMessage());
+            log.error("发送短信失败，错误码 ：{}，错误信息：{}", smsSendOneResponse.getCode(), smsSendOneResponse.getMessage());
             throw exception(AUTH_LOGIN_SMS_SEND_FAIL);
         }else {
             return isSendSuccess(smsSendOneResponse);
