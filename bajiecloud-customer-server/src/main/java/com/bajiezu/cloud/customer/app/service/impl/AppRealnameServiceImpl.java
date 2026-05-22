@@ -382,8 +382,34 @@ public class AppRealnameServiceImpl implements AppRealnameService {
     private void fillStatusFields(AppRealnameStatusRespVO respVO, Integer realnameStatus) { if (realnameStatus != null && realnameStatus == 1) { respVO.setStatusDesc("已实名"); respVO.setCanSubmit(false); return; } if (realnameStatus != null && realnameStatus == 2) { respVO.setStatusDesc("实名失败"); respVO.setCanSubmit(true); return; } respVO.setStatusDesc("未实名"); respVO.setCanSubmit(true); }
     private AppRealnameSubmitRespVO buildResp(Integer rs,Integer fs,Integer as,String desc,String orderNo,String name,String id,String fail){ AppRealnameSubmitRespVO v=new AppRealnameSubmitRespVO(); v.setRealnameStatus(rs);v.setFaceAuthStatus(fs);v.setAuthStatus(as);v.setStatusDesc(desc);v.setAuthOrderNo(orderNo);v.setRealName(maskName(name));v.setIdCard(IdCardUtil.desensitize(id));v.setFailReason(fail); return v; }
     private void afterSubmitUpdateRedis(Long customerId, boolean passed, String name, String idCard){
-        String idxKey="bajie:auth:app-user-tokens:"+customerId; Set<String> tokens=redisTemplate.opsForSet().members(idxKey);
-        if(tokens!=null){ Iterator<String> it=tokens.iterator(); while(it.hasNext()){ String t=it.next(); String userKey="bajie:auth:app-user:"+t; String val=redisTemplate.opsForValue().get(userKey); if(StrUtil.isBlank(val)){ redisTemplate.opsForSet().remove(idxKey,t); continue;} try{ Map m=JacksonUtil.str2Obj(val, Map.class); m.put("realnameStatus", passed?1:2); m.put("faceAuthStatus",0); m.put("realnamePassed",passed); if(passed){ m.put("realNameMasked", maskName(name)); m.put("idCardMasked", IdCardUtil.desensitize(idCard)); } redisTemplate.opsForValue().set(userKey, JacksonUtil.obj2Str(m), 2, TimeUnit.HOURS);}catch(Exception ignore){} }}
+        String idxKey="bajie:auth:app-user-tokens:"+customerId;
+        Set<String> tokens=redisTemplate.opsForSet().members(idxKey);
+        if(tokens!=null){
+            Iterator<String> it=tokens.iterator();
+            while(it.hasNext()){
+                String t=it.next();
+                String userKey="bajie:auth:app-user:"+t;
+                String val=redisTemplate.opsForValue().get(userKey);
+                if(StrUtil.isBlank(val)){
+                    redisTemplate.opsForSet().remove(idxKey,t);
+                    continue;
+                }
+                try{
+                    Map m=JacksonUtil.str2Obj(val, Map.class);
+                    m.put("realnameStatus", passed?1:2);
+                    m.put("faceAuthStatus",0);
+                    m.put("realnamePassed",passed);
+                    if(passed){
+                        m.put("realNameMasked", maskName(name));
+                        m.put("idCardMasked", IdCardUtil.desensitize(idCard));
+                    }
+                    redisTemplate.opsForValue().set(userKey, JacksonUtil.obj2Str(m), 2, TimeUnit.HOURS);
+                }
+                catch(Exception ignore){
+
+                }
+            }
+        }
         redisTemplate.delete("customer_base_info:"+customerId);
     }
 

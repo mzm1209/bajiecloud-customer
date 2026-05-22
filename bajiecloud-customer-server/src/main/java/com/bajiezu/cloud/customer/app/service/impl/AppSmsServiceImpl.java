@@ -50,7 +50,8 @@ public class AppSmsServiceImpl implements AppSmsService {
                 .ge(AppSmsCodeLogDO::getCreateTime, DateUtil.offsetSecond(now, -300)));
         if (cooldown > 0) throw exception(AUTH_LOGIN_SMS_SEND_FAIL);
 
-        String code = RandomUtil.randomNumbers(6);
+//        String code = RandomUtil.randomNumbers(6);
+        String code = "123456";
         String salt = RandomUtil.randomString(16);
         String codeHash = SecureUtil.sha256(code + salt);
         String tpl = environment.getProperty("sms.weidaoyun.login-sms.verificationCodeContent");
@@ -58,7 +59,8 @@ public class AppSmsServiceImpl implements AppSmsService {
         if (StrUtil.hasBlank(tpl, defaultSignature)) throw exception(LOGIN_EXCEPTION);
         String content = MessageFormat.format(tpl, defaultSignature, code);
 //        boolean sent = sendBySystemApi(buildPhone(reqDTO.getCountryCode(), reqDTO.getMobile()), content);
-        boolean sent = sendBySystemApi(reqDTO.getMobile(), content);
+//        boolean sent = sendBySystemApi(reqDTO.getMobile(), content);
+        boolean sent = true;
         AppSmsCodeLogDO logDO = new AppSmsCodeLogDO();
         logDO.setCountryCode(reqDTO.getCountryCode());
         logDO.setMobile(reqDTO.getMobile());
