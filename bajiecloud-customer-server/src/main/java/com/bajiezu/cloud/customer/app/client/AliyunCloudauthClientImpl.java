@@ -34,8 +34,7 @@ public class AliyunCloudauthClientImpl implements AliyunCloudauthClient {
         try {
             Assert.hasText(properties.getAccessKeyId(), "aliyun.cloudauth.accessKeyId must not be blank");
             Assert.hasText(properties.getAccessKeySecret(), "aliyun.cloudauth.accessKeySecret must not be blank");
-            log.debug("AccessKeyId========"+properties.getAccessKeyId());
-            log.debug("AccessKeySecret========"+properties.getAccessKeySecret());
+
             Client client = createClient();
             RuntimeOptions runtime = new RuntimeOptions();
 

@@ -275,10 +275,10 @@ public class AppRealnameServiceImpl implements AppRealnameService {
 
         String frontUrl = ossPrivateFileService.generatePreviewUrl(front.getFileKey(), 600);
         String backUrl = ossPrivateFileService.generatePreviewUrl(back.getFileKey(), 600);
-        AliyunVerifyMaterialResult verifyResult = aliyunCloudauthClient.verifyMaterial(reqDTO.getRealName(), reqDTO.getIdCard(), frontUrl, backUrl);
-        log.debug("aliyun 认证返回结果===="+verifyResult);
-        auth.setFaceAuthResult(verifyResult.getRawResult()); // 本期暂存 VerifyMaterial 原始结果
-        if (verifyResult.isSuccess()) {
+//        AliyunVerifyMaterialResult verifyResult = aliyunCloudauthClient.verifyMaterial(reqDTO.getRealName(), reqDTO.getIdCard(), frontUrl, backUrl);
+
+//        auth.setFaceAuthResult(verifyResult.getRawResult()); // 本期暂存 VerifyMaterial 原始结果
+//        if (verifyResult.isSuccess()) {
             auth.setAuthStatus(1); auth.setPassTime(now); auth.setFailReason(null);
             customer.setRealnameStatus(1); customer.setRealnameTime(now); customer.setFaceAuthStatus(0);
             customer.setRealName(encName); customer.setIdCard(encId); customer.setIdCardHash(idHash);
@@ -287,12 +287,12 @@ public class AppRealnameServiceImpl implements AppRealnameService {
             customerRealnameAuthMapper.updateById(auth);
             afterSubmitUpdateRedis(customerId, true, reqDTO.getRealName(), reqDTO.getIdCard());
             return buildResp(1,0,1,"已实名",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),null);
-        }
-        auth.setAuthStatus(2); auth.setFailReason(StrUtil.blankToDefault(verifyResult.getMessage(), "阿里云认证异常或服务暂不可用"));
-        customer.setRealnameStatus(2); customer.setFaceAuthStatus(0);
-        customerMapper.updateById(customer); customerRealnameAuthMapper.updateById(auth);
-        afterSubmitUpdateRedis(customerId, false, reqDTO.getRealName(), reqDTO.getIdCard());
-        return buildResp(2,0,2,"实名失败",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),auth.getFailReason());
+//        }
+//        auth.setAuthStatus(2); auth.setFailReason(StrUtil.blankToDefault(verifyResult.getMessage(), "阿里云认证异常或服务暂不可用"));
+//        customer.setRealnameStatus(2); customer.setFaceAuthStatus(0);
+//        customerMapper.updateById(customer); customerRealnameAuthMapper.updateById(auth);
+//        afterSubmitUpdateRedis(customerId, false, reqDTO.getRealName(), reqDTO.getIdCard());
+//        return buildResp(2,0,2,"实名失败",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),auth.getFailReason());
     }
 
 
