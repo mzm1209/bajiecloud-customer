@@ -11,12 +11,7 @@ import com.bajiezu.cloud.customer.app.vo.AddressListVO;
 import com.bajiezu.cloud.customer.app.vo.AppCustomerProfileRespVO;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -42,6 +37,25 @@ public class AppCustomerController {
 
     @GetMapping("/address/detail/{id}")
     public CommonResult<AddressDetailVO> getAddressDetail(@PathVariable("id") Long id) {
+        return CommonResult.success(appCustomerService.getAddressDetail(id));
+    }
+
+    /**
+     * 兼容两种方式：
+     * 1) /address/detail/{id}
+     * 2) /address/detail?id=xxx
+     */
+    @GetMapping({"/address/detail/{id}", "/address/detail"})
+    public CommonResult<AddressDetailVO> getAddressDetail(
+            @PathVariable(value = "id", required = false) Long pathId,
+            @RequestParam(value = "id", required = false) Long queryId) {
+
+        Long id = pathId != null ? pathId : queryId;
+        if (id == null) {
+            // 按你们项目统一异常/返回码风格改
+            throw new IllegalArgumentException("id 不能为空");
+        }
+
         return CommonResult.success(appCustomerService.getAddressDetail(id));
     }
 
