@@ -87,6 +87,8 @@ public class AppRealnameServiceImpl implements AppRealnameService {
     private String ossPrefix;
     @Value("${app.realname.oss.preview-expire-seconds:600}")
     private long previewExpireSeconds;
+    @Value("${spring.redis.key.prefix:}")
+    private String redisPrefix;
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
     private static final Set<String> ALLOWED_MIME = Set.of("image/jpeg", "image/png");
@@ -410,7 +412,7 @@ public class AppRealnameServiceImpl implements AppRealnameService {
                 }
             }
         }
-        redisTemplate.delete("customer_base_info:"+customerId);
+        redisTemplate.delete(redisPrefix + "customer_base_info:" + customerId);
     }
 
     private LoginUser<?> requireLoginUser() {
