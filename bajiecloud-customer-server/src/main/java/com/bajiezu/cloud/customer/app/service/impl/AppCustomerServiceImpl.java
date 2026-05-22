@@ -372,11 +372,11 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         vo.setNickName(customer.getNickname());
         vo.setAvatarUrl(customer.getAvatarUrl());
         String mobile = decryptIfPresent(customer.getMobile());
-        vo.setMobile(maskMobile(mobile));
+        vo.setMobile(mobile);
         vo.setHasMobile(StrUtil.isNotBlank(mobile));
-        vo.setEmail(maskEmail(decryptIfPresent(customer.getEmail())));
-        vo.setRealName(maskName(decryptIfPresent(customer.getRealName())));
-        vo.setIdCard(maskIdCard(decryptIfPresent(customer.getIdCard())));
+        vo.setEmail(decryptIfPresent(customer.getEmail()));
+        vo.setRealName(decryptIfPresent(customer.getRealName()));
+        vo.setIdCard(decryptIfPresent(customer.getIdCard()));
         vo.setRealnameStatus(customer.getRealnameStatus());
         vo.setFaceAuthStatus(customer.getFaceAuthStatus());
         vo.setGender(formatGender(customer.getGender()));

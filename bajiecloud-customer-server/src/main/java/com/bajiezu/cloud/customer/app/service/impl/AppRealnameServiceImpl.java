@@ -420,11 +420,11 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         profile.setCustomerId(customerId);
         profile.setNickName(customer.getNickname());
         profile.setAvatarUrl(customer.getAvatarUrl());
-        profile.setMobile(maskMobile(decrypt(customer.getMobile())));
+        profile.setMobile(decrypt(customer.getMobile()));
         profile.setHasMobile(StrUtil.isNotBlank(decrypt(customer.getMobile())));
-        profile.setEmail(maskEmail(decrypt(customer.getEmail())));
-        profile.setRealName(maskName(decrypt(customer.getRealName())));
-        profile.setIdCard(IdCardUtil.desensitize(decrypt(customer.getIdCard())));
+        profile.setEmail(decrypt(customer.getEmail()));
+        profile.setRealName(decrypt(customer.getRealName()));
+        profile.setIdCard(decrypt(customer.getIdCard()));
         profile.setGender(customer.getGender() == null ? null : (customer.getGender() == 1 ? "男" : (customer.getGender() == 2 ? "女" : "未知")));
         profile.setBirthday(formatDate(customer.getBirthday()));
         profile.setEthnicity(auth.getEthnicity());
