@@ -21,6 +21,9 @@ public class AppCustomerProfileRespVO {
     @Schema(description = "是否绑定手机号")
     private Boolean hasMobile;
 
+    @Schema(description = "脱敏邮箱")
+    private String email;
+
     @Schema(description = "实名状态")
     private Integer realnameStatus;
 
@@ -32,6 +35,27 @@ public class AppCustomerProfileRespVO {
 
     @Schema(description = "脱敏身份证号")
     private String idCard;
+
+    @Schema(description = "性别")
+    private String gender;
+
+    @Schema(description = "生日")
+    private String birthday;
+
+    @Schema(description = "民族")
+    private String ethnicity;
+
+    @Schema(description = "地址")
+    private String address;
+
+    @Schema(description = "签发机关")
+    private String issue_authority;
+
+    @Schema(description = "证件有效期起")
+    private String id_card_valid_start;
+
+    @Schema(description = "证件有效期止")
+    private String id_card_valid_end;
 
     @Schema(description = "账户状态")
     private Integer accountStatus;

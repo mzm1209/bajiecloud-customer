@@ -9,6 +9,7 @@ import com.bajiezu.cloud.customer.app.dto.AppIdentityListReqDTO;
 import com.bajiezu.cloud.customer.app.dto.AppRealnameSubmitReqDTO;
 import com.bajiezu.cloud.customer.app.vo.AppIdentityDetailRespVO;
 import com.bajiezu.cloud.customer.app.vo.AppIdentityListItemVO;
+import com.bajiezu.cloud.customer.app.vo.AppCustomerProfileRespVO;
 import com.bajiezu.cloud.customer.app.vo.AppIdentityListRespVO;
 import com.bajiezu.cloud.customer.app.vo.AppRealnameSubmitRespVO;
 import com.bajiezu.cloud.customer.app.vo.AppRealnameStatusRespVO;
@@ -285,9 +286,11 @@ public class AppRealnameServiceImpl implements AppRealnameService {
             customer.setRealnameStatus(1); customer.setRealnameTime(now); customer.setFaceAuthStatus(0);
             customer.setRealName(encName); customer.setIdCard(encId); customer.setIdCardHash(idHash);
             customer.setGender(reqDTO.getGender()); customer.setBirthday(parseDate(reqDTO.getBirthday())); customer.setIsAnonymous(false);
+            customer.setMobile(encrypt(reqDTO.getMobile()));
+            customer.setEmail(encrypt(reqDTO.getEmail()));
             customerMapper.updateById(customer);
             customerRealnameAuthMapper.updateById(auth);
-            afterSubmitUpdateRedis(customerId, true, reqDTO.getRealName(), reqDTO.getIdCard());
+            afterSubmitUpdateRedis(customer, auth, true, reqDTO.getRealName(), reqDTO.getIdCard());
             return buildResp(1,0,1,"已实名",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),null);
 //        }
 //        auth.setAuthStatus(2); auth.setFailReason(StrUtil.blankToDefault(verifyResult.getMessage(), "阿里云认证异常或服务暂不可用"));
@@ -383,7 +386,8 @@ public class AppRealnameServiceImpl implements AppRealnameService {
     private Integer mapAuthStatusToRealnameStatus(Integer authStatus) { if (authStatus == null) return 0; if (authStatus == 1) return 1; if (authStatus == 2) return 2; return 0; }
     private void fillStatusFields(AppRealnameStatusRespVO respVO, Integer realnameStatus) { if (realnameStatus != null && realnameStatus == 1) { respVO.setStatusDesc("已实名"); respVO.setCanSubmit(false); return; } if (realnameStatus != null && realnameStatus == 2) { respVO.setStatusDesc("实名失败"); respVO.setCanSubmit(true); return; } respVO.setStatusDesc("未实名"); respVO.setCanSubmit(true); }
     private AppRealnameSubmitRespVO buildResp(Integer rs,Integer fs,Integer as,String desc,String orderNo,String name,String id,String fail){ AppRealnameSubmitRespVO v=new AppRealnameSubmitRespVO(); v.setRealnameStatus(rs);v.setFaceAuthStatus(fs);v.setAuthStatus(as);v.setStatusDesc(desc);v.setAuthOrderNo(orderNo);v.setRealName(maskName(name));v.setIdCard(IdCardUtil.desensitize(id));v.setFailReason(fail); return v; }
-    private void afterSubmitUpdateRedis(Long customerId, boolean passed, String name, String idCard){
+    private void afterSubmitUpdateRedis(Customer customer, CustomerRealnameAuthDO auth, boolean passed, String name, String idCard){
+        Long customerId = customer.getId();
         String idxKey="bajie:auth:app-user-tokens:"+customerId;
         Set<String> tokens=redisTemplate.opsForSet().members(idxKey);
         if(tokens!=null){
@@ -412,7 +416,29 @@ public class AppRealnameServiceImpl implements AppRealnameService {
                 }
             }
         }
-        redisTemplate.delete(redisPrefix + "customer_base_info:" + customerId);
+        AppCustomerProfileRespVO profile = new AppCustomerProfileRespVO();
+        profile.setCustomerId(customerId);
+        profile.setNickName(customer.getNickname());
+        profile.setAvatarUrl(customer.getAvatarUrl());
+        profile.setMobile(maskMobile(decrypt(customer.getMobile())));
+        profile.setHasMobile(StrUtil.isNotBlank(decrypt(customer.getMobile())));
+        profile.setEmail(maskEmail(decrypt(customer.getEmail())));
+        profile.setRealName(maskName(decrypt(customer.getRealName())));
+        profile.setIdCard(IdCardUtil.desensitize(decrypt(customer.getIdCard())));
+        profile.setGender(customer.getGender() == null ? null : (customer.getGender() == 1 ? "男" : (customer.getGender() == 2 ? "女" : "未知")));
+        profile.setBirthday(formatDate(customer.getBirthday()));
+        profile.setEthnicity(auth.getEthnicity());
+        profile.setAddress(decrypt(auth.getAddress()));
+        profile.setIssue_authority(auth.getIssueAuthority());
+        profile.setId_card_valid_start(formatDate(auth.getIdCardValidStart()));
+        profile.setId_card_valid_end(formatDate(auth.getIdCardValidEnd()));
+        profile.setRealnameStatus(customer.getRealnameStatus());
+        profile.setFaceAuthStatus(customer.getFaceAuthStatus());
+        profile.setAccountStatus(customer.getAccountStatus());
+        profile.setPlatformName(customer.getPlatformName());
+        profile.setSourceChannel(customer.getSourceChannel());
+        profile.setLastLoginTime(formatDateTime(customer.getLastLoginTime()));
+        redisTemplate.opsForValue().set(redisPrefix + "customer_base_info:" + customerId, JacksonUtil.obj2Str(profile), 30, TimeUnit.MINUTES);
     }
 
     private LoginUser<?> requireLoginUser() {
