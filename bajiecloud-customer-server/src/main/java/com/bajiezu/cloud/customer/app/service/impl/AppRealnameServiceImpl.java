@@ -19,6 +19,7 @@ import com.bajiezu.cloud.customer.dal.mapper.CustomerRealnameAuthMapper;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
 import com.bajiezu.cloud.customer.utils.IdCardUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.Locale;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class AppRealnameServiceImpl implements AppRealnameService {
 
@@ -274,6 +276,7 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         String frontUrl = ossPrivateFileService.generatePreviewUrl(front.getFileKey(), 600);
         String backUrl = ossPrivateFileService.generatePreviewUrl(back.getFileKey(), 600);
         AliyunVerifyMaterialResult verifyResult = aliyunCloudauthClient.verifyMaterial(reqDTO.getRealName(), reqDTO.getIdCard(), frontUrl, backUrl);
+        log.debug("aliyun 认证返回结果===="+verifyResult);
         auth.setFaceAuthResult(verifyResult.getRawResult()); // 本期暂存 VerifyMaterial 原始结果
         if (verifyResult.isSuccess()) {
             auth.setAuthStatus(1); auth.setPassTime(now); auth.setFailReason(null);

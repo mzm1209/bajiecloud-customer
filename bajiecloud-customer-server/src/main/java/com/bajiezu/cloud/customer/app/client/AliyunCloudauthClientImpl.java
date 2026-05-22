@@ -34,6 +34,8 @@ public class AliyunCloudauthClientImpl implements AliyunCloudauthClient {
         try {
             Assert.hasText(properties.getAccessKeyId(), "aliyun.cloudauth.accessKeyId must not be blank");
             Assert.hasText(properties.getAccessKeySecret(), "aliyun.cloudauth.accessKeySecret must not be blank");
+            log.debug("AccessKeyId========"+properties.getAccessKeyId());
+            log.debug("AccessKeySecret========"+properties.getAccessKeySecret());
             Client client = createClient();
             RuntimeOptions runtime = new RuntimeOptions();
 
@@ -45,13 +47,13 @@ public class AliyunCloudauthClientImpl implements AliyunCloudauthClient {
                     .setCardPageNumber("2")
                     .setPictureSave("Y");
             InitCardVerifyResponse initResp = client.initCardVerifyWithOptions(initReq, runtime);
-
+            log.debug("InitCardVerifyResponse========"+initResp);
             Id2MetaStandardVerifyRequest verifyReq = new Id2MetaStandardVerifyRequest()
                     .setParamType("normal")
                     .setIdentifyNum(idCard)
                     .setUserName(realName);
             Id2MetaStandardVerifyResponse verifyResp = client.id2MetaStandardVerifyWithOptions(verifyReq, runtime);
-
+            log.debug("Id2MetaStandardVerifyResponse========"+verifyResp);
             String initJson = JacksonUtil.obj2Str(initResp);
             String verifyJson = JacksonUtil.obj2Str(verifyResp);
             result.setRawResult("{\"initCardVerify\":" + initJson + ",\"id2MetaStandardVerify\":" + verifyJson + "}");
