@@ -12,9 +12,11 @@ import com.bajiezu.cloud.customer.app.vo.AddressDetailVO;
 import com.bajiezu.cloud.customer.app.vo.AddressListVO;
 import com.bajiezu.cloud.customer.app.vo.AppCustomerProfileRespVO;
 import com.bajiezu.cloud.customer.dal.entity.CustomerAddress;
+import com.bajiezu.cloud.customer.dal.entity.CustomerRealnameAuthDO;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerAddressMapper;
 import com.bajiezu.cloud.customer.dal.entity.Customer;
 import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerRealnameAuthMapper;
 import com.bajiezu.cloud.customer.utils.JacksonUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -64,6 +66,8 @@ public class AppCustomerServiceImpl implements AppCustomerService {
     private CustomerMapper customerMapper;
     @Resource
     private CustomerAddressMapper customerAddressMapper;
+    @Resource
+    private CustomerRealnameAuthMapper customerRealnameAuthMapper;
 
     @Override
     public AppCustomerProfileRespVO getProfile() {
@@ -72,7 +76,10 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         String cache = redisTemplate.opsForValue().get(key);
         if (StrUtil.isNotBlank(cache)) {
             try {
-                return JacksonUtil.str2Obj(cache, AppCustomerProfileRespVO.class);
+                AppCustomerProfileRespVO cached = JacksonUtil.str2Obj(cache, AppCustomerProfileRespVO.class);
+                if (!needRefreshProfileCache(cached)) {
+                    return cached;
+                }
             } catch (IOException ignored) {
                 // ignore invalid cache and fallback to db
             }
@@ -368,15 +375,34 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         vo.setNickName(customer.getNickname());
         vo.setAvatarUrl(customer.getAvatarUrl());
         String mobile = decryptIfPresent(customer.getMobile());
-        vo.setMobile(maskMobile(mobile));
+        vo.setMobile(mobile);
         vo.setHasMobile(StrUtil.isNotBlank(mobile));
-        vo.setRealName(maskName(decryptIfPresent(customer.getRealName())));
-        vo.setIdCard(maskIdCard(decryptIfPresent(customer.getIdCard())));
-        vo.setRealnameStatus(0);
-        vo.setFaceAuthStatus(0);
+        vo.setEmail(decryptIfPresent(customer.getEmail()));
+        vo.setRealName(decryptIfPresent(customer.getRealName()));
+        vo.setIdCard(decryptIfPresent(customer.getIdCard()));
+        vo.setRealnameStatus(customer.getRealnameStatus());
+        vo.setFaceAuthStatus(customer.getFaceAuthStatus());
         vo.setAccountStatus(customer.getAccountStatus());
         vo.setPlatformName(customer.getPlatformName());
         vo.setSourceChannel(customer.getSourceChannel());
+        CustomerRealnameAuthDO latestAuth = customerRealnameAuthMapper.selectOne(new LambdaQueryWrapper<CustomerRealnameAuthDO>()
+                .eq(CustomerRealnameAuthDO::getCustomerId, customer.getId())
+                .eq(CustomerRealnameAuthDO::getIsDeleted, 0)
+                .eq(CustomerRealnameAuthDO::getAuthStatus, 1)
+                .orderByDesc(CustomerRealnameAuthDO::getId)
+                .last("limit 1"));
+        if (latestAuth != null) {
+            vo.setGender(formatGender(latestAuth.getGender()));
+            vo.setBirthday(formatDate(latestAuth.getBirthday()));
+            vo.setEthnicity(latestAuth.getEthnicity());
+            vo.setAddress(decryptIfPresent(latestAuth.getAddress()));
+            vo.setIssue_authority(latestAuth.getIssueAuthority());
+            vo.setId_card_valid_start(formatDate(latestAuth.getIdCardValidStart()));
+            vo.setId_card_valid_end(formatDate(latestAuth.getIdCardValidEnd()));
+        } else {
+            vo.setGender(formatGender(customer.getGender()));
+            vo.setBirthday(formatDate(customer.getBirthday()));
+        }
         if (customer.getLastLoginTime() != null) {
             vo.setLastLoginTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(customer.getLastLoginTime()));
         }
@@ -409,5 +435,54 @@ public class AppCustomerServiceImpl implements AppCustomerService {
             return idCard;
         }
         return idCard.substring(0, 3) + "***********" + idCard.substring(idCard.length() - 4);
+    }
+
+    private String maskEmail(String email) {
+        if (StrUtil.isBlank(email) || !email.contains("@")) {
+            return email;
+        }
+        String[] parts = email.split("@", 2);
+        String username = parts[0];
+        if (username.length() <= 2) {
+            return username.charAt(0) + "***@" + parts[1];
+        }
+        return username.charAt(0) + "***" + username.charAt(username.length() - 1) + "@" + parts[1];
+    }
+
+    private String formatGender(Integer gender) {
+        if (gender == null) {
+            return null;
+        }
+        if (gender == 1) {
+            return "男";
+        }
+        if (gender == 2) {
+            return "女";
+        }
+        return "未知";
+    }
+
+    private String formatDate(Date date) {
+        if (date == null) {
+            return null;
+        }
+        return new SimpleDateFormat("yyyy-MM-dd").format(date);
+    }
+
+    private boolean needRefreshProfileCache(AppCustomerProfileRespVO cached) {
+        if (cached == null) {
+            return true;
+        }
+        Integer realnameStatus = cached.getRealnameStatus();
+        if (realnameStatus == null || realnameStatus != 1) {
+            return false;
+        }
+        return cached.getGender() == null
+                || cached.getBirthday() == null
+                || cached.getEthnicity() == null
+                || cached.getAddress() == null
+                || cached.getIssue_authority() == null
+                || cached.getId_card_valid_start() == null
+                || cached.getId_card_valid_end() == null;
     }
 }
