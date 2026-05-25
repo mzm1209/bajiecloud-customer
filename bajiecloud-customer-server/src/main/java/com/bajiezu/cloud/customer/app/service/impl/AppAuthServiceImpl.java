@@ -3,6 +3,7 @@ package com.bajiezu.cloud.customer.app.service.impl;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import com.bajiezu.cloud.alipay.AlipayProperties;
 import com.bajiezu.cloud.common.constants.UserTypeEnum;
 import com.bajiezu.cloud.customer.app.client.alipay.AlipayLoginGateway;
 import com.bajiezu.cloud.customer.app.client.alipay.dto.AlipayPhoneInfo;
@@ -46,6 +47,8 @@ public class AppAuthServiceImpl implements AppAuthService {
     private AppLoginTokenService appLoginTokenService;
     @Resource
     private AlipayLoginGateway alipayLoginGateway;
+    @Resource
+    private AlipayProperties alipayProperties;
     @Autowired
     private SpringUtil springUtil;
 
@@ -94,7 +97,8 @@ public class AppAuthServiceImpl implements AppAuthService {
         String masked = maskMobile(mobile);
 
         log.debug("开始获取用户登录token");
-        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), "AliPay");
+        String alipayAppId = alipayProperties.getMiniapp() != null ? alipayProperties.getMiniapp().getAppId() : null;
+        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), "AliPay", openId, alipayAppId);
         log.debug("已获取用户登录token："+token);
 
         AppLoginRespVO vo = new AppLoginRespVO();
@@ -158,7 +162,7 @@ public class AppAuthServiceImpl implements AppAuthService {
             customerMapper.updateById(customer);
         }
         String masked = maskMobile(reqDTO.getMobile());
-        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
+        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"), null, null);
         AppLoginRespVO vo = new AppLoginRespVO();
         vo.setTokenName("app-user-token");
         vo.setToken(token);
@@ -220,11 +224,13 @@ public class AppAuthServiceImpl implements AppAuthService {
         }
     }
 
-    private String createToken(Long customerId, String maskedMobile, String deviceId, String sourceChannel) {
+    private String createToken(Long customerId, String maskedMobile, String deviceId, String sourceChannel, String alipayOpenId, String alipayAppId) {
         CustomerInfo customerInfo = CustomerInfo.builder()
                 .customerId(customerId)
                 .phone(maskedMobile)
                 .miniProgramOpenId(String.valueOf(customerId))
+                .alipayOpenId(alipayOpenId)
+                .alipayAppId(alipayAppId)
                 .build();
         LoginUser<CustomerInfo> loginUser = new LoginUser<>();
         loginUser.setId(customerId);
