@@ -6,6 +6,7 @@
         <id column="id" property="id"/>
         <result column="platform_uid" property="platformUid"/>
         <result column="third_party_id" property="thirdPartyId"/>
+        <result column="third_open_id" property="thirdOpenId"/>
         <result column="platform_name" property="platformName"/>
         <result column="source_channel" property="sourceChannel"/>
         <result column="source_level" property="sourceLevel"/>
@@ -43,7 +44,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, platform_uid, third_party_id, platform_name, source_channel, source_level, source_point,
+        id, platform_uid, third_party_id, third_open_id, platform_name, source_channel, source_level, source_point,
         mobile, email, wechat_id, wechat_mobile, id_card, id_card_hash, nickname, avatar_url, real_name,
         gender, birthday, area_code, member_level, in_black_list, in_black_reason, is_anonymous,
         account_status, merge_master_id, last_login_time, last_login_ip, order_count, last_order_time, last_source, version,

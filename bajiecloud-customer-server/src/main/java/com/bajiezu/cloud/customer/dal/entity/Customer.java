@@ -30,6 +30,10 @@ public class Customer implements Serializable {
     @TableField("third_party_id")
     private String thirdPartyId;
 
+    /** 第三方平台OpenID */
+    @TableField("third_open_id")
+    private String thirdOpenId;
+
     /** 来源平台名称 */
     @TableField("platform_name")
     private String platformName;

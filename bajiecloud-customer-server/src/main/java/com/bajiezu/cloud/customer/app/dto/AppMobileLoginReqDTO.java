@@ -11,6 +11,10 @@ public class AppMobileLoginReqDTO {
     private String mobile;
     @NotBlank
     private String smsCode;
+    /**
+     * 支付宝小程序授权码（可选）
+     */
+    private String authCode;
     private String sourceChannel;
     private String deviceId;
 }

@@ -13,4 +13,6 @@ public class AppLoginRespVO {
     private Integer realnameStatus;
     private Integer faceAuthStatus;
     private Integer accountStatus;
+    private String thirdPartyId;
+    private String thirdOpenId;
 }
