@@ -384,6 +384,8 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         vo.setAccountStatus(customer.getAccountStatus());
         vo.setPlatformName(customer.getPlatformName());
         vo.setSourceChannel(customer.getSourceChannel());
+        vo.setThirdPartyId(customer.getThirdPartyId());
+        vo.setThirdOpenId(customer.getThirdOpenId());
         CustomerRealnameAuthDO latestAuth = customerRealnameAuthMapper.selectOne(new LambdaQueryWrapper<CustomerRealnameAuthDO>()
                 .eq(CustomerRealnameAuthDO::getCustomerId, customer.getId())
                 .eq(CustomerRealnameAuthDO::getIsDeleted, 0)
