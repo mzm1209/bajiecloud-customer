@@ -256,7 +256,6 @@ public class AppAuthServiceImpl implements AppAuthService {
                 .customerId(customerId)
                 .phone(maskedMobile)
                 .miniProgramOpenId(String.valueOf(customerId))
-                .alipayOpenId(alipayOpenId)
                 .alipayAppId(alipayAppId)
                 .build();
         LoginUser<CustomerInfo> loginUser = new LoginUser<>();
