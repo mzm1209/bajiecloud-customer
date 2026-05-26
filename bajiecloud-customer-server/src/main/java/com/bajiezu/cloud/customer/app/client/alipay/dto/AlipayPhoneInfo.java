@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class AlipayPhoneInfo {
+    private String userId;
     private String openId;
     private String mobile;
 }

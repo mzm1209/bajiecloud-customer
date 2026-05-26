@@ -66,6 +66,12 @@ public class AppCustomerProfileRespVO {
     @Schema(description = "来源渠道")
     private String sourceChannel;
 
+    @Schema(description = "第三方平台用户ID（支付宝userId）")
+    private String thirdPartyId;
+
+    @Schema(description = "第三方平台OpenID（支付宝openId）")
+    private String thirdOpenId;
+
     @Schema(description = "最近登录时间")
     private String lastLoginTime;
 }

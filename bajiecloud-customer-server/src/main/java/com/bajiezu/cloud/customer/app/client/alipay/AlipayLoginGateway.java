@@ -24,7 +24,7 @@ public class AlipayLoginGateway {
     @Resource
     private ApplicationContext applicationContext;
 
-    public String getOpenId(String authCode) {
+    public String getUserId(String authCode) {
         AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
         return response.getUserId();
     }
@@ -32,7 +32,8 @@ public class AlipayLoginGateway {
     public AlipayPhoneInfo getPhone(String authCode) {
         AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
         AlipayPhoneInfo info = new AlipayPhoneInfo();
-        info.setOpenId(response.getUserId());
+        info.setUserId(response.getUserId());
+        info.setOpenId(response.getOpenId());
         // TODO 当前 SDK 版本未提供 AlipayUserPhoneGetRequest/AlipayUserPhoneGetResponse，待升级后补充手机号获取。
         return info;
     }

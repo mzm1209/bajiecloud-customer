@@ -57,26 +57,27 @@ public class AppAuthServiceImpl implements AppAuthService {
         if (StrUtil.isBlank(reqDTO.getAuthCode())) {
             throw exception(LOGIN_EXCEPTION);
         }
-        log.debug("开始获取ali openid=====");
-        //获取 openid 测试 url拦截器
+        log.debug("开始获取ali userId/openId=====");
         AlipayPhoneInfo phoneInfo = alipayLoginGateway.getPhone(reqDTO.getAuthCode());
-        String openId = phoneInfo.getOpenId();
-        if (StrUtil.isBlank(openId)) {
-            openId = alipayLoginGateway.getOpenId(reqDTO.getAuthCode());
+        String thirdPartyId = phoneInfo.getUserId();
+        String thirdOpenId = phoneInfo.getOpenId();
+        if (StrUtil.isBlank(thirdPartyId)) {
+            thirdPartyId = alipayLoginGateway.getUserId(reqDTO.getAuthCode());
         }
-        log.debug("已获取ali openid：===="+openId);
-        if (StrUtil.isBlank(openId)) {
+        log.debug("已获取ali userId：====" + thirdPartyId + ", openId:====" + thirdOpenId);
+        if (StrUtil.isBlank(thirdPartyId)) {
             throw exception(LOGIN_EXCEPTION);
         }
         Customer customer = customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
-                .eq(Customer::getThirdPartyId, openId)
+                .eq(Customer::getThirdPartyId, thirdPartyId)
                 .last("limit 1"));
         String mobile = phoneInfo.getMobile();
         String encryptedMobile = encryptMobileIfPresent(mobile);
         if (customer == null) {
             customer = new Customer();
-            customer.setPlatformUid("alipay_openid_" + openId);
-            customer.setThirdPartyId(openId);
+            customer.setPlatformUid("alipay_userid_" + thirdPartyId);
+            customer.setThirdPartyId(thirdPartyId);
+            customer.setThirdOpenId(thirdOpenId);
             customer.setPlatformName("ALIPAY_MINI_APP");
             customer.setSourceChannel("AliPay");
             customer.setMobile(encryptedMobile);
@@ -90,6 +91,9 @@ public class AppAuthServiceImpl implements AppAuthService {
             if (StrUtil.isNotBlank(encryptedMobile) && StrUtil.isBlank(customer.getMobile())) {
                 customer.setMobile(encryptedMobile);
             }
+            if (StrUtil.isNotBlank(thirdOpenId) && StrUtil.isBlank(customer.getThirdOpenId())) {
+                customer.setThirdOpenId(thirdOpenId);
+            }
             customer.setLastLoginTime(new Date());
             customer.setUpdateTime(new Date());
             customerMapper.updateById(customer);
@@ -98,7 +102,7 @@ public class AppAuthServiceImpl implements AppAuthService {
 
         log.debug("开始获取用户登录token");
         String alipayAppId = alipayProperties.getMiniapp() != null ? alipayProperties.getMiniapp().getAppId() : null;
-        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), "AliPay", openId, alipayAppId);
+        String token = createToken(customer.getId(), masked, "AliPay");
         log.debug("已获取用户登录token："+token);
 
         AppLoginRespVO vo = new AppLoginRespVO();
@@ -111,6 +115,8 @@ public class AppAuthServiceImpl implements AppAuthService {
         vo.setRealnameStatus(0);
         vo.setFaceAuthStatus(0);
         vo.setAccountStatus(1);
+        vo.setThirdPartyId(customer.getThirdPartyId());
+        vo.setThirdOpenId(customer.getThirdOpenId());
         return vo;
     }
 
@@ -140,13 +146,26 @@ public class AppAuthServiceImpl implements AppAuthService {
         appSmsCodeLogMapper.updateById(log);
 
         String encryptedMobile = encryptMobileIfPresent(reqDTO.getMobile());
+        AlipayPhoneInfo phoneInfo = null;
+        String thirdPartyId = null;
+        String thirdOpenId = null;
+        if (StrUtil.isNotBlank(reqDTO.getAuthCode())) {
+            phoneInfo = alipayLoginGateway.getPhone(reqDTO.getAuthCode());
+            thirdPartyId = phoneInfo.getUserId();
+            thirdOpenId = phoneInfo.getOpenId();
+            if (StrUtil.isBlank(thirdPartyId)) {
+                thirdPartyId = alipayLoginGateway.getUserId(reqDTO.getAuthCode());
+            }
+        }
+
         Customer customer = customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
                 .eq(Customer::getMobile, encryptedMobile)
                 .last("limit 1"));
         if (customer == null) {
             customer = new Customer();
             customer.setPlatformUid(buildPlatformUid(reqDTO));
-//            customer.setThirdPartyId(buildPlatformUid(reqDTO));
+            customer.setThirdPartyId(thirdPartyId);
+            customer.setThirdOpenId(thirdOpenId);
             customer.setMobile(encryptedMobile);
             customer.setSourceChannel(StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
             customer.setPlatformName("AliPay");
@@ -159,10 +178,16 @@ public class AppAuthServiceImpl implements AppAuthService {
         } else {
             customer.setLastLoginTime(new Date());
             customer.setUpdateTime(new Date());
+            if (StrUtil.isNotBlank(thirdPartyId) && StrUtil.isBlank(customer.getThirdPartyId())) {
+                customer.setThirdPartyId(thirdPartyId);
+            }
+            if (StrUtil.isNotBlank(thirdOpenId) && StrUtil.isBlank(customer.getThirdOpenId())) {
+                customer.setThirdOpenId(thirdOpenId);
+            }
             customerMapper.updateById(customer);
         }
         String masked = maskMobile(reqDTO.getMobile());
-        String token = createToken(customer.getId(), masked, reqDTO.getDeviceId(), StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"), null, null);
+        String token = createToken(customer.getId(), masked, StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
         AppLoginRespVO vo = new AppLoginRespVO();
         vo.setTokenName("app-user-token");
         vo.setToken(token);
@@ -173,6 +198,8 @@ public class AppAuthServiceImpl implements AppAuthService {
         vo.setRealnameStatus(0);
         vo.setFaceAuthStatus(0);
         vo.setAccountStatus(1);
+        vo.setThirdPartyId(customer.getThirdPartyId());
+        vo.setThirdOpenId(customer.getThirdOpenId());
         return vo;
     }
 
@@ -224,13 +251,11 @@ public class AppAuthServiceImpl implements AppAuthService {
         }
     }
 
-    private String createToken(Long customerId, String maskedMobile, String deviceId, String sourceChannel, String alipayOpenId, String alipayAppId) {
+    private String createToken(Long customerId, String maskedMobile, String sourceChannel) {
         CustomerInfo customerInfo = CustomerInfo.builder()
                 .customerId(customerId)
                 .phone(maskedMobile)
                 .miniProgramOpenId(String.valueOf(customerId))
-                .alipayOpenId(alipayOpenId)
-                .alipayAppId(alipayAppId)
                 .build();
         LoginUser<CustomerInfo> loginUser = new LoginUser<>();
         loginUser.setId(customerId);

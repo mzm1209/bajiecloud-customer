@@ -437,6 +437,8 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         profile.setAccountStatus(customer.getAccountStatus());
         profile.setPlatformName(customer.getPlatformName());
         profile.setSourceChannel(customer.getSourceChannel());
+        profile.setThirdPartyId(customer.getThirdPartyId());
+        profile.setThirdOpenId(customer.getThirdOpenId());
         profile.setLastLoginTime(formatDateTime(customer.getLastLoginTime()));
         redisTemplate.opsForValue().set(redisPrefix + "customer_base_info:" + customerId, JacksonUtil.obj2Str(profile), 30, TimeUnit.MINUTES);
     }
