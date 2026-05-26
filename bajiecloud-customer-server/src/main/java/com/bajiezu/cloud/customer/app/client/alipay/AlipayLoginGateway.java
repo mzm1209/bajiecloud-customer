@@ -31,6 +31,7 @@ public class AlipayLoginGateway {
 
     public AlipayPhoneInfo getPhone(String authCode) {
         AlipaySystemOauthTokenResponse response = exchangeToken(authCode);
+        log.debug("已获取ali response：====" + response);
         AlipayPhoneInfo info = new AlipayPhoneInfo();
         info.setUserId(response.getUserId());
         info.setOpenId(response.getOpenId());
