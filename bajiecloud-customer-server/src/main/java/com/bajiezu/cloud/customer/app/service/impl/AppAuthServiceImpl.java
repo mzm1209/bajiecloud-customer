@@ -32,6 +32,7 @@ import java.util.Date;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.SMS_CODE_INVALID;
 
 @Slf4j
 @Service
@@ -139,7 +140,7 @@ public class AppAuthServiceImpl implements AppAuthService {
             log.setVerifyCount(log.getVerifyCount() + 1);
             log.setUpdateTime(new Date());
             appSmsCodeLogMapper.updateById(log);
-            throw exception(LOGIN_EXCEPTION);
+            throw exception(SMS_CODE_INVALID);
         }
         log.setVerifyStatus(1);
         log.setUpdateTime(new Date());

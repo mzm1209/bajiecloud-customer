@@ -5,6 +5,7 @@ import com.bajiezu.cloud.common.web.exception.ErrorCode;
 public interface ErrorCodeConstants {
 
     ErrorCode LOGIN_EXCEPTION = new ErrorCode(1_004_001_001, "用户登录异常");
+    ErrorCode SMS_CODE_INVALID = new ErrorCode(1_004_001_011, "验证码有误");
 
     ErrorCode NAME_EXIST = new ErrorCode(1_004_001_002, "名称已存在");
 
