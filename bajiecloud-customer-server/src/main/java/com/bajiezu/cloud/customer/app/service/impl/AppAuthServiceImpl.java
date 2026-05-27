@@ -102,7 +102,7 @@ public class AppAuthServiceImpl implements AppAuthService {
 
         log.debug("开始获取用户登录token");
         String alipayAppId = alipayProperties.getMiniapp() != null ? alipayProperties.getMiniapp().getAppId() : null;
-        String token = createToken(customer.getId(), masked, "AliPay");
+        String token = createToken(customer.getId(), masked, "AliPay", thirdPartyId, alipayAppId);
         log.debug("已获取用户登录token："+token);
 
         AppLoginRespVO vo = new AppLoginRespVO();
@@ -187,7 +187,7 @@ public class AppAuthServiceImpl implements AppAuthService {
             customerMapper.updateById(customer);
         }
         String masked = maskMobile(reqDTO.getMobile());
-        String token = createToken(customer.getId(), masked, StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
+        String token = createToken(customer.getId(), masked, StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"), null, null);
         AppLoginRespVO vo = new AppLoginRespVO();
         vo.setTokenName("app-user-token");
         vo.setToken(token);
@@ -251,11 +251,14 @@ public class AppAuthServiceImpl implements AppAuthService {
         }
     }
 
-    private String createToken(Long customerId, String maskedMobile, String sourceChannel) {
+    private String createToken(Long customerId, String maskedMobile, String sourceChannel,
+                               String alipayUserId, String alipayAppId) {
         CustomerInfo customerInfo = CustomerInfo.builder()
                 .customerId(customerId)
                 .phone(maskedMobile)
                 .miniProgramOpenId(String.valueOf(customerId))
+                .alipayUserId(alipayUserId)
+                .alipayAppId(alipayAppId)
                 .build();
         LoginUser<CustomerInfo> loginUser = new LoginUser<>();
         loginUser.setId(customerId);
