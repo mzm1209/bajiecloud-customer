@@ -246,7 +246,7 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         Long customerId = extractCustomerId(loginUser);
         if (!Boolean.TRUE.equals(reqDTO.getAgreeAuth())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "请同意实名认证协议");
         if (StrUtil.isBlank(reqDTO.getRealName()) || StrUtil.isBlank(reqDTO.getIdCard())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "姓名和身份证号不能为空");
-        if (IdCardUtil.getBirthDateStr(reqDTO.getIdCard()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "身份证号格式错误");
+        if (IdCardUtil.getBirthDateStr(reqDTO.getIdCard()) == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "身份证号有误");
 
         Customer customer = customerMapper.selectById(customerId);
         if (customer == null || !Integer.valueOf(0).equals(customer.getIsDeleted())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "用户不存在");
