@@ -47,7 +47,7 @@ public class AppSmsServiceImpl implements AppSmsService {
         Date now = new Date();
         Long cooldown = appSmsCodeLogMapper.selectCount(new LambdaQueryWrapper<AppSmsCodeLogDO>()
                 .eq(AppSmsCodeLogDO::getMobileHash, mobileHash)
-                .ge(AppSmsCodeLogDO::getCreateTime, DateUtil.offsetSecond(now, -300)));
+                .ge(AppSmsCodeLogDO::getCreateTime, DateUtil.offsetSecond(now, -60)));
         if (cooldown > 0) throw exception(AUTH_LOGIN_SMS_SEND_FAIL);
 
 //        String code = RandomUtil.randomNumbers(6);
