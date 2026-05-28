@@ -252,7 +252,7 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         entity.setStreetAddress(streetAddress);
         entity.setPostalCode(postalCode);
         entity.setAddressType(addressType);
-        entity.setAddressTag(resolveAddressTag(addressType, addressTag));
+        entity.setAddressTag(addressTag);
         entity.setLongitude(longitude);
         entity.setLatitude(latitude);
         entity.setIsDefault(isDefault);
