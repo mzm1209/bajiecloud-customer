@@ -251,7 +251,7 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         Customer customer = customerMapper.selectById(customerId);
         if (customer == null || !Integer.valueOf(0).equals(customer.getIsDeleted())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "用户不存在");
         if (!Integer.valueOf(1).equals(customer.getAccountStatus())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "账户状态不允许实名认证");
-        if (Integer.valueOf(1).equals(customer.getRealnameStatus())) return buildResp(1,0,1,"已实名",null,reqDTO.getRealName(),reqDTO.getIdCard(),null);
+        if (Integer.valueOf(1).equals(customer.getRealnameStatus())) return buildResp(1,0,1,"已实名",null,reqDTO,null);
 
         AppFileUploadDO front = appFileUploadMapper.selectById(reqDTO.getIdCardFrontFileId());
         AppFileUploadDO back = appFileUploadMapper.selectById(reqDTO.getIdCardBackFileId());
@@ -291,13 +291,13 @@ public class AppRealnameServiceImpl implements AppRealnameService {
             customerMapper.updateById(customer);
             customerRealnameAuthMapper.updateById(auth);
             afterSubmitUpdateRedis(customer, auth, true, reqDTO.getRealName(), reqDTO.getIdCard());
-            return buildResp(1,0,1,"已实名",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),null);
+            return buildResp(1,0,1,"已实名",String.valueOf(auth.getId()),reqDTO,null);
 //        }
 //        auth.setAuthStatus(2); auth.setFailReason(StrUtil.blankToDefault(verifyResult.getMessage(), "阿里云认证异常或服务暂不可用"));
 //        customer.setRealnameStatus(2); customer.setFaceAuthStatus(0);
 //        customerMapper.updateById(customer); customerRealnameAuthMapper.updateById(auth);
 //        afterSubmitUpdateRedis(customerId, false, reqDTO.getRealName(), reqDTO.getIdCard());
-//        return buildResp(2,0,2,"实名失败",String.valueOf(auth.getId()),reqDTO.getRealName(),reqDTO.getIdCard(),auth.getFailReason());
+//        return buildResp(2,0,2,"实名失败",String.valueOf(auth.getId()),reqDTO,auth.getFailReason());
     }
 
 
@@ -385,7 +385,7 @@ public class AppRealnameServiceImpl implements AppRealnameService {
     private String getFirstNotBlank(String first, String second) { return StrUtil.isNotBlank(first) ? first : second; }
     private Integer mapAuthStatusToRealnameStatus(Integer authStatus) { if (authStatus == null) return 0; if (authStatus == 1) return 1; if (authStatus == 2) return 2; return 0; }
     private void fillStatusFields(AppRealnameStatusRespVO respVO, Integer realnameStatus) { if (realnameStatus != null && realnameStatus == 1) { respVO.setStatusDesc("已实名"); respVO.setCanSubmit(false); return; } if (realnameStatus != null && realnameStatus == 2) { respVO.setStatusDesc("实名失败"); respVO.setCanSubmit(true); return; } respVO.setStatusDesc("未实名"); respVO.setCanSubmit(true); }
-    private AppRealnameSubmitRespVO buildResp(Integer rs,Integer fs,Integer as,String desc,String orderNo,String name,String id,String fail){ AppRealnameSubmitRespVO v=new AppRealnameSubmitRespVO(); v.setRealnameStatus(rs);v.setFaceAuthStatus(fs);v.setAuthStatus(as);v.setStatusDesc(desc);v.setAuthOrderNo(orderNo);v.setRealName(maskName(name));v.setIdCard(IdCardUtil.desensitize(id));v.setFailReason(fail); return v; }
+    private AppRealnameSubmitRespVO buildResp(Integer rs,Integer fs,Integer as,String desc,String orderNo,AppRealnameSubmitReqDTO reqDTO,String fail){ AppRealnameSubmitRespVO v=new AppRealnameSubmitRespVO(); v.setRealnameStatus(rs);v.setFaceAuthStatus(fs);v.setAuthStatus(as);v.setStatusDesc(desc);v.setAuthOrderNo(orderNo);v.setRealName(reqDTO == null ? null : reqDTO.getRealName());v.setIdCard(reqDTO == null ? null : reqDTO.getIdCard());v.setGender(reqDTO == null ? null : reqDTO.getGender());v.setBirthday(reqDTO == null ? null : reqDTO.getBirthday());v.setEthnicity(reqDTO == null ? null : reqDTO.getEthnicity());v.setAddress(reqDTO == null ? null : reqDTO.getAddress());v.setIssueAuthority(reqDTO == null ? null : reqDTO.getIssueAuthority());v.setValidStart(reqDTO == null ? null : reqDTO.getValidStart());v.setValidEnd(reqDTO == null ? null : reqDTO.getValidEnd());v.setMobile(reqDTO == null ? null : reqDTO.getMobile());v.setEmail(reqDTO == null ? null : reqDTO.getEmail());v.setFailReason(fail); return v; }
     private void afterSubmitUpdateRedis(Customer customer, CustomerRealnameAuthDO auth, boolean passed, String name, String idCard){
         Long customerId = customer.getId();
         String idxKey="bajie:auth:app-user-tokens:"+customerId;

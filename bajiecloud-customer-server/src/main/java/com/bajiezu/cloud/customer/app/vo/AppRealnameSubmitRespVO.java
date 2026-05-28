@@ -11,5 +11,14 @@ public class AppRealnameSubmitRespVO {
     private String authOrderNo;
     private String realName;
     private String idCard;
+    private Integer gender;
+    private String birthday;
+    private String ethnicity;
+    private String address;
+    private String issueAuthority;
+    private String validStart;
+    private String validEnd;
+    private String mobile;
+    private String email;
     private String failReason;
 }
