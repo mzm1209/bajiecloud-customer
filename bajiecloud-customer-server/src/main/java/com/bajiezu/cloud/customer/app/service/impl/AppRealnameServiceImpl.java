@@ -353,10 +353,10 @@ public class AppRealnameServiceImpl implements AppRealnameService {
         vo.setSubmitTime(formatDateTime(row.getSubmitTime()));
         vo.setPassTime(formatDateTime(row.getPassTime()));
         vo.setFailReason(row.getFailReason());
-        vo.setRealName(maskName(decrypt(row.getRealName())));
-        vo.setIdCard(IdCardUtil.desensitize(decrypt(row.getIdCard())));
-        vo.setMobile(maskMobile(decrypt(customer == null ? null : customer.getMobile())));
-        vo.setEmail(maskEmail(decrypt(customer == null ? null : customer.getEmail())));
+        vo.setRealName(decrypt(row.getRealName()));
+        vo.setIdCard(decrypt(row.getIdCard()));
+        vo.setMobile(decrypt(customer == null ? null : customer.getMobile()));
+        vo.setEmail(decrypt(customer == null ? null : customer.getEmail()));
         vo.setGender(row.getGender());
         vo.setBirthday(formatDate(row.getBirthday()));
         vo.setEthnicity(row.getEthnicity());
