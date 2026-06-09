@@ -55,4 +55,8 @@ public interface CustomerApi {
     @PostMapping(PREFIX + "/orderUpdate")
     @Operation(summary = "客户下单更新数据")
     CommonResult<Boolean> customerOrderUpdate(@RequestBody CustomerBaseDto dto);
+
+    @PostMapping(PREFIX + "/getEncryptedInfo")
+    @Operation(summary = "获取客户加密敏感信息(密文)")
+    CommonResult<CustomerEncryptedInfoDto> getEncryptedInfo(@RequestBody CustomerBaseDto dto);
 }

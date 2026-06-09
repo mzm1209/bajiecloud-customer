@@ -6,6 +6,8 @@ import com.bajiezu.cloud.common.web.pojo.PageResult;
 import com.bajiezu.cloud.customer.api.dto.*;
 import com.bajiezu.cloud.customer.controller.customerbehaviorVO.CustomerBehaviorVO;
 import com.bajiezu.cloud.customer.controller.customervo.*;
+import com.bajiezu.cloud.customer.dal.entity.Customer;
+import com.bajiezu.cloud.customer.dal.mapper.CustomerMapper;
 import com.bajiezu.cloud.customer.service.CustomerBehaviorService;
 import com.bajiezu.cloud.customer.service.CustomerCacheService;
 import com.bajiezu.cloud.customer.service.CustomerService;
@@ -25,6 +27,9 @@ public class CustomerApiImpl implements CustomerApi {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    private CustomerMapper customerMapper;
 
     @Autowired
     private CustomerCacheService customerCacheService;
@@ -120,5 +125,18 @@ public class CustomerApiImpl implements CustomerApi {
     public CommonResult<Boolean> customerOrderUpdate(CustomerBaseDto dto) {
         customerService.customerOrderUpdate(dto.getCustomerId());
         return CommonResult.success(true);
+    }
+
+    @Override
+    public CommonResult<CustomerEncryptedInfoDto> getEncryptedInfo(CustomerBaseDto dto) {
+        Customer customer = customerMapper.selectById(dto.getCustomerId());
+        if (customer == null) {
+            return CommonResult.success(new CustomerEncryptedInfoDto());
+        }
+        CustomerEncryptedInfoDto info = new CustomerEncryptedInfoDto();
+        info.setRealName(customer.getRealName());
+        info.setMobile(customer.getMobile());
+        info.setIdCard(customer.getIdCard());
+        return CommonResult.success(info);
     }
 }
