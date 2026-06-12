@@ -10,29 +10,29 @@ import java.math.BigDecimal;
 
 @Data
 public class AddressUpdateRequest {
-    @NotNull(message = "id不能为空")
+    @NotNull(message = "地址ID不能为空")
     private Long id;
-    @NotBlank(message = "receiverName不能为空")
-    @Size(min = 2, max = 30, message = "receiverName长度需在2-30")
+    @NotBlank(message = "请填写收货人姓名")
+    @Size(min = 2, max = 30, message = "收货人姓名需为2-30个字符")
     private String receiverName;
-    @NotBlank(message = "receiverMobile不能为空")
-    @Pattern(regexp = "^1\\d{10}$", message = "receiverMobile格式不正确")
+    @NotBlank(message = "请填写手机号码")
+    @Pattern(regexp = "^1\\d{10}$", message = "请填写正确的手机号码")
     private String receiverMobile;
     private String provinceCode;
-    @NotBlank(message = "provinceName不能为空")
+    @NotBlank(message = "请选择省份")
     private String provinceName;
     private String cityCode;
-    @NotBlank(message = "cityName不能为空")
+    @NotBlank(message = "请选择城市")
     private String cityName;
-    @NotBlank(message = "areaCode不能为空")
+    @NotBlank(message = "请选择所在地区")
     private String areaCode;
-    @NotBlank(message = "areaName不能为空")
+    @NotBlank(message = "请选择所在地区")
     private String areaName;
-    @NotBlank(message = "streetAddress不能为空")
-    @Size(min = 5, message = "streetAddress长度至少5")
+    @NotBlank(message = "请填写详细地址")
+    @Size(min = 5, message = "详细地址至少需要5个字符")
     private String streetAddress;
     private String postalCode;
-    @NotNull(message = "addressType不能为空")
+    @NotNull(message = "请选择地址标签")
     private Integer addressType;
     private String addressTag;
     private BigDecimal longitude;
