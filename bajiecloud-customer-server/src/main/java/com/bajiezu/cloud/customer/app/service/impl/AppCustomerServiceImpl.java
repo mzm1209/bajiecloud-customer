@@ -207,7 +207,20 @@ public class AppCustomerServiceImpl implements AppCustomerService {
         entity.setIsDeleted(0);
         entity.setUpdateTime(new Date());
         entity.setUpdatedBy(customerId);
-        return customerAddressMapper.updateById(entity) > 0;
+        boolean updated = customerAddressMapper.updateById(entity) > 0;
+        if (updated) {
+            updateAddressTag(req.getId(), customerId, req.getAddressTag());
+        }
+        return updated;
+    }
+
+    private void updateAddressTag(Long id, Long customerId, String addressTag) {
+        String normalizedAddressTag = StrUtil.isBlank(addressTag) ? null : addressTag;
+        customerAddressMapper.update(null, new LambdaUpdateWrapper<CustomerAddress>()
+                .eq(CustomerAddress::getId, id)
+                .eq(CustomerAddress::getCustomerId, customerId)
+                .eq(CustomerAddress::getIsDeleted, 0)
+                .set(CustomerAddress::getAddressTag, normalizedAddressTag));
     }
 
     @Override
