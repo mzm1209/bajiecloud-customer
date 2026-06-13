@@ -13,6 +13,10 @@ public class AppLoginRespVO {
     private Integer realnameStatus;
     private Integer faceAuthStatus;
     private Integer accountStatus;
+    /**
+     * 支付宝用户ID
+     */
+    private String alipayUid;
     private String thirdPartyId;
     private String thirdOpenId;
 }

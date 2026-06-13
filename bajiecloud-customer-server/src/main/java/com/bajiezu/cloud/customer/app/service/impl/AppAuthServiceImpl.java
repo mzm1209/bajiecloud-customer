@@ -159,36 +159,11 @@ public class AppAuthServiceImpl implements AppAuthService {
             }
         }
 
-        Customer customer = customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
-                .eq(Customer::getMobile, encryptedMobile)
-                .last("limit 1"));
-        if (customer == null) {
-            customer = new Customer();
-            customer.setPlatformUid(buildPlatformUid(reqDTO));
-            customer.setThirdPartyId(thirdPartyId);
-            customer.setThirdOpenId(thirdOpenId);
-            customer.setMobile(encryptedMobile);
-            customer.setSourceChannel(StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"));
-            customer.setPlatformName("AliPay");
-            customer.setAccountStatus(1);
-            customer.setCreateTime(new Date());
-            customer.setUpdateTime(new Date());
-            customer.setLastLoginTime(new Date());
-            customer.setIsDeleted(0);
-            customerMapper.insert(customer);
-        } else {
-            customer.setLastLoginTime(new Date());
-            customer.setUpdateTime(new Date());
-            if (StrUtil.isNotBlank(thirdPartyId) && StrUtil.isBlank(customer.getThirdPartyId())) {
-                customer.setThirdPartyId(thirdPartyId);
-            }
-            if (StrUtil.isNotBlank(thirdOpenId) && StrUtil.isBlank(customer.getThirdOpenId())) {
-                customer.setThirdOpenId(thirdOpenId);
-            }
-            customerMapper.updateById(customer);
-        }
+        String sourceChannel = StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay");
+        Customer customer = resolveMobileLoginCustomer(reqDTO, encryptedMobile, thirdPartyId, thirdOpenId, sourceChannel);
         String masked = maskMobile(reqDTO.getMobile());
-        String token = createToken(customer.getId(), masked, StrUtil.blankToDefault(reqDTO.getSourceChannel(), "AliPay"), null, null);
+        String alipayAppId = alipayProperties.getMiniapp() != null ? alipayProperties.getMiniapp().getAppId() : null;
+        String token = createToken(customer.getId(), masked, sourceChannel, thirdPartyId, alipayAppId);
         AppLoginRespVO vo = new AppLoginRespVO();
         vo.setTokenName("app-user-token");
         vo.setToken(token);
@@ -199,6 +174,7 @@ public class AppAuthServiceImpl implements AppAuthService {
         vo.setRealnameStatus(0);
         vo.setFaceAuthStatus(0);
         vo.setAccountStatus(1);
+        vo.setAlipayUid(customer.getThirdPartyId());
         vo.setThirdPartyId(customer.getThirdPartyId());
         vo.setThirdOpenId(customer.getThirdOpenId());
         return vo;
@@ -274,6 +250,88 @@ public class AppAuthServiceImpl implements AppAuthService {
 
     private String buildPlatformUid(AppMobileLoginReqDTO reqDTO) {
         return "app_" + reqDTO.getCountryCode().replace("+", "") + "_" + System.currentTimeMillis();
+    }
+
+    private Customer resolveMobileLoginCustomer(AppMobileLoginReqDTO reqDTO, String encryptedMobile,
+                                                String thirdPartyId, String thirdOpenId, String sourceChannel) {
+        if (StrUtil.isBlank(thirdPartyId)) {
+            Customer mobileCustomer = selectLatestByMobile(encryptedMobile, sourceChannel);
+            if (mobileCustomer == null) {
+                return createMobileLoginCustomer(reqDTO, encryptedMobile, null, null, sourceChannel);
+            }
+            return updateLoginCustomer(mobileCustomer, null, null);
+        }
+
+        Customer uidCustomer = selectLatestByThirdPartyId(thirdPartyId, sourceChannel);
+        if (uidCustomer != null) {
+            if (StrUtil.isBlank(uidCustomer.getMobile())) {
+                uidCustomer.setMobile(encryptedMobile);
+                return updateLoginCustomer(uidCustomer, thirdPartyId, thirdOpenId);
+            }
+            if (StrUtil.equals(uidCustomer.getMobile(), encryptedMobile)) {
+                return updateLoginCustomer(uidCustomer, thirdPartyId, thirdOpenId);
+            }
+            return createMobileLoginCustomer(reqDTO, encryptedMobile, thirdPartyId, thirdOpenId, sourceChannel);
+        }
+
+        Customer mobileCustomer = selectLatestByMobile(encryptedMobile, sourceChannel);
+        if (mobileCustomer == null) {
+            return createMobileLoginCustomer(reqDTO, encryptedMobile, thirdPartyId, thirdOpenId, sourceChannel);
+        }
+        return updateLoginCustomer(mobileCustomer, thirdPartyId, thirdOpenId);
+    }
+
+    private Customer selectLatestByThirdPartyId(String thirdPartyId, String sourceChannel) {
+        return customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
+                .eq(Customer::getThirdPartyId, thirdPartyId)
+                .eq(Customer::getSourceChannel, sourceChannel)
+                .eq(Customer::getIsDeleted, 0)
+                .ne(Customer::getAccountStatus, 3)
+                .orderByDesc(Customer::getLastLoginTime)
+                .orderByDesc(Customer::getId)
+                .last("limit 1"));
+    }
+
+    private Customer selectLatestByMobile(String encryptedMobile, String sourceChannel) {
+        return customerMapper.selectOne(new LambdaQueryWrapper<Customer>()
+                .eq(Customer::getMobile, encryptedMobile)
+                .eq(Customer::getSourceChannel, sourceChannel)
+                .eq(Customer::getIsDeleted, 0)
+                .ne(Customer::getAccountStatus, 3)
+                .orderByDesc(Customer::getLastLoginTime)
+                .orderByDesc(Customer::getId)
+                .last("limit 1"));
+    }
+
+    private Customer updateLoginCustomer(Customer customer, String thirdPartyId, String thirdOpenId) {
+        if (StrUtil.isNotBlank(thirdPartyId) && !StrUtil.equals(customer.getThirdPartyId(), thirdPartyId)) {
+            customer.setThirdPartyId(thirdPartyId);
+        }
+        if (StrUtil.isNotBlank(thirdOpenId) && !StrUtil.equals(customer.getThirdOpenId(), thirdOpenId)) {
+            customer.setThirdOpenId(thirdOpenId);
+        }
+        customer.setLastLoginTime(new Date());
+        customer.setUpdateTime(new Date());
+        customerMapper.updateById(customer);
+        return customer;
+    }
+
+    private Customer createMobileLoginCustomer(AppMobileLoginReqDTO reqDTO, String encryptedMobile,
+                                               String thirdPartyId, String thirdOpenId, String sourceChannel) {
+        Customer customer = new Customer();
+        customer.setPlatformUid(buildPlatformUid(reqDTO));
+        customer.setThirdPartyId(thirdPartyId);
+        customer.setThirdOpenId(thirdOpenId);
+        customer.setMobile(encryptedMobile);
+        customer.setSourceChannel(sourceChannel);
+        customer.setPlatformName("AliPay");
+        customer.setAccountStatus(1);
+        customer.setCreateTime(new Date());
+        customer.setUpdateTime(new Date());
+        customer.setLastLoginTime(new Date());
+        customer.setIsDeleted(0);
+        customerMapper.insert(customer);
+        return customer;
     }
 
     private String encryptMobileIfPresent(String mobile) {
