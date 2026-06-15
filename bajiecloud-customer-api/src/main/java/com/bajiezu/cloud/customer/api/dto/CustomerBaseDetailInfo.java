@@ -76,4 +76,7 @@ public class CustomerBaseDetailInfo {
 
     @Schema(description = "账户状态：0-禁用，1-正常，2-冻结，3-合并后归档", example = "xxx")
     private Integer accountStatus;
+
+    @Schema(description = "实名状态：0-未实名，1-已实名，2-实名失败", example = "1")
+    private Integer realnameStatus;
 }
