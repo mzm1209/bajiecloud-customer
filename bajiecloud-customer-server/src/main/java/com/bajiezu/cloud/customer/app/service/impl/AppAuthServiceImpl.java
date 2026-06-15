@@ -32,7 +32,9 @@ import java.util.Date;
 
 import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.exception;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.SMS_CODE_EXPIRED;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.SMS_CODE_INVALID;
+import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.SMS_CODE_USED;
 
 @Slf4j
 @Service
@@ -127,17 +129,20 @@ public class AppAuthServiceImpl implements AppAuthService {
             throw exception(LOGIN_EXCEPTION);
         }
         String mobileHash = SecureUtil.sha256(reqDTO.getCountryCode() + reqDTO.getMobile());
+        Date now = new Date();
         AppSmsCodeLogDO log = appSmsCodeLogMapper.selectOne(new LambdaQueryWrapper<AppSmsCodeLogDO>()
                 .eq(AppSmsCodeLogDO::getMobileHash, mobileHash)
                 .eq(AppSmsCodeLogDO::getScene, "LOGIN")
-                .eq(AppSmsCodeLogDO::getVerifyStatus, 0)
-                .ge(AppSmsCodeLogDO::getExpireTime, new Date())
+                .eq(AppSmsCodeLogDO::getSendStatus, 1)
                 .orderByDesc(AppSmsCodeLogDO::getId)
                 .last("limit 1"));
-        if (log == null || log.getVerifyCount() >= 5) throw exception(LOGIN_EXCEPTION);
+        if (log == null) throw exception(SMS_CODE_INVALID);
+        if (Integer.valueOf(1).equals(log.getVerifyStatus())) throw exception(SMS_CODE_USED);
+        if (log.getExpireTime() == null || log.getExpireTime().before(now)) throw exception(SMS_CODE_EXPIRED);
+        if (log.getVerifyCount() != null && log.getVerifyCount() >= 5) throw exception(SMS_CODE_INVALID);
         String hash = SecureUtil.sha256(reqDTO.getSmsCode() + log.getSalt());
         if (!StrUtil.equals(hash, log.getSmsCodeHash())) {
-            log.setVerifyCount(log.getVerifyCount() + 1);
+            log.setVerifyCount(log.getVerifyCount() == null ? 1 : log.getVerifyCount() + 1);
             log.setUpdateTime(new Date());
             appSmsCodeLogMapper.updateById(log);
             throw exception(SMS_CODE_INVALID);
