@@ -563,27 +563,32 @@ public class CustomerServiceImpl implements CustomerService {
    */
   @Override
   public PageResult<CustomerInfoRespVO> querySimpleCustomerInfoByKey(CustomerQueryRequest queryRequest) {
-    if (StringUtils.isEmpty(queryRequest.getKey())) {
+    String key = StrUtil.trim(queryRequest.getKey());
+    if (StringUtils.isEmpty(key)) {
       return PageResult.empty();
     }
+    String encryptedKey = encryptIfPresent(key);
+    CustomerQueryRequest.QueryType queryType = Optional.ofNullable(queryRequest.getQueryType())
+        .orElse(CustomerQueryRequest.QueryType.ALL);
     Page<Customer> page = queryRequest.toPage(Customer::getUpdateTime, false);
     LambdaQueryWrapper<Customer> wrapper = new LambdaQueryWrapper<>();
-    wrapper.select(Customer::getId, Customer::getMobile, Customer::getRealName);
-    if (CustomerQueryRequest.QueryType.ALL == queryRequest.getQueryType()) {
-      wrapper.likeRight(Customer::getMobile, queryRequest.getKey())
-          .or().likeRight(Customer::getRealName, queryRequest.getKey());
-    } else if (CustomerQueryRequest.QueryType.MOBILE == queryRequest.getQueryType()) {
-      wrapper.likeRight(Customer::getMobile, queryRequest.getKey());
-    } else if (CustomerQueryRequest.QueryType.NAME == queryRequest.getQueryType()) {
-      wrapper.likeRight(Customer::getRealName, queryRequest.getKey());
+    wrapper.select(Customer::getId, Customer::getMobile, Customer::getRealName)
+        .eq(Customer::getIsDeleted, 0);
+    if (CustomerQueryRequest.QueryType.ALL == queryType) {
+      wrapper.and(queryWrapper -> queryWrapper.likeRight(Customer::getMobile, encryptedKey)
+          .or().likeRight(Customer::getRealName, encryptedKey));
+    } else if (CustomerQueryRequest.QueryType.MOBILE == queryType) {
+      wrapper.likeRight(Customer::getMobile, encryptedKey);
+    } else if (CustomerQueryRequest.QueryType.NAME == queryType) {
+      wrapper.likeRight(Customer::getRealName, encryptedKey);
     }
 
     IPage<Customer> customerPage = customerMapper.selectPage(page, wrapper);
     IPage<CustomerInfoRespVO> respVOIPage = customerPage.convert(customer -> {
       CustomerInfoRespVO respVO = new CustomerInfoRespVO();
       respVO.setCustomerId(customer.getId());
-      respVO.setMobile(customer.getMobile());
-      respVO.setName(customer.getRealName());
+      respVO.setMobile(decryptIfPresent(customer.getMobile()));
+      respVO.setName(decryptIfPresent(customer.getRealName()));
       return respVO;
     });
     return PageResult.of(respVOIPage);
