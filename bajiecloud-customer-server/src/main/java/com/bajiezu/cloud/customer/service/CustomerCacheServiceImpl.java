@@ -132,7 +132,7 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
         for (String param : reqVO.getParams()) {
             Object fieldValue = ReflectUtils.getFieldValue(customer, param);
             String fieldValueStr = fieldValue == null ? null : fieldValue.toString();
-            ReflectUtils.setFieldValue(resp, param, fieldValueStr);
+            ReflectUtils.setFieldValue(resp, param, decryptIfPresent(fieldValueStr));
         }
         return resp;
     }
