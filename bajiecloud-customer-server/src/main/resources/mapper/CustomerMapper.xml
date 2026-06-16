@@ -87,7 +87,7 @@
             and mobile = #{mobile}
         </if>
         <if test="name != null and name != ''">
-            and nickname like concat('%',#{name},'%')
+            and real_name = #{name}
         </if>
         <if test="customerId != null">
             and id = #{customerId}
