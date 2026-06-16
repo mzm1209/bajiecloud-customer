@@ -1,5 +1,7 @@
 package com.bajiezu.cloud.customer.service;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
 import com.bajiezu.cloud.customer.controller.customervo.CustomerBaseDetail;
@@ -50,6 +52,9 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
     @Autowired
     private MarketingVipGradeApi vipGradeApi;
 
+    @Value("${app.security.aes-key:}")
+    private String aesKey;
+
 
     @Override
     public CustomerBaseDetail getBaseInfo(Long customerId) {
@@ -70,13 +75,16 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
         baseDetail.setCustomerId(customer.getId());
         baseDetail.setRegisterTime(customer.getCreateTime());
         baseDetail.setInBlackList(customer.getInBlackList() ? 1 : 0);
-        if (StringUtils.isNotEmpty(customer.getIdCard())) {
-            Integer age = IdCardUtil.getAgeByIdCard(customer.getIdCard());
+        String idCard = decryptIfPresent(customer.getIdCard());
+        if (StringUtils.isNotEmpty(idCard)) {
+            Integer age = IdCardUtil.getAgeByIdCard(idCard);
             baseDetail.setAge(age);
+            baseDetail.setIdCard(IdCardUtil.desensitize(idCard));
         }
-        if (StringUtils.isNotEmpty(customer.getIdCard())) {
-            baseDetail.setIdCard(IdCardUtil.desensitize(customer.getIdCard()));
-        }
+        baseDetail.setMobile(decryptIfPresent(customer.getMobile()));
+        baseDetail.setWechatMobile(decryptIfPresent(customer.getWechatMobile()));
+        baseDetail.setRealName(decryptIfPresent(customer.getRealName()));
+        baseDetail.setEmail(decryptIfPresent(customer.getEmail()));
 
         Map<Long, String> memberLevelNameMap = Maps.newHashMap();
         MarketingVipGradeReqDTO gradeReqDTO = new MarketingVipGradeReqDTO();
@@ -95,6 +103,19 @@ public class CustomerCacheServiceImpl implements CustomerCacheService {
             baseDetail.setLevelName(memberLevelNameMap.get(memberLevel.longValue()));
         }
         return baseDetail;
+    }
+
+
+    private String decryptIfPresent(String encrypted) {
+        if (StrUtil.hasBlank(encrypted, aesKey)) {
+            return encrypted;
+        }
+        try {
+            return SecureUtil.aes(aesKey.getBytes()).decryptStr(encrypted);
+        } catch (Exception e) {
+            log.warn("decrypt sensitive data failed, fallback to original value");
+            return encrypted;
+        }
     }
 
 

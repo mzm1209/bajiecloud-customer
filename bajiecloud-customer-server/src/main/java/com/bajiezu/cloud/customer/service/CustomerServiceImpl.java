@@ -4,6 +4,8 @@ import static com.bajiezu.cloud.common.web.exception.util.ServiceExceptionUtil.e
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.CUSTOMER_NOT_EXIST;
 import static com.bajiezu.cloud.customer.enums.ErrorCodeConstants.LOGIN_EXCEPTION;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.bajiezu.cloud.common.web.pojo.CommonResult;
@@ -42,6 +44,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -84,6 +87,9 @@ public class CustomerServiceImpl implements CustomerService {
 
   @Autowired
   private MarketingVipGradeApi vipGradeApi;
+
+  @Value("${app.security.aes-key:}")
+  private String aesKey;
 
   @Override
   public void mockAddCustomer() {
@@ -180,9 +186,9 @@ public class CustomerServiceImpl implements CustomerService {
     respVO.setCustomerId(customer.getId());
     respVO.setThirdPartyId(customer.getThirdPartyId());
     respVO.setName(customer.getNickname());
-    respVO.setRealName(customer.getRealName());
-    respVO.setMobile(MobileUtils.encryptMobile(customer.getMobile()));
-    respVO.setEmail(customer.getEmail());
+    respVO.setRealName(maskName(decryptIfPresent(customer.getRealName())));
+    respVO.setMobile(MobileUtils.encryptMobile(decryptIfPresent(customer.getMobile())));
+    respVO.setEmail(decryptIfPresent(customer.getEmail()));
     respVO.setMemberLevel(customer.getMemberLevel());
     respVO.setSourceChannel(customer.getSourceChannel());
     respVO.setPlatformName(customer.getPlatformName());
@@ -196,6 +202,29 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     return respVO;
+  }
+
+
+  private String decryptIfPresent(String encrypted) {
+    if (StrUtil.hasBlank(encrypted, aesKey)) {
+      return encrypted;
+    }
+    try {
+      return SecureUtil.aes(aesKey.getBytes()).decryptStr(encrypted);
+    } catch (Exception e) {
+      log.warn("decrypt sensitive data failed, fallback to original value");
+      return encrypted;
+    }
+  }
+
+  private String maskName(String name) {
+    if (StrUtil.isBlank(name)) {
+      return name;
+    }
+    if (name.length() == 1) {
+      return name + "*";
+    }
+    return name.charAt(0) + "*";
   }
 
   @Override
@@ -471,10 +500,10 @@ public class CustomerServiceImpl implements CustomerService {
     List<CustomerAddressVO> respVOList = Lists.newArrayList();
     for (CustomerAddress address : addressList) {
       CustomerAddressVO addressVO = new CustomerAddressVO();
-      addressVO.setCustomerId(addressVO.getCustomerId());
+      addressVO.setCustomerId(address.getCustomerId());
       addressVO.setAddressType(address.getAddressType());
-      addressVO.setName(address.getReceiverName());
-      addressVO.setMobile(address.getReceiverMobile());
+      addressVO.setName(maskName(decryptIfPresent(address.getReceiverName())));
+      addressVO.setMobile(MobileUtils.encryptMobile(decryptIfPresent(address.getReceiverMobile())));
       addressVO.setAreaCode(address.getAreaCode());
       if (StringUtils.isNotEmpty(address.getAreaCode())) {
         String areaName = areaService.getFullName(address.getAreaCode());
