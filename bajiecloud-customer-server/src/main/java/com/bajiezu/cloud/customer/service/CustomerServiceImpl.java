@@ -142,6 +142,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     CustomerListDto dto = new CustomerListDto();
     BeanUtils.copyProperties(reqVO, dto);
+    dto.setMobile(encryptIfPresent(reqVO.getMobile()));
+    dto.setName(encryptIfPresent(reqVO.getName()));
     dto.setOffset(offset);
     dto.setLimit(limit);
     log.info("list query dto: {}", dto);
@@ -204,6 +206,13 @@ public class CustomerServiceImpl implements CustomerService {
     return respVO;
   }
 
+
+  private String encryptIfPresent(String plain) {
+    if (StrUtil.hasBlank(plain, aesKey)) {
+      return plain;
+    }
+    return SecureUtil.aes(aesKey.getBytes()).encryptBase64(plain);
+  }
 
   private String decryptIfPresent(String encrypted) {
     if (StrUtil.hasBlank(encrypted, aesKey)) {
